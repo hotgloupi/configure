@@ -1,0 +1,26 @@
+version: 0.0.0-{build}
+
+#os: Visual Studio 2014 CTP4
+
+branches:
+    only:
+        - master
+
+init:
+    - git config --global core.autocrlf input
+
+platform:
+    - x86
+
+install:
+    - CALL "C:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/vcvarsall.bat" x86
+    - SET CONFIGURE_LIBRARY_DIR=%APPVEYOR_BUILD_FOLDER%/src/lib
+
+before_build:
+    - cmd: SET
+    - bash bootstrap/vs.sh
+
+build_script:
+    - configure.exe build BOOST_INCLUDE_DIR="c:/Libraries/boost" BOOST_LIBRARY_DIR="c:/Libraries/boost/stage/lib"
+    - cat build/Makefile
+    - bash -c "cd build && nmake -f Makefile"
