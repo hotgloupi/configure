@@ -52,6 +52,26 @@ namespace configure {
 		return 1;
 	}
 
+	static int fs_list_directory(lua_State* state)
+	{
+		Filesystem& self = lua::Converter<std::reference_wrapper<Filesystem>>::extract(state, 1);
+		std::vector<NodePtr> res;
+		if (char const* arg = lua_tostring(state, 2))
+			res = self.list_directory(arg);
+		else
+			res = self.list_directory(
+				lua::Converter<fs::path>::extract(state, 2)
+			);
+
+		lua_createtable(state, res.size(), 0);
+		for (int i = 0, len = res.size(); i < len; ++i)
+		{
+			lua::Converter<NodePtr>::push(state, res[i]);
+			lua_rawseti(state, -2, i + 1);
+		}
+		return 1;
+	}
+
 	static int fs_which(lua_State* state)
 	{
 		Filesystem& self = lua::Converter<std::reference_wrapper<Filesystem>>::extract(state, 1);
@@ -124,6 +144,12 @@ namespace configure {
 			// @string pattern A glob pattern
 			// @return A list of @{Node}s
 			.def("rglob", &fs_rglob)
+
+			/// List a directory
+			// @function Filesystem:list_directory
+			// @tparam string|Path dir Directory to list
+			// @return A list of @{Node}s
+			.def("list_directory", &fs_list_directory)
 
 			/// Find an executable path
 			// @function Filesystem:which

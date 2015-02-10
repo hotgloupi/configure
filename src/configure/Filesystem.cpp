@@ -152,6 +152,24 @@ namespace configure {
 		return res;
 	}
 
+	std::vector<NodePtr> Filesystem::list_directory(path_t const& dir)
+	{
+		if (!dir.is_absolute())
+			return this->list_directory(_build.project_directory() / dir);
+
+		std::vector<NodePtr> res;
+		fs::directory_iterator it(dir), end;
+		for (; it != end; ++it)
+		{
+			if (fs::is_directory(it->status()))
+				res.push_back(_build.directory_node(*it));
+			else
+				res.push_back(_build.file_node(*it));
+		}
+
+		return res;
+	}
+
 #ifdef _WIN32
 # define PATH_SEP ";"
 #else
