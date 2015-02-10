@@ -39,7 +39,7 @@ namespace configure { namespace generators {
 				auto& node = bg.node(vertex);
 				if (node->is_virtual())
 				{
-					if (node->name().empty())
+					if (!node->name().empty())
 						phony.insert(node.get());
 					continue;
 				}
