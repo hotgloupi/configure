@@ -3,7 +3,7 @@
 #include <configure/lua/State.hpp>
 #include <configure/lua/Type.hpp>
 
-#include <boost/filesystem/path.hpp>
+#include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;
 
@@ -44,6 +44,13 @@ namespace configure {
 		auto& self = lua::Converter<fs::path>::extract(state, 1);
 		auto ext = lua::Converter<std::string>::extract(state, 2);
 		lua::Converter<fs::path>::push(state, self.string() + ext);
+		return 1;
+	}
+
+	static int Path_is_directory(lua_State* state)
+	{
+		auto& self = lua::Converter<fs::path>::extract(state, 1);
+		lua_pushboolean(state, fs::is_directory(self));
 		return 1;
 	}
 
@@ -115,6 +122,11 @@ namespace configure {
 			/// @function Path:is_absolute
 			/// @treturn bool True when the path is absolute
 			.def("is_absolute", &fs::path::is_absolute)
+
+			/// True when a path refers to a directory
+			// @function Path:is_directory
+			// @treturn bool
+			.def("is_directory", &Path_is_directory)
 
 			/// Filename without the extension (if any)
 			// @function Path:stem
