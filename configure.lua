@@ -105,7 +105,7 @@ function configure(build)
 		coverage = with_coverage,
 	}
 
-	compiler:link_executable{
+	local configure_exe = compiler:link_executable{
 		name = "configure",
 		sources = {'src/main.cpp'},
 		libraries = table.extend({libconfigure}, libs),
@@ -126,7 +126,7 @@ function configure(build)
 		libs
 	)
 
-	local unittests = Rule:new():add_target(build:virtual_node("check/unit"))
+	local unit_tests = Rule:new():add_target(build:virtual_node("check/unit"))
 	for i, src in pairs(fs:rglob("test/unit", "*.cpp"))
 	do
 		local test_name = src:path():stem()
@@ -144,15 +144,31 @@ function configure(build)
 			},
 			coverage = with_coverage,
 		}
-		unittests:add_source(bin)
-		unittests:add_shell_command(ShellCommand:new(bin))
+		unit_tests:add_source(bin)
+		unit_tests:add_shell_command(ShellCommand:new(bin))
 	end
-	build:add_rule(unittests)
+	build:add_rule(unit_tests)
+
+	local functional_tests = Rule:new():add_target(build:virtual_node("check/functional"))
+	for _, dir in ipairs(build:fs():list_directory("test/functional")) do
+		if dir:path():is_directory() then
+			local test_name = tostring(dir:path():filename())
+			local test_node = build:virtual_node("check/function/" .. test_name)
+			build:add_rule(
+				Rule:new()
+					:add_target(test_node)
+					:add_shell_command(ShellCommand:new(configure_exe, '-p', dir, build:directory() / "test/functional" / test_name))
+			)
+			functional_tests:add_source(test_node)
+		end
+	end
+	build:add_rule(functional_tests)
 
 	build:add_rule(
 		Rule:new()
 			:add_target(build:virtual_node("check"))
 			:add_source(build:virtual_node("check/unit"))
+			:add_source(build:virtual_node("check/functional"))
 	)
 
 end
