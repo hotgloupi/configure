@@ -146,7 +146,7 @@ namespace configure {
 			/// True when the path is empty
 			// @function Path:empty
 			// @treturn bool
-			.def("ext", &fs::path::extension)
+			.def("empty", &fs::path::empty)
 		;
 	}
 
