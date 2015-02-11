@@ -129,7 +129,7 @@ function configure(build)
 		)
 	end
 
-	local test_include_directories = table.extend({}, 'test/unit')
+	local test_include_directories = table.append({}, 'test/unit')
 	local unit_tests = Rule:new():add_target(build:virtual_node("check/unit"))
 	for i, src in pairs(fs:rglob("test/unit", "*.cpp"))
 	do
