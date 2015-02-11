@@ -20,7 +20,7 @@ namespace configure {
 
 	public:
 		Application(int ac, char** av);
-		Application(std::vector<std::string> args);
+		explicit Application(std::vector<std::string> args);
 		virtual ~Application();
 
 	public:
