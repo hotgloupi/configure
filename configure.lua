@@ -129,6 +129,7 @@ function configure(build)
 		)
 	end
 
+	local test_include_directories = table.extend({}, 'test/unit')
 	local unit_tests = Rule:new():add_target(build:virtual_node("check/unit"))
 	for i, src in pairs(fs:rglob("test/unit", "*.cpp"))
 	do
@@ -139,11 +140,12 @@ function configure(build)
 			sources = {src, },
 			libraries = test_libs,
 			defines = {{"BOOST_TEST_MODULE", test_name},},
-			include_directories = {'test/unit'},
+			include_directories = test_include_directories,
 			include_files = {
 				'boost/test/unit_test.hpp',
 			},
 			coverage = with_coverage,
+			library_directories = library_directories,
 		}
 		unit_tests:add_source(bin)
 		unit_tests:add_shell_command(ShellCommand:new(bin))
