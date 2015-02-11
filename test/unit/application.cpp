@@ -4,7 +4,6 @@
 #include <boost/filesystem.hpp>
 
 #include <fstream>
-#include <vector>
 
 namespace fs = boost::filesystem;
 
@@ -12,10 +11,12 @@ typedef configure::Application app_t;
 
 BOOST_AUTO_TEST_CASE(invalid_args)
 {
-	std::vector<std::string> empty_args;
 	BOOST_CHECK_THROW(configure::Application(0, nullptr), std::exception);
 	BOOST_CHECK_THROW(configure::Application(-1, nullptr), std::exception);
-	BOOST_CHECK_THROW(configure::Application(empty_args), std::exception);
+	BOOST_CHECK_THROW(
+		(configure::Application(std::vector<std::string>())),
+		std::exception
+	);
 }
 
 struct Env
