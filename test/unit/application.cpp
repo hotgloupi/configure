@@ -12,9 +12,10 @@ typedef configure::Application app_t;
 
 BOOST_AUTO_TEST_CASE(invalid_args)
 {
+	std::vector<std::string> empty_args;
 	BOOST_CHECK_THROW(app_t(0, nullptr), std::exception);
 	BOOST_CHECK_THROW(app_t(-1, nullptr), std::exception);
-	BOOST_CHECK_THROW(app_t(std::vector<std::string>()), std::exception);
+	BOOST_CHECK_THROW(app_t(empty_args), std::exception);
 }
 
 struct Env
