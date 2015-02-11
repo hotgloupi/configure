@@ -142,7 +142,7 @@ function configure(build)
 			defines = {{"BOOST_TEST_MODULE", test_name},},
 			include_directories = test_include_directories,
 			include_files = {
-				'boost/test/unit_test.hpp',
+				'boost/test/included/unit_test.hpp',
 			},
 			coverage = with_coverage,
 			library_directories = library_directories,
