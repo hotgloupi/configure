@@ -114,17 +114,20 @@ function configure(build)
 		coverage = with_coverage,
 	}
 
-	local test_libs = table.extend({
+	local test_libs = {libconfigure}
+	local defines = {}
+	if build:host():os() ~= Platform.OS.windows then
+		table.extend(test_libs, libs)
+		table.append(
+			test_libs,
 			cxx.Library:new{
 				name = "boost_unit_test_framework",
 				system = true,
 				kind = 'shared',
 				defines = {'BOOST_TEST_DYN_LINK'},
-			},
-			libconfigure
-		},
-		libs
-	)
+			}
+		)
+	end
 
 	local unit_tests = Rule:new():add_target(build:virtual_node("check/unit"))
 	for i, src in pairs(fs:rglob("test/unit", "*.cpp"))
@@ -135,9 +138,7 @@ function configure(build)
 			directory = 'test/unit',
 			sources = {src, },
 			libraries = test_libs,
-			defines = {
-				{"BOOST_TEST_MODULE", test_name},
-			},
+			defines = {{"BOOST_TEST_MODULE", test_name},},
 			include_directories = {'test/unit'},
 			include_files = {
 				'boost/test/unit_test.hpp',
