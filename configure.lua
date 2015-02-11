@@ -114,10 +114,9 @@ function configure(build)
 		coverage = with_coverage,
 	}
 
-	local test_libs = {libconfigure}
+	local test_libs = table.extend({libconfigure}, libs)
 	local defines = {}
 	if build:host():os() ~= Platform.OS.windows then
-		table.extend(test_libs, libs)
 		table.append(
 			test_libs,
 			cxx.Library:new{
