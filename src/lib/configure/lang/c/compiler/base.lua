@@ -25,7 +25,10 @@
 --  : Enable or disable threading support (defaults to true).
 --
 --  `debug`
---  : Enable debug informations (defaults true).
+--  : Enable debug informations (defaults to true).
+--
+--  `warnings`
+--  : Enable warnings (defaults to true).
 --
 --  `defines`
 --  : A list of defines. Elements can be a pair `{key, value}` or a `string`
@@ -88,6 +91,7 @@ local M = {
 		shared_library_directory = 'lib',
 		static_library_directory = 'lib',
 		standard = nil,
+		warnings = true,
 	},
 }
 
@@ -340,6 +344,59 @@ end
 function M:_coverage(args)
 	if args.coverage == nil then return self.coverage end
 	return args.coverage
+end
+
+--- Threading state
+--
+-- @param args
+-- @tparam[opt] bool args.threading
+-- @treturn bool
+function M:_threading(args)
+	if args.threading == nil then
+		return self.threading
+	else
+		return args.threading
+	end
+end
+
+--- debug state
+--
+-- @param args
+-- @tparam[opt] bool args.debug
+-- @treturn bool
+function M:_debug(args)
+	if args.debug == nil then
+		return self.debug
+	else
+		return args.debug
+	end
+end
+
+
+--- Exception state
+--
+-- @param args
+-- @tparam[opt] bool args.exception
+-- @treturn bool
+function M:_exception(args)
+	if args.exception == nil then
+		return self.exception
+	else
+		return args.exception
+	end
+end
+
+--- warnings state
+--
+-- @param args
+-- @tparam[opt] bool args.warnings
+-- @treturn bool
+function M:_warnings(args)
+	if args.warnings == nil then
+		return self.warnings
+	else
+		return args.warnings
+	end
 end
 
 --- Convert directories to directory nodes if needed.
