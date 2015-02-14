@@ -21,6 +21,8 @@ function Compiler:_build_object(args)
 	command = {self.binary_path, '-x', self.lang}
 	if args.standard then table.insert(command, '-std=' .. args.standard) end
 	if args.coverage then table.insert(command, '--coverage') end
+	if args.debug then table.insert(command, '-g') end
+	if args.warnings then table.extend(command, {'-Wall', '-Wextra'}) end
 	for _, dir in ipairs(args.include_directories) do
 		table.extend(command, {'-I', dir})
 	end
