@@ -142,6 +142,10 @@ function M:link_executable(args)
 		libraries = libraries,
 		library_directories = self:_library_directories(args),
 		coverage = self:_coverage(args),
+		threading = self:_threading(args),
+		debug = self:_debug(args),
+		exception = self:_exception(args),
+		warnings = self:_warnings(args),
 	}
 end
 
@@ -192,6 +196,10 @@ function M:link_library(args)
 		libraries = libraries,
 		library_directories = self:_library_directories(args),
 		coverage = self:_coverage(args),
+		threading = self:_threading(args),
+		debug = self:_debug(args),
+		exception = self:_exception(args),
+		warnings = self:_warnings(args),
 	}
 	return self.Library:new{
 		name = args.name,
@@ -234,6 +242,10 @@ function M:_build_objects(args)
 	local standard = args.standard or self.standard
 	local libraries = self:_libraries(args)
 	local coverage = self:_coverage(args)
+	local threading = self:_threading(args)
+	local debug = self:_debug(args)
+	local exception = self:_exception(args)
+	local warnings = self:_warnings(args)
 	local objects = {}
 	for idx, source in ipairs(args.sources) do
 		if getmetatable(source) ~= Node then
@@ -253,6 +265,10 @@ function M:_build_objects(args)
 			standard = standard,
 			coverage = coverage,
 			include_files = include_files,
+			threading = threading,
+			debug = debug,
+			exception = exception,
+			warnings = warnings,
 		}
 	end
 	return objects
