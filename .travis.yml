@@ -1,16 +1,13 @@
 language: cpp
 cache: apt
-os:
-    - linux
-    - osx
 before_install:
-    - if [ "$OS" = linux ]; then
+    - if [ "$TRAVIS_OS_NAME" = linux ]; then
         sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test;
         sudo apt-get update -qq;
       fi
     - if [ "${COVERALLS}" = "true" ]; then
         sudo pip install cpp-coveralls ;
-        if [ "$OS" = "linux" ]; then
+        if [ "$TRAVIS_OS_NAME" = "linux" ]; then
             sudo apt-get install luarocks;
         else
             brew install luarocks;
@@ -18,12 +15,10 @@ before_install:
         sudo luarocks install luacov-coveralls ;
       fi
 install:
-    - if [ "$OS" = "linux" ]; then
+    - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         if [ "$CXX_COMPILER" = clang++ ]; then sudo apt-get install -qq clang-3.4; fi;
         if [ "$CXX_COMPILER" = g++-4.8 ]; then sudo apt-get install -qq g++-4.8; fi;
         sudo apt-get install libboost1.48-all-dev;
-      else
-        brew install boost;
       fi
     - $CXX_COMPILER --version
     - CXX=$CXX_COMPILER ./bootstrap/unix.sh
