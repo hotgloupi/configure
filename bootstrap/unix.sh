@@ -10,6 +10,8 @@ SCRIPT_DIR="$(cd "$(dirname ${SCRIPT})" && pwd)"
 LUA_SRC_DIR="${SCRIPT_DIR}/../lua/src"
 SRC_DIR="${SCRIPT_DIR}/../src"
 CXX="${CXX:-g++}"
+CXXFLAGS="${CXXFLAGS:-}"
+LDFLAGS="${LDFLAGS:-}"
 TMP_DIR="${TMP_DIR:-/tmp}"
 BIN="${TMP_DIR}/configure"
 
@@ -51,11 +53,11 @@ ${LUA_SRC_DIR}/linit.c
 SRCS=$(find "${SRC_DIR}" -name '*.cpp')
 
 
-"${CXX}" -x c++ -std=c++11 \
+"${CXX}" -x c++ -std=c++11 ${CXXFLAGS} \
 	-o "${BIN}" \
 	-I "${LUA_SRC_DIR}" -I "${SRC_DIR}" \
 	${LUA_SRCS} \
 	${SRCS} \
-	-lboost_filesystem -lboost_serialization -lboost_system
+	-lboost_filesystem -lboost_serialization -lboost_system ${LDFLAGS}
 
 echo "Created bootstrap at ${BIN}"
