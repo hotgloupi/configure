@@ -21,7 +21,11 @@ install:
         sudo apt-get install libboost1.48-all-dev;
       fi
     - $CXX_COMPILER --version
-    - CXX=$CXX_COMPILER ./bootstrap/unix.sh
+    - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
+        CXX=$CXX_COMPILER ./bootstrap/unix.sh;
+      else
+        CXX=$CXX_COMPILER ./bootstrap/osx.sh;
+      fi
 script:
     - cat cov-int/scm_log.txt || echo "No coverity log"
     - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then
