@@ -5,6 +5,7 @@
 
 #include <type_traits>
 
+#if defined(__GNUC__)
 namespace std {
 	template<typename> struct has_trivial_destructor;
 	template<typename> struct is_trivially_destructible;
@@ -42,3 +43,14 @@ namespace configure { namespace lua {
 		>::type;
 
 }}
+#else
+
+namespace configure { namespace lua {
+
+	template<typename T>
+	using is_trivially_destructible =
+		typename std::is_trivially_destructible<T>::type;
+
+}}
+
+#endif
