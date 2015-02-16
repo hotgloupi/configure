@@ -1,11 +1,11 @@
 #pragma once
 
 #include "fwd.hpp"
-#include "is_trivially_destructible.hpp"
 #include <configure/log.hpp>
 
 #include <string>
 #include <typeinfo>
+#include <type_traits>
 #include <stdexcept>
 
 namespace configure { namespace lua {
@@ -46,7 +46,7 @@ namespace configure { namespace lua {
 			std::string name = type_name();
 			if (!luaL_newmetatable(state, name.c_str()))
 				return false;
-			if (!is_trivially_destructible<T>::value)
+			if (!std::is_trivially_destructible<T>::value)
 			{
 				lua_pushstring(state, "__gc");
 				lua_pushcfunction(state, &_call_destructor);

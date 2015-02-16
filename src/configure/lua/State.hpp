@@ -4,7 +4,6 @@
 #include "Converter.hpp"
 #include "Signature.hpp"
 #include "Caller.hpp"
-#include "is_trivially_destructible.hpp"
 #include "store_exception.hpp"
 
 #include <configure/error.hpp>
