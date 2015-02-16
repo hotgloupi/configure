@@ -20,6 +20,9 @@ end
 function Compiler:_build_object(args)
 	command = {self.binary_path, '-x', self.lang}
 	if args.standard then table.insert(command, '-std=' .. args.standard) end
+	if args.standard_library then
+		table.insert(command, '-stdlib=' .. args.standard_library)
+	end
 	if args.coverage then table.insert(command, '--coverage') end
 	if args.debug then table.insert(command, '-g') end
 	if args.warnings then table.extend(command, {'-Wall', '-Wextra'}) end
@@ -46,44 +49,58 @@ function Compiler:_build_object(args)
 	return args.target
 end
 
-function Compiler:_link_executable(args)
-	command = {self.binary_path, }
-	if args.standard then table.insert(command, '-std=' .. args.standard) end
-	if args.coverage then table.insert(command, '--coverage') end
-	table.extend(command, args.objects)
-
+-- Generic linker flags generation
+function Compiler:_linker_flags(args, sources)
+	local res = {}
 	for _, dir in ipairs(args.library_directories)
 	do
-		table.extend(command, {'-L', dir})
+		table.extend(res, {'-L', dir})
 	end
 
-	library_sources = {}
 	for _, lib in ipairs(args.libraries)
 	do
 		if lib.system then
-			if lib.kind == 'static' then
-				table.append(command, '-Wl,-Bstatic')
+			if self.build:host():os() ~= Platform.OS.osx then
+				if lib.kind == 'static' then
+					table.append(res, '-Wl,-Bstatic')
+				end
+				if lib.kind == 'shared' then
+					table.append(res, '-Wl,-Bdynamic')
+				end
 			end
-			if lib.kind == 'shared' then
-				table.append(command, '-Wl,-Bdynamic')
-			end
-			table.append(command, "-l" .. lib.name)
+			table.append(res, "-l" .. lib.name)
 		else
 			for _, file in ipairs(lib.files) do
-				table.append(command, file)
+				table.append(res, file)
 				if getmetatable(file) == Node then
-					table.append(library_sources, file)
+					table.append(sources, file)
 				end
 			end
 		end
 	end
-	table.append(command, '-Wl,-Bdynamic')
+	if self.build:host():os() ~= Platform.OS.osx then
+		table.append(res, '-Wl,-Bdynamic')
+	end
+	return res
+end
+
+function Compiler:_link_executable(args)
+	command = {self.binary_path, }
+	if args.standard then table.insert(command, '-std=' .. args.standard) end
+	if args.standard_library then
+		table.insert(command, '-stdlib=' .. args.standard_library)
+	end
+	if args.coverage then table.insert(command, '--coverage') end
+	table.extend(command, args.objects)
+
+	local sources = {}
+	table.extend(command, self:_linker_flags(args, sources))
 
 	table.extend(command, {"-o", args.target})
 	self.build:add_rule(
 		Rule:new()
 			:add_sources(args.objects)
-			:add_sources(library_sources)
+			:add_sources(sources)
 			:add_target(args.target)
 			:add_shell_command(ShellCommand:new(table.unpack(command)))
 	)

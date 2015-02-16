@@ -67,6 +67,9 @@
 --  : Directory where shared libraries are generated (default to `bin/` on
 --  Windows, `lib/` on other OSes).
 --
+-- `standard\_library`
+-- : Applicable to languages that support alternate standard libraries (C++)
+--
 -- @classmod configure.lang.c.compiler.base
 
 local undefined = {}
@@ -92,6 +95,7 @@ local M = {
 		static_library_directory = 'lib',
 		standard = nil,
 		warnings = true,
+		standard_library = nil,
 	},
 }
 
@@ -131,6 +135,7 @@ end
 -- @return The target executable
 function M:link_executable(args)
 	local standard = args.standard or self.standard
+	local standard_library = args.standard_library or self.standard_library
 	local libraries = self:_libraries(args)
 	local directory = Path:new(args.directory or self.executable_directory)
 	return self:_link_executable{
@@ -139,6 +144,7 @@ function M:link_executable(args)
 			(directory / args.name) + self:_executable_extension(args.extension)
 		),
 		standard = standard,
+		standard_library = standard_library,
 		libraries = libraries,
 		library_directories = self:_library_directories(args),
 		coverage = self:_coverage(args),
@@ -178,6 +184,7 @@ end
 function M:link_library(args)
 	assert(args.kind == 'shared' or args.kind == 'static')
 	local standard = args.standard or self.standard
+	local standard_library = args.standard_library or self.standard_library
 	local libraries = self:_libraries(args)
 	local directory = Path:new(args.directory or (
 		kind == 'shared'
@@ -193,6 +200,7 @@ function M:link_library(args)
 		),
 		kind = args.kind,
 		standard = standard,
+		standard_library = standard_library,
 		libraries = libraries,
 		library_directories = self:_library_directories(args),
 		coverage = self:_coverage(args),
@@ -240,6 +248,7 @@ function M:_build_objects(args)
 	local include_files = self:_include_files(args)
 	local defines = self:_defines(args)
 	local standard = args.standard or self.standard
+	local standard_library = args.standard_library or self.standard_library
 	local libraries = self:_libraries(args)
 	local coverage = self:_coverage(args)
 	local threading = self:_threading(args)
@@ -263,6 +272,7 @@ function M:_build_objects(args)
 			include_directories = include_directories,
 			defines = defines,
 			standard = standard,
+			standard_library = standard_library,
 			coverage = coverage,
 			include_files = include_files,
 			threading = threading,

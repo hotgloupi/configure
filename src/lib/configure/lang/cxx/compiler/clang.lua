@@ -6,5 +6,6 @@ local Compiler = table.update(
 )
 Compiler.binary_names = {'clang++',}
 Compiler.lang = 'c++'
+Compiler.standard_library = 'libc++'
 
 return Compiler
