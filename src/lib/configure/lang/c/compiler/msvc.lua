@@ -16,8 +16,21 @@ function Compiler:new(args)
 	return o
 end
 
+Compiler._optimization_flags = {
+	no = {"-Od", },
+	yes = {"-Ox", },
+	size = {"-O1", },
+	harder = {"-O2", },
+	fastest = {"-O2", },
+}
+
+function Compiler:_add_optimization_flag(cmd, args)
+	table.extend(cmd, self._optimization_flags[args.optimization])
+end
+
 function Compiler:_build_object(args)
 	command = { self.binary_path, '-nologo', self._language_flag }
+	self:_add_optimization_flag(command, args)
 	if self.exception == true then
 		table.append(command, '-EHsc')
 	end

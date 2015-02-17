@@ -70,6 +70,14 @@
 -- `standard\_library`
 -- : Applicable to languages that support alternate standard libraries (C++)
 --
+-- `optimization`
+-- : Specify the optimization level (defaults to "no") can be one of:
+--    - "size": Small program size
+--    - "no": No optimization is made
+--    - "yes": Safe optimization level
+--    - "harder": Try harder to make your code fast
+--    - "fastest": Tell the compiler to do its best (ignoring code size).
+--
 -- @classmod configure.lang.c.compiler.base
 
 local undefined = {}
@@ -96,6 +104,7 @@ local M = {
 		standard = nil,
 		warnings = true,
 		standard_library = nil,
+		optimization = "no",
 	},
 }
 
@@ -152,6 +161,7 @@ function M:link_executable(args)
 		debug = self:_debug(args),
 		exception = self:_exception(args),
 		warnings = self:_warnings(args),
+		optimization = self:_optimization(args),
 	}
 end
 
@@ -208,6 +218,7 @@ function M:link_library(args)
 		debug = self:_debug(args),
 		exception = self:_exception(args),
 		warnings = self:_warnings(args),
+		optimization = self:_optimization(args),
 	}
 	return self.Library:new{
 		name = args.name,
@@ -255,6 +266,7 @@ function M:_build_objects(args)
 	local debug = self:_debug(args)
 	local exception = self:_exception(args)
 	local warnings = self:_warnings(args)
+	local optimization = self:_optimization(args)
 	local objects = {}
 	for idx, source in ipairs(args.sources) do
 		if getmetatable(source) ~= Node then
@@ -279,6 +291,7 @@ function M:_build_objects(args)
 			debug = debug,
 			exception = exception,
 			warnings = warnings,
+			optimization = optimization,
 		}
 	end
 	return objects
@@ -423,6 +436,21 @@ function M:_warnings(args)
 	else
 		return args.warnings
 	end
+end
+
+--- Optiomization level.
+--
+-- @param args
+-- @tparam[opt] string args.optimization
+-- @treturn string
+function M:_optimization(args)
+	local lvl
+	if args.optimization then
+		lvl = args.optimization
+	else
+		lvl = self.optimization
+	end
+	return lvl
 end
 
 --- Convert directories to directory nodes if needed.
