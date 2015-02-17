@@ -1,4 +1,4 @@
-
+#include "tools/TemporaryDirectory.hpp"
 #include <configure/Application.hpp>
 
 #include <boost/filesystem.hpp>
@@ -19,45 +19,16 @@ BOOST_AUTO_TEST_CASE(invalid_args)
 	);
 }
 
-struct Env
-{
-	fs::path _dir;
-	fs::path _old_cwd;
-
-	Env()
-		: _dir{fs::temp_directory_path() / fs::unique_path()}
-		, _old_cwd{fs::current_path()}
-	{
-		fs::create_directories(_dir);
-		fs::current_path(_dir);
-	}
-
-	~Env()
-	{
-		fs::current_path(_old_cwd);
-		fs::remove_all(_dir);
-	}
-
-	void add_project()
-	{
-		std::ofstream out{(_dir / "configure.lua").string()};
-		out << "something";
-		out.close();
-	}
-
-	fs::path const& dir() { return _dir; }
-};
-
 BOOST_AUTO_TEST_CASE(missing_project)
 {
-	Env env;
+	TemporaryDirectory env;
 	BOOST_CHECK_THROW(app_t({"pif"}), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(no_build_dir)
 {
-	Env env;
-	env.add_project();
+	TemporaryDirectory env;
+	env.create_file("configure.lua", "-- nothing\n");
 	app_t app({"pif"});
 	BOOST_CHECK_EQUAL(app.build_directories().size(), 0);
 	BOOST_CHECK_EQUAL(app.project_directory(), env.dir());
