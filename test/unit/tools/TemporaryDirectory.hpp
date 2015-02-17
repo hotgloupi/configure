@@ -16,6 +16,7 @@ struct TemporaryDirectory
 		, _old_cwd{fs::current_path()}
 	{
 		fs::create_directories(_dir);
+		_dir = fs::canonical(_dir);
 		fs::current_path(_dir);
 	}
 
