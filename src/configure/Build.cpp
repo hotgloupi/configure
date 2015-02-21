@@ -119,7 +119,7 @@ namespace configure {
 	{
 		try { _this->env.save(_this->env_path); }
 		catch (...) {
-			log::fatal("Couldn't save environ in", _this->env_path, ":",
+			log::error("Couldn't save environ in", _this->env_path, ":",
 			           error_string());
 			std::abort();
 		}
