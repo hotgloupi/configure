@@ -21,6 +21,7 @@ namespace configure { namespace generators {
 		virtual void dump_command(
 		    std::ostream& out,
 		    std::vector<std::string> const& cmd) const;
+		virtual std::string node_path(Build& build, Node& node) const;
 	};
 
 }}

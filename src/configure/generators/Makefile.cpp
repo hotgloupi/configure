@@ -72,7 +72,7 @@ namespace configure { namespace generators {
 				for (auto& node: all)
 				{
 					if (node->is_file())
-						out << ' ' << node->relative_path(build.directory()).string();
+						out << ' ' << this->node_path(build, *node);
 					else if (node->is_virtual() && !node->name().empty())
 						out << ' ' << node->name();
 				}
@@ -95,15 +95,14 @@ namespace configure { namespace generators {
 			if (node->is_virtual())
 				out << node->name() << ':';
 			else
-				//out << node->relative_path(build.directory()).string() << ':';
-				out << node->path().string() << ':';
+				out << this->node_path(build, *node) << ':';
 
 			for (GraphTraits::in_edge_iterator i = in_edge_range.first;
 			     i != in_edge_range.second; ++i)
 			{
 				auto node = bg.node(boost::source(*i, g)).get();
 				if (node->is_file())
-					out << ' ' << node->relative_path(build.directory()).string();
+					out << ' ' << this->node_path(build, *node);
 				else if (node->is_virtual())
 					out << ' ' << node->name();
 			}
@@ -128,6 +127,12 @@ namespace configure { namespace generators {
 		}
 
 	}
+
+	std::string Makefile::node_path(Build&, Node& node) const
+	{
+		return node.path().string();
+	}
+
 	void Makefile::dump_command(
 		    std::ostream& out,
 		    std::vector<std::string> const& cmd) const
