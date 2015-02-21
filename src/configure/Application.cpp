@@ -123,6 +123,7 @@ namespace configure {
 					CONFIGURE_THROW(
 						error::BuildError("Build failed with exit code " + std::to_string(res))
 						<< error::path(build.directory())
+						<< error::command(cmd)
 					);
 			}
 		}

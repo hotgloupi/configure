@@ -1,4 +1,6 @@
 #include "error.hpp"
+
+#include <boost/algorithm/string/join.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 
 namespace configure {
@@ -50,6 +52,8 @@ namespace configure {
 					res += "\n";
 				}
 			}
+			if (auto ptr = get_error_info<error::command>(e))
+				res += boost::join(*ptr, " ");
 			if (auto ptr = get_error_info<error::nested>(e))
 				res += "  Initial error: " + error_string(*ptr) + "\n";
 		}

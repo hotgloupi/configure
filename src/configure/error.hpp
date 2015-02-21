@@ -68,6 +68,7 @@ namespace configure {
 /**/
 
 		MAKE_ERROR_INFO(path, boost::filesystem::path);
+		MAKE_ERROR_INFO(command, std::vector<std::string>);
 		MAKE_ERROR_INFO(nested, std::exception_ptr);
 		MAKE_ERROR_INFO(lua_function, std::string);
 		MAKE_ERROR_INFO(lua_traceback, std::vector<lua::Frame>);
