@@ -131,7 +131,7 @@ function Compiler:_add_linker_library_flags(cmd, args, sources)
 end
 
 function Compiler:_link_executable(args)
-	command = {self.binary_path, }
+	local command = {self.binary_path, }
 
 	local sources = {}
 	self:_add_linker_flags(command, args, sources)
@@ -160,7 +160,19 @@ function Compiler:_link_library(args)
 		)
 	else
 		assert(args.kind == 'shared')
-		error("NOT IMPLEMENTED")
+		local command = { self.binary_path, '-shared', '-Wl,-soname,' .. tostring(args.target:path()) }
+		local sources = {}
+		self:_add_linker_flags(command, args, sources)
+		table.extend(command, args.objects)
+		self:_add_linker_library_flags(command, args, sources)
+		table.extend(command, {"-o", args.target})
+		self.build:add_rule(
+			Rule:new()
+				:add_sources(args.objects)
+				:add_sources(sources)
+				:add_target(args.target)
+				:add_shell_command(ShellCommand:new(table.unpack(command)))
+		)
 	end
 	return args.target
 end
