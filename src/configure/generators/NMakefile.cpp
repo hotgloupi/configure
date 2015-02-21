@@ -25,7 +25,7 @@ namespace configure { namespace generators {
 	NMakefile::build_command(Build& build, std::string const& target) const
 	{
 		return {
-			"nmake", "-f", (build.directory() / "Makefile").string(),
+			"nmake", "-nologo", "-f", (build.directory() / "Makefile").string(),
 			target.empty() ? "all" : target
 		};
 	}
