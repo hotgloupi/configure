@@ -46,7 +46,7 @@ namespace configure {
 		{
 			if ((target == CommandParser::unix_shell ||
 			     target == CommandParser::make) &&
-			    (c == '\\' || c == '\'' || c == '`' || c == '$'))
+			    (c == '\\' || c == '\'' || c == '`' || c == '$' || c == '"'))
 				res.push_back('\\');
 			if (target == CommandParser::windows_shell ||
 			    target == CommandParser::nmake)

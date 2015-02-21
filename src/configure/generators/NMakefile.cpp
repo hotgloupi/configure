@@ -16,9 +16,18 @@ namespace configure { namespace generators {
 
 	void NMakefile::dump_command(
 		    std::ostream& out,
-		    std::vector<std::string> const& cmd)
+		    std::vector<std::string> const& cmd) const
 	{
 		out << quote<CommandParser::nmake>(cmd);
+	}
+
+	std::vector<std::string>
+	NMakefile::build_command(Build& build, std::string const& target) const
+	{
+		return {
+			"nmake", "-f", (build.directory() / "Makefile").string(),
+			target.empty() ? "all" : target
+		};
 	}
 
 }}

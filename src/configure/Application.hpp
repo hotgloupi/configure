@@ -38,7 +38,7 @@ namespace configure {
 		std::vector<path_t> const& build_directories() const;
 
 	private:
-		void _generate(Build& build);
+		Generator const& _generator(Build& build) const;
 		void _parse_args();
 	};
 

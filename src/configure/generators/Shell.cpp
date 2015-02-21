@@ -1,10 +1,11 @@
 #include "Shell.hpp"
 
-#include <configure/Build.hpp>
 #include <configure/BuildGraph.hpp>
+#include <configure/Build.hpp>
+#include <configure/Command.hpp>
 #include <configure/Filesystem.hpp>
 #include <configure/Graph.hpp>
-#include <configure/Command.hpp>
+#include <configure/log.hpp>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/graph/topological_sort.hpp>
@@ -17,7 +18,7 @@ namespace configure { namespace generators {
 	std::string Shell::name() const
 	{ return "shell"; }
 
-	void Shell::generate(Build& build)
+	void Shell::generate(Build& build) const
 	{
 		std::ofstream out((build.directory() / "build.sh").string());
 		out << "#!/bin/sh" << std::endl;
@@ -56,6 +57,16 @@ namespace configure { namespace generators {
 	bool Shell::is_available(Build& build) const
 	{
 		return build.fs().which("sh") != boost::none;
+	}
+
+	std::vector<std::string>
+	Shell::build_command(Build& build, std::string const& target) const
+	{
+		if (!target.empty())
+			log::warning("Shell generator does not support targets");
+		return {
+			"sh", (build.directory() / "build.sh").string(),
+		};
 	}
 
 }}

@@ -10,6 +10,7 @@
 #include "lua/State.hpp"
 #include "Platform.hpp"
 #include "Rule.hpp"
+#include "quote.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -396,8 +397,10 @@ namespace configure {
 	void Build::dump_graphviz(std::ostream& out)
 	{
 		struct Writer {
+			Build& _b;
 			BuildGraph& _g;
-			Writer(BuildGraph& g) : _g(g) {}
+
+			Writer(Build& b, BuildGraph& g) : _b(b), _g(g) {}
 
 			void operator ()(std::ostream& out, Node::index_type idx) const
 			{
@@ -406,7 +409,7 @@ namespace configure {
 				{
 				case Node::file_node:
 				case Node::directory_node:
-					out << "[label=\"" << node->path().string() << "\"]";
+					out << "[label=\"" << node->relative_path(_b.directory()).string() << "\"]";
 					break;
 				case Node::virtual_node:
 					out << "[label=\"" << node->name() << "\"]";
@@ -425,12 +428,12 @@ namespace configure {
 				{
 					if (first) first = false;
 					else out << "\\n";
-					out << boost::join(shell_command.dump(), " ");
+					out << quote<CommandParser::unix_shell>(shell_command.dump());
 				}
 				out << "\"]";
 
 			}
-		} writer(_this->build_graph);
+		} writer(*this, _this->build_graph);
 		boost::write_graphviz(
 			out,
 			_this->build_graph.graph(),

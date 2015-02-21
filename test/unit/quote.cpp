@@ -20,6 +20,14 @@ BOOST_AUTO_TEST_CASE(space)
 	BOOST_CHECK_EQUAL("\" \"", quote<P::nmake>({" "}));
 }
 
+BOOST_AUTO_TEST_CASE(quote_)
+{
+	BOOST_CHECK_EQUAL("\\\"", quote<P::unix_shell>({"\""}));
+	BOOST_CHECK_EQUAL("\\\"", quote<P::windows_shell>({"\""}));
+	BOOST_CHECK_EQUAL("\\\"", quote<P::make>({"\""}));
+	BOOST_CHECK_EQUAL("\\\"", quote<P::nmake>({"\""}));
+}
+
 BOOST_AUTO_TEST_CASE(dollar)
 {
 	std::string ref = "$";
@@ -50,8 +58,8 @@ BOOST_AUTO_TEST_CASE(backslash)
 	BOOST_CHECK_EQUAL("\\", quote<P::nmake>({ref}));
 
 	ref = "\\\"";
-	BOOST_CHECK_EQUAL("\"\\\\\"\"", quote<P::unix_shell>({ref}));
-	BOOST_CHECK_EQUAL("\"\\\\\"\"", quote<P::make>({ref}));
+	BOOST_CHECK_EQUAL("\"\\\\\\\"\"", quote<P::unix_shell>({ref}));
+	BOOST_CHECK_EQUAL("\"\\\\\\\"\"", quote<P::make>({ref}));
 	BOOST_CHECK_EQUAL("\\\\\\\"", quote<P::windows_shell>({ref}));
 	BOOST_CHECK_EQUAL("\\\\\\\"", quote<P::nmake>({ref}));
 }

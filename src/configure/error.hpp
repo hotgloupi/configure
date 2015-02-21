@@ -34,7 +34,9 @@ namespace configure {
 		} \
 /**/
 
+		MAKE_EXCEPTION(BuildError);
 		MAKE_EXCEPTION(CommandAlreadySet);
+		MAKE_EXCEPTION(InvalidArgument);
 		MAKE_EXCEPTION(InvalidEnviron);
 		MAKE_EXCEPTION(InvalidGenerator);
 		MAKE_EXCEPTION(InvalidKey);

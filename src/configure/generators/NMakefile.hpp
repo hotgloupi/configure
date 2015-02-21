@@ -10,10 +10,12 @@ namespace configure { namespace generators {
 	public:
 		bool is_available(Build& build) const override;
 		std::string name() const override;
+		std::vector<std::string>
+		build_command(Build& build, std::string const& target) const override;
 	protected:
 		void dump_command(
 		    std::ostream& out,
-		    std::vector<std::string> const& cmd) override;
+		    std::vector<std::string> const& cmd) const override;
 	};
 
 }}

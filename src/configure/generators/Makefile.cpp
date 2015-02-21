@@ -18,7 +18,7 @@ namespace configure { namespace generators {
 	std::string Makefile::name() const
 	{ return "makefile"; }
 
-	void Makefile::generate(Build& build)
+	void Makefile::generate(Build& build) const
 	{
 		std::ofstream out((build.directory() / "Makefile").string());
 		out << "# Generated makefile" << std::endl;
@@ -129,7 +129,7 @@ namespace configure { namespace generators {
 	}
 	void Makefile::dump_command(
 		    std::ostream& out,
-		    std::vector<std::string> const& cmd)
+		    std::vector<std::string> const& cmd) const
 	{
 		out << quote<CommandParser::make>(cmd);
 	}
@@ -137,6 +137,14 @@ namespace configure { namespace generators {
 	bool Makefile::is_available(Build& build) const
 	{
 		return build.fs().which("make") != boost::none;
+	}
+	std::vector<std::string>
+	Makefile::build_command(Build& build, std::string const& target) const
+	{
+		return {
+			"make", "-C", build.directory().string(),
+			target.empty() ? "all" : target
+		};
 	}
 }}
 

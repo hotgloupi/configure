@@ -168,7 +168,7 @@ function configure(build)
 			build:add_rule(
 				Rule:new()
 					:add_target(test_node)
-					:add_shell_command(ShellCommand:new(configure_exe, '-p', dir, build:directory() / "test/functional" / test_name))
+					:add_shell_command(ShellCommand:new(configure_exe, '-p', dir, build:directory() / "test/functional" / test_name, '--build=check'))
 			)
 			functional_tests:add_source(test_node)
 		end

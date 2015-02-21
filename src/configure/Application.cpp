@@ -3,6 +3,7 @@
 #include "lua/State.hpp"
 #include "Build.hpp"
 #include "bind.hpp"
+#include "quote.hpp"
 
 #include "generators/Shell.hpp"
 #include "generators/Makefile.hpp"
@@ -50,8 +51,10 @@ namespace configure {
 		std::vector<path_t>                build_directories;
 		path_t                             project_directory;
 		std::map<std::string, std::string> build_variables;
-		bool                               dump_mode;
+		bool                               dump_graph_mode;
 		std::string                        generator;
+		bool                               build_mode;
+		std::string                        build_target;
 	};
 
 	Application::Application(int ac, char** av)
@@ -64,7 +67,7 @@ namespace configure {
 		_this->program_name = args.at(0);
 		_this->args = std::move(args);
 		_this->current_directory = fs::current_path();
-		_this->dump_mode = false;
+		_this->dump_graph_mode = false;
 		_this->args.erase(_this->args.begin());
 		_parse_args();
 	}
@@ -99,10 +102,29 @@ namespace configure {
 		{
 			Build build(lua, directory, _this->build_variables);
 			build.configure(_this->project_directory);
-			if (_this->dump_mode)
+			if (_this->dump_graph_mode)
 				build.dump_graphviz(std::cout);
 			log::debug("Generating the build files in", build.directory());
-			this->_generate(build);
+			auto& generator = this->_generator(build);
+			generator.generate(build);
+			log::status("Build files generated successfully in", build.directory());
+			if (_this->build_mode)
+			{
+				log::status("Starting build in", build.directory());
+				auto cmd = generator.build_command(build, _this->build_target);
+				int res = ::system(
+#ifdef _WIN32
+				    quote<CommandParser::windows_shell>(cmd).c_str()
+#else
+				    quote<CommandParser::unix_shell>(cmd).c_str()
+#endif
+				);
+				if (res != 0)
+					CONFIGURE_THROW(
+						error::BuildError("Build failed with exit code " + std::to_string(res))
+						<< error::path(build.directory())
+					);
+			}
 		}
 
 	}
@@ -116,7 +138,7 @@ namespace configure {
 	std::vector<fs::path> const& Application::build_directories() const
 	{ return _this->build_directories; }
 
-	void Application::_generate(Build& build)
+	Generator const& Application::_generator(Build& build) const
 	{
 		static std::vector<std::unique_ptr<Generator>> generators;
 		if (generators.empty())
@@ -169,8 +191,7 @@ namespace configure {
 							"Generator '" + generator_name + "' is not available"
 						)
 					);
-				gen->generate(build);
-				return;
+				return *gen;
 			}
 		CONFIGURE_THROW(
 			error::InvalidGenerator("Unknown generator '" + generator_name + "'")
@@ -180,27 +201,46 @@ namespace configure {
 	{
 		std::cout
 			<< "Usage: " << _this->program_name
-			<< " [OPTIONS] [VARIABLES...] [BUILD_DIRS...]\n"
+			<< "  [OPTION]... [BUILD_DIR]... [KEY=VALUE]...\n"
 			<< "\n"
-			<< "    Configure your project's builds in one or more directories.\n"
+			<< "  Configure your project's builds in one or more directories.\n"
 			<< "\n"
 			<< "Positional arguments:\n"
-			<< "  -h, --help" << "             " << "Show this help and exit\n"
+
+			<< "  BUILD_DIR" << "             "
+			<< "Build directory to configure\n"
+
+			<< "  KEY=VALUE" << "             "
+			<< "Set a variable for selected build directories\n"
+
 			<< "\n"
+
 			<< "Optional arguments:\n"
 
-			<< "  -G, --generator NAME" << " "
-			<< "Specify the generator to use (alternative to variable GENERATOR)"
+			<< "  -G, --generator NAME" << "  "
+			<< "Specify the generator to use (alternative to variable GENERATOR)\n"
 
-			<< "  -p, --project PATH" << " "
+			<< "  -p, --project PATH" << "    "
 			<< "Specify the project to configure instead of detecting it\n"
 
-			<< "  --dump " << " " << "Dump the build graph\n"
+			<< "  --dump-graph" << "          "
+			<< "Dump the build graph\n"
+
+			<< "  -d, --debug" << "           "
+			<< "Enable debug output\n"
+
+			<< "  -v, --verbose" << "         "
+			<< "Enable verbose output\n"
 
 			<< "  --version" << "             "
 			<< "Print version\n"
 
-			<< "\n"
+			<< "  -h, --help" << "            "
+			<< "Show this help and exit\n"
+
+			<< "  -b,--build[=target]" << "   "
+			<< "Start a build in specified directories\n"
+
 		;
 	}
 
@@ -253,45 +293,74 @@ namespace configure {
 					throw std::runtime_error{"Cannot operate on multiple projects"};
 				}
 				next_arg = NextArg::other;
-				continue;
 			}
-
-			if (next_arg == NextArg::generator)
+			else if (next_arg == NextArg::generator)
 			{
 				_this->generator = arg;
 				next_arg = NextArg::other;
-				continue;
 			}
-
-			if (arg == "-p" || arg == "--project")
+			else if (arg == "-p" || arg == "--project")
 			{
 				next_arg = NextArg::project;
-				continue;
 			}
-			if (arg == "--dump")
+			else if (arg == "--dump-graph")
 			{
-				_this->dump_mode = true;
-				continue;
+				_this->dump_graph_mode = true;
 			}
-			if (arg == "-G" || arg == "--generator")
+			else if (arg == "-G" || arg == "--generator")
 			{
 				next_arg = NextArg::generator;
-				continue;
 			}
-
-			auto it = arg.find('=');
-			if (it != std::string::npos)
+			else if (arg == "-d" || arg == "--debug")
 			{
-				_this->build_variables[arg.substr(0, it)] = arg.substr(it + 1, std::string::npos);
-				continue;
+				log::level() = log::Level::debug;
 			}
-			if (is_build_directory(arg) || !fs::exists(arg) || (fs::is_directory(arg) && fs::is_empty(arg)))
+			else if (arg == "-v" || arg == "--verbose")
+			{
+				log::level() = log::Level::verbose;
+			}
+			else if (boost::starts_with(arg, "--build=") ||
+			         boost::starts_with(arg, "-b="))
+			{
+				auto it = arg.find('=');
+				_this->build_target = arg.substr(it + 1, std::string::npos);
+				_this->build_mode = true;
+			}
+			else if (arg == "--build" || arg == "-b")
+			{
+				_this->build_mode = true;
+			}
+			else if (arg.find('=') != std::string::npos)
+			{
+				auto it = arg.find('=');
+				if (it != std::string::npos)
+				{
+					_this->build_variables[arg.substr(0, it)] =
+						arg.substr(it + 1, std::string::npos);
+					continue;
+				}
+			}
+			else if (is_build_directory(arg) ||
+			         !fs::exists(arg) ||
+			         (fs::is_directory(arg) && fs::is_empty(arg)))
+			{
 				_this->build_directories.push_back(fs::absolute(arg));
+			}
 			else
-				std::cout << "UNKNOWN ARG: " << arg << std::endl;
+			{
+				CONFIGURE_THROW(
+					error::InvalidArgument("Unknown argument '" + arg + "'")
+				);
+			}
 		}
 		if (next_arg != NextArg::other)
-			throw std::runtime_error{"Expecting argument for the flag " + _this->args.back()};
+		{
+			CONFIGURE_THROW(
+				error::InvalidArgument(
+					"Missing argument for flag '" + _this->args.back() + "'"
+				)
+			);
+		}
 		if (!has_project)
 		{
 			if (is_project_directory(_this->current_directory))
