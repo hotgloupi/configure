@@ -95,7 +95,8 @@ namespace configure { namespace generators {
 			if (node->is_virtual())
 				out << node->name() << ':';
 			else
-				out << node->relative_path(build.directory()).string() << ':';
+				//out << node->relative_path(build.directory()).string() << ':';
+				out << node->path().string() << ':';
 
 			for (GraphTraits::in_edge_iterator i = in_edge_range.first;
 			     i != in_edge_range.second; ++i)
