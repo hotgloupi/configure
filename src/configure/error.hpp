@@ -12,7 +12,8 @@
 namespace configure {
 
 	std::string error_string();
-	std::string error_string(std::exception_ptr const& e);
+	std::string error_string(std::exception_ptr const& e,
+	                         unsigned int indent = 0);
 
 
 # define CONFIGURE_THROW BOOST_THROW_EXCEPTION

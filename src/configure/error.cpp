@@ -8,31 +8,33 @@ namespace configure {
 	std::string error_string()
 	{ return error_string(std::current_exception()); }
 
-	std::string what(std::exception_ptr const& e)
+	static std::string what(std::exception_ptr const& e)
 	{
 		try { std::rethrow_exception(e); }
 		catch (std::exception const& err) { return err.what(); }
 		catch (...) { return "Error:"; }
 		std::abort();
 	}
-	std::string error_string(std::exception_ptr const& e)
+
+	std::string error_string(std::exception_ptr const& e, unsigned int indent)
 	{
 		using boost::get_error_info;
-		std::string res = what(e) + "\n";
+		std::string padding(' ', indent);
+		std::string res = padding + what(e) + "\n";
 		try { std::rethrow_exception(e); }
 		catch (boost::exception const& e) {
 			if (auto ptr = get_error_info<error::path>(e))
-				res += "  Path: " + ptr->string() + "\n";
+				res += padding + "  Path: " + ptr->string() + "\n";
 			if (auto ptr = get_error_info<error::lua_function>(e))
-				res += "  Lua function: " + *ptr + "\n";
+				res += padding + "  Lua function: " + *ptr + "\n";
 			if (auto ptr = get_error_info<error::lua_traceback>(e))
 			{
-				res += "  Lua traceback:\n";
+				res += padding + "  Lua traceback:\n";
 				for (auto const& frame: *ptr)
 				{
 					if (frame.builtin &&frame.name.empty())
 						continue;
-					res += "    ";
+					res += padding + "    ";
 					if (frame.builtin)
 						res += "{builtin}: ";
 					else
@@ -53,9 +55,9 @@ namespace configure {
 				}
 			}
 			if (auto ptr = get_error_info<error::command>(e))
-				res += boost::join(*ptr, " ");
+				res += padding + "  Command: " + boost::join(*ptr, " ");
 			if (auto ptr = get_error_info<error::nested>(e))
-				res += "  Initial error: " + error_string(*ptr) + "\n";
+				res += padding + "  Initial error: " + error_string(*ptr, indent + 2);
 		}
 		catch (...) {}
 		return res;
