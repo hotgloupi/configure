@@ -1,5 +1,7 @@
 #include "tools/TemporaryProject.hpp"
 
+#include <boost/optional.hpp>
+
 using namespace configure;
 
 namespace {
@@ -68,4 +70,43 @@ BOOST_AUTO_TEST_CASE(inexistent_source_node)
 	    "end"
 	);
 	BOOST_CHECK_THROW(project.configure(), error::LuaError);
+}
+
+BOOST_AUTO_TEST_CASE(empty_option)
+{
+	TemporaryDirectory temp;
+	lua::State state;
+	Build build(state, temp.dir() / "build");
+	BOOST_CHECK_EQUAL(
+		build.option<std::string>("key", "description"),
+		boost::none
+	);
+}
+
+BOOST_AUTO_TEST_CASE(default_option)
+{
+	TemporaryDirectory temp;
+	lua::State state;
+	Build build(state, temp.dir() / "build");
+	BOOST_CHECK_EQUAL(
+		build.option<std::string>("key", "description", "default value"),
+		"default value"
+	);
+	BOOST_CHECK_EQUAL(
+		build.option<std::string>("key", "description"),
+		std::string("default value")
+	);
+}
+
+BOOST_AUTO_TEST_CASE(option_read_environ)
+{
+	TemporaryDirectory temp;
+	lua::State state;
+	Build build(state, temp.dir() / "build");
+	build.env().set<std::string>("key", "some value");
+	BOOST_CHECK_EQUAL(
+		build.option<std::string>("key", "description", "default value"),
+		"some value"
+	);
+
 }

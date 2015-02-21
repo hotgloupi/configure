@@ -117,11 +117,18 @@ namespace configure {
 
 	Build::~Build()
 	{
-		try { _this->env.save(_this->env_path); }
-		catch (...) {
-			log::error("Couldn't save environ in", _this->env_path, ":",
-			           error_string());
-			std::abort();
+		if (fs::is_directory(_this->root_directory))
+		{
+			try { _this->env.save(_this->env_path); }
+			catch (...) {
+				log::error("Couldn't save environ in", _this->env_path, ":",
+						   error_string());
+				std::abort();
+			}
+		}
+		else
+		{
+			log::debug("Non-existant build directory, drop the environ");
 		}
 	}
 
@@ -220,8 +227,9 @@ namespace configure {
 			else
 				_this->env.set(name, boost::lexical_cast<T>(it->second));
 			_this->build_args.erase(it);
-			return boost::optional<T>(_this->env.get<T>(name));
 		}
+		if (_this->env.has(name))
+			return boost::optional<T>(_this->env.get<T>(name));
 		return boost::none;
 	}
 
