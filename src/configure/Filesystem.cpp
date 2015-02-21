@@ -176,8 +176,11 @@ namespace configure {
 # define PATH_SEP ":"
 #endif
 
-	boost::optional<fs::path> Filesystem::which(std::string const& program)
+	boost::optional<fs::path> Filesystem::which(std::string const& program_name)
 	{
+		fs::path program(program_name);
+		if (program.is_absolute() && fs::is_regular_file(program))
+			return program;
 		char const* PATH = ::getenv("PATH");
 		if (PATH == nullptr)
 			return boost::none;
