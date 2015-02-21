@@ -55,6 +55,18 @@ namespace configure {
 		std::string                        generator;
 		bool                               build_mode;
 		std::string                        build_target;
+		Impl(std::vector<std::string> args)
+			: program_name(args.at(0))
+			, args(std::move(args))
+			, current_directory(fs::current_path())
+			, build_directories()
+			, project_directory()
+			, build_variables()
+			, dump_graph_mode(false)
+			, generator()
+			, build_mode(false)
+			, build_target()
+		{ this->args.erase(this->args.begin()); }
 	};
 
 	Application::Application(int ac, char** av)
@@ -62,15 +74,8 @@ namespace configure {
 	{}
 
 	Application::Application(std::vector<std::string> args)
-		: _this(new Impl)
-	{
-		_this->program_name = args.at(0);
-		_this->args = std::move(args);
-		_this->current_directory = fs::current_path();
-		_this->dump_graph_mode = false;
-		_this->args.erase(_this->args.begin());
-		_parse_args();
-	}
+		: _this(new Impl(std::move(args)))
+	{ _parse_args(); }
 
 	Application::~Application() {}
 
