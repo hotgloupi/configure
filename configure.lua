@@ -9,7 +9,7 @@ local c = require "configure.lang.c"
 local version = '0.0.1'
 
 function configure(build)
-	print("Building on", build:host():os_string())
+	build:status("Building on", build:host():os_string())
 
 	local with_coverage = build:bool_option(
 		"coverage",
@@ -39,7 +39,6 @@ function configure(build)
 		build = build,
 		standard = 'c++11',
 	}
-	print(compiler.name, compiler.binary_path)
 
 	lua_srcs = {
 		"lua/src/lapi.c",

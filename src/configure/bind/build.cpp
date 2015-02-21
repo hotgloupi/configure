@@ -41,6 +41,22 @@ namespace configure {
 		return 1;
 	}
 
+	template<log::Level level>
+	static int Build_log(lua_State* state)
+	{
+		lua::Converter<std::reference_wrapper<Build>>::extract(state, 1);
+		std::string msg;
+		for (int i = 2, len = lua_gettop(state); i <= len; ++i)
+		{
+			if (!msg.empty()) msg.push_back(' ');
+			msg += luaL_tolstring(state, i, nullptr);
+		}
+		if (level == log::Level::error)
+			CONFIGURE_THROW(error::BuildError(msg));
+		log::log<level>(msg);
+		return 0;
+	}
+
 	void bind_build(lua::State& state)
 	{
 		/// Represent a build.
@@ -133,6 +149,26 @@ namespace configure {
 			// @treturn Platform
 			// @function Build:target_platform
 			.def<lua::return_policy::ref>("target", &Build::target)
+
+			/// Log a debug message.
+			// @param args...
+			// @function Build:debug
+			.def("debug", &Build_log<log::Level::verbose>)
+
+			/// Log an informational message.
+			// @param args...
+			// @function Build:status
+			.def("status", &Build_log<log::Level::status>)
+
+			/// Log a warning message.
+			// @param args...
+			// @function Build:warning
+			.def("warning", &Build_log<log::Level::warning>)
+
+			/// Stop the configuration with an error message.
+			// @param args...
+			// @function Build:error
+			.def("error", &Build_log<log::Level::error>)
 		;
 
 	}

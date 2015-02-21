@@ -128,7 +128,7 @@ function M:new(args)
 		args
 	)
 	for key, value in pairs(o) do
-		print(self.name, key, '=', value)
+		args.build:debug(self.name, key, '=', value)
 	end
 	setmetatable(o, self)
 	self.__index = self
