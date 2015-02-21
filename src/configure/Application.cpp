@@ -197,6 +197,9 @@ namespace configure {
 
 			<< "  --dump " << " " << "Dump the build graph\n"
 
+			<< "  --version" << "             "
+			<< "Print version\n"
+
 			<< "\n"
 		;
 	}
@@ -208,12 +211,21 @@ namespace configure {
 
 	void Application::_parse_args()
 	{
-		// Searching help flag first (ignoring command line errors if any).
+		// Searching help and version flags first (ignoring command line errors
+		// if any).
 		for (auto const& arg: _this->args)
 		{
 			if (arg == "-h" || arg == "--help")
 			{
 				this->print_help();
+				this->exit();
+			}
+			if (arg == "--version")
+			{
+#ifndef CONFIGURE_VERSION_STRING
+# define CONFIGURE_VERSION_STRING "unknown"
+#endif
+				log::print("configure version", CONFIGURE_VERSION_STRING);
 				this->exit();
 			}
 		}

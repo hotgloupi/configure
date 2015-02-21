@@ -6,6 +6,8 @@ local deps = require "configure.dependency"
 local cxx = require "configure.lang.cxx"
 local c = require "configure.lang.c"
 
+local version = '0.0.1'
+
 function configure(build)
 	print("Building on", build:host():os_string())
 
@@ -14,6 +16,11 @@ function configure(build)
 		"Enable coverage build",
 		false
 	)
+	local build_type = build:string_option(
+		"build_type",
+		"Set build type",
+		'debug'
+	):lower()
 
 	if with_coverage then
 		print("Coverage enabled:", with_coverage)
@@ -103,6 +110,9 @@ function configure(build)
 		library_directories = library_directories,
 		libraries = libs,
 		coverage = with_coverage,
+		defines = {
+			{'CONFIGURE_VERSION_STRING', '\"' .. build_type .. '-' .. version .. '\"'}
+		}
 	}
 
 	local configure_exe = compiler:link_executable{
