@@ -160,7 +160,18 @@ function Compiler:_link_library(args)
 		)
 	else
 		assert(args.kind == 'shared')
-		local command = { self.binary_path, '-shared', '-Wl,-soname,' .. tostring(args.target:path()) }
+		local command = { self.binary_path,}
+		if self.build:host():os() == Platform.OS.osx then
+			table.extend(
+				command,
+				{'-dynamiclib', '-Wl,-install_name,' .. tostring(args.target:path())}
+			)
+		else
+			table.extend(
+				command,
+				{'-shared', '-Wl,-soname,' .. tostring(args.target:path())}
+			)
+		end
 		local sources = {}
 		self:_add_linker_flags(command, args, sources)
 		table.extend(command, args.objects)
