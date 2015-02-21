@@ -87,13 +87,15 @@ function configure(build)
 	local include_directories = {'src'}
 
 	if build:host():os() == Platform.OS.windows then
-		print("XXX Adding path to Boost")
-		table.extend(include_directories, {
-			build:string_option("BOOST_INCLUDE_DIR", "Boost include dir")
-		})
-		table.extend(library_directories, {
-			build:string_option("BOOST_LIBRARY_DIR", "Boost library dir")
-		})
+		build:status("XXX Using boost auto link feature")
+
+		local boost_include_dir = build:string_option("BOOST_INCLUDE_DIR", "Boost include dir")
+		build:status("XXX Using boost include dir:", boost_include_dir)
+		table.extend(include_directories, {boost_include_dir})
+
+		local boost_library_dir = build:string_option("BOOST_LIBRARY_DIR", "Boost library dir")
+		build:status("XXX Using boost library dir:", boost_library_dir)
+		table.extend(library_directories, {boost_library_dir})
 	else
 		table.extend(libs, {
 			cxx.Library:new{name = 'boost_system', system = true, kind = 'static'},
