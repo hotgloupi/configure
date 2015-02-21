@@ -47,11 +47,11 @@ end
 -- @param args Arguments forwarded to the compiler constructor
 function M.select_first_compiler(compilers, args)
 	for _, cls in ipairs(compilers) do
-		print("Checking compiler", _, cls.name)
+		args.build:debug("Checking if compiler", cls.name, "is available")
 		for _, binary_name in ipairs(cls.binary_names) do
 			local path = args.build:fs():which(binary_name)
 			if path then
-				print("Found", cls.name, "at", path)
+				args.build:status("Found", cls.lang:upper(), "compiler", cls.name, "at", path)
 				args.binary_path = path
 				return cls:new(args)
 			end
