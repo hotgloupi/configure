@@ -112,7 +112,8 @@ namespace configure {
 			log::debug("Generating the build files in", build.directory());
 			auto& generator = this->_generator(build);
 			generator.generate(build);
-			log::status("Build files generated successfully in", build.directory());
+			log::status("Build files generated successfully in",
+						build.directory(), "(", generator.name(), ")");
 			if (_this->build_mode)
 			{
 				log::status("Starting build in", build.directory());
@@ -167,10 +168,12 @@ namespace configure {
 		std::string generator_name = _this->generator;
 		if (generator_name.empty())
 		{
+			log::debug("No generator specified on command line, searching for one that is available as default");
 			for (auto& gen: generators)
 				if (gen->is_available(build))
 				{
 					generator_name = gen->name();
+					log::debug("Found generator", generator_name, "as default");
 					break;
 				}
 			if (generator_name.empty())
@@ -186,6 +189,8 @@ namespace configure {
 			"Generator to use",
 			generator_name
 		);
+		log::debug("Choosen generator is", generator_name);
+
 
 		boost::algorithm::to_lower(generator_name);
 		for (auto& gen: generators)
