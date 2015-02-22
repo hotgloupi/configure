@@ -124,22 +124,28 @@ end
 
 function Compiler:_link_library(args)
 	local command = {}
-	if args.kind == 'static' then
-		table.extend(command, {
-			self.lib_path, '-nologo',
-			'-OUT:' .. tostring(args.target:path())
-		})
-		table.extend(command, args.objects)
-	elseif args.kind == 'shared' then
-		error("Not implemented")
+	local linker_lib = nil
+	local rule = Rule:new():add_sources(args.objects):add_target(args.target)
+	if args.kind == 'shared' then
+		linker_lib = self.build:target_node(
+			self.static_library_directory / (args.target:path():stem() + ".lib")
+		)
+		rule:add_target(linker_lib)
+		table.extend(command, {self.link_path, '-DLL', '-IMPLIB:' .. tostring(linker_lib:path())})
+	else
+		table.extend(command, {self.lib_path})
+		linker_lib = args.target
 	end
+	table.extend(command, {
+		'-nologo',
+		'-OUT:' .. tostring(args.target:path())
+	})
+	table.extend(command, args.objects)
+
 	self.build:add_rule(
-		Rule:new()
-			:add_sources(args.objects)
-			:add_target(args.target)
-			:add_shell_command(ShellCommand:new(table.unpack(command)))
+		rule:add_shell_command(ShellCommand:new(table.unpack(command)))
 	)
-	return args.target
+	return linker_lib
 end
 
 function Compiler:_library_extension(kind, ext)
