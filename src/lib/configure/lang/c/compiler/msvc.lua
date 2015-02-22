@@ -9,6 +9,13 @@ Compiler.binary_names = {'cl.exe', }
 Compiler.lang = 'c'
 Compiler._language_flag = '-TC'
 
+Compiler.optional_args = table.update(
+	table.update({}, Super.optional_args),
+	{
+		shared_library_directory = Super.optional_args.executable_directory
+	}
+)
+
 function Compiler:new(args)
 	o = Super.new(self, args)
 	o.link_path = o:find_tool("LINK", "Link program", "link.exe")
