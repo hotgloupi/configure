@@ -183,6 +183,8 @@ namespace configure {
 					)
 				);
 		}
+		else
+			build.env().set<std::string>("GENERATOR", generator_name);
 
 		generator_name = build.option<std::string>(
 			"GENERATOR",
