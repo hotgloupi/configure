@@ -202,7 +202,7 @@ namespace configure {
 				return full;
 		}
 #ifdef _WIN32
-		if (!boost::iends_with(program, ".exe"))
+		if (!boost::iends_with(program.string(), ".exe"))
 			return this->which(program.string() + ".exe");
 #endif
 		return boost::none;
