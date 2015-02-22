@@ -16,7 +16,7 @@
 namespace configure { namespace generators {
 
 	std::string Makefile::name() const
-	{ return "makefile"; }
+	{ return "Makefile"; }
 
 	void Makefile::generate(Build& build) const
 	{
