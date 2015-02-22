@@ -72,7 +72,7 @@ namespace configure {
 		NodePtr& virtual_node(std::string const& name);
 
 		// Return a file node with the given absolute `path`.
-		NodePtr& file_node(path_t const& path);
+		NodePtr& file_node(path_t path);
 
 		// Return a file node relative to the project directory with the given
 		// relative `path`.
@@ -83,7 +83,7 @@ namespace configure {
 		NodePtr& target_node(path_t const& path);
 
 		// Return a directory node with the given absolute `path`.
-		NodePtr& directory_node(path_t const& path);
+		NodePtr& directory_node(path_t path);
 
 		void add_rule(Rule const& rule);
 

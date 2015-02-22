@@ -310,8 +310,9 @@ namespace configure {
 		return (_this->virtual_nodes[name] = std::move(node));
 	}
 
-	NodePtr& Build::file_node(path_t const& path)
+	NodePtr& Build::file_node(path_t path)
 	{
+		path.make_preferred();
 		if (!path.is_absolute())
 			throw std::runtime_error("Not an absolute path: " + path.string());
 		auto it = _this->file_nodes.find(path);
@@ -321,8 +322,9 @@ namespace configure {
 		return (_this->file_nodes[path] = std::move(node));
 	}
 
-	NodePtr& Build::directory_node(path_t const& path)
+	NodePtr& Build::directory_node(path_t path)
 	{
+		path.make_preferred();
 		if (!path.is_absolute())
 			throw std::runtime_error("Not an absolute path: " + path.string());
 		auto it = _this->directory_nodes.find(path);
