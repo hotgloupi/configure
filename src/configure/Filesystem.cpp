@@ -4,7 +4,7 @@
 #include "Rule.hpp"
 #include "ShellCommand.hpp"
 #include "error.hpp"
-
+#include "log.hpp"
 //#include <boost/algorithm/string/split.hpp>
 //#include <boost/algorithm/string/classification.hpp>
 
