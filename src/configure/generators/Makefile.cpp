@@ -142,7 +142,7 @@ namespace configure { namespace generators {
 		{
 			// Workaroung a bug in GNU Make, when commands contain a double quote
 			// they are spawned through CreateProcess() as 'sh -c \"COMMAND HERE\"'
-			// when the argument does have any special character other than \
+			// when the argument does have any special character other than slash
 			// and there is only one argument, quotes are left ...
 			auto res = quote<CommandParser::make>(cmd);
 			if (res[0] == '"' && res.back() == '"' )

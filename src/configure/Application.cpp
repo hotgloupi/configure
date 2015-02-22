@@ -168,7 +168,7 @@ namespace configure {
 		std::string generator_name = _this->generator;
 		if (generator_name.empty())
 		{
-			log::debug("No generator specified on command line, searching for one that is available as default");
+			log::debug("No generator specified on command line, searching for a default one");
 			for (auto& gen: generators)
 				if (gen->is_available(build))
 				{
@@ -191,7 +191,7 @@ namespace configure {
 			"Generator to use",
 			generator_name
 		);
-		log::debug("Choosen generator is", generator_name);
+		log::debug("Chosen generator is", generator_name);
 
 
 		boost::algorithm::to_lower(generator_name);
