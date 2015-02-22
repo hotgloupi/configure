@@ -159,8 +159,8 @@ namespace configure {
 				generators.push_back(std::move(g));\
 			} \
 /**/
-			ADD_GENERATOR(generators::Makefile);
 			ADD_GENERATOR(generators::NMakefile);
+			ADD_GENERATOR(generators::Makefile);
 			ADD_GENERATOR(generators::Shell);
 #undef ADD_GENERATOR
 		}
