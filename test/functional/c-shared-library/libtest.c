@@ -1,6 +1,5 @@
 
-
-int libtest_main()
+__declspec(dllexport) int libtest_main()
 {
 	return 0;
 }
