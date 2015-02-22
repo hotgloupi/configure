@@ -58,7 +58,7 @@ ${SRC_DIR}/configure/generators/*.cpp
 "
 
 ls "$BOOST_LIBRARY_DIR"
-ls "c:/Libraries"
+ls "${BOOST_ROOT}"
 
 mkdir temp
 
@@ -79,7 +79,7 @@ link -nologo \
 	-LIBPATH:"${BOOST_LIBRARY_DIR}" \
 	-subsystem:console \
 	-machine:I386 \
-	temp/*.obj
+	temp/*.obj \
 	Shlwapi.lib
 
 rm -rf temp
