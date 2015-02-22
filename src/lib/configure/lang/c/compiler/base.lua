@@ -197,7 +197,7 @@ function M:link_library(args)
 	local standard_library = args.standard_library or self.standard_library
 	local libraries = self:_libraries(args)
 	local directory = Path:new(args.directory or (
-		kind == 'shared'
+		args.kind == 'shared'
 		and self.shared_library_directory
 		or self.static_library_directory
 	))
