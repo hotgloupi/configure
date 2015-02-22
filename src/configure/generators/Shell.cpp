@@ -6,6 +6,7 @@
 #include <configure/Filesystem.hpp>
 #include <configure/Graph.hpp>
 #include <configure/log.hpp>
+#include <configure/quote.hpp>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/graph/topological_sort.hpp>
@@ -48,7 +49,7 @@ namespace configure { namespace generators {
 				seen_commands.insert(cmd_ptr);
 				for (auto const& shell_command: cmd_ptr->shell_commands())
 				{
-					out <<  boost::join(shell_command.dump(), " ") << std::endl;
+					out <<  quote<CommandParser::unix_shell>(shell_command.dump()) << std::endl;
 				}
 			}
 		}
