@@ -80,6 +80,7 @@ link -nologo \
 	-subsystem:console \
 	-machine:I386 \
 	temp/*.obj
+	Shlwapi.lib
 
 rm -rf temp
 

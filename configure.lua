@@ -96,6 +96,9 @@ function configure(build)
 		local boost_library_dir = build:string_option("BOOST_LIBRARY_DIR", "Boost library dir")
 		build:status("XXX Using boost library dir:", boost_library_dir)
 		table.extend(library_directories, {boost_library_dir})
+		table.extend(libs, {
+			cxx.Library:new{name = 'Shlwapi', system = true, kind = 'static'},
+		})
 	else
 		table.extend(libs, {
 			cxx.Library:new{name = 'boost_system', system = true, kind = 'static'},

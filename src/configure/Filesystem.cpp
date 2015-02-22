@@ -17,6 +17,7 @@
 #include <cstdlib>
 #ifdef _WIN32
 # include <windows.h>
+# include <Shlwapi.h>
 #else
 # include <glob.h>
 #endif
@@ -68,6 +69,7 @@ namespace configure {
 			if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 				continue;
 # ifdef UNICODE
+#error "NOPE "
 			int size = ::WideCharToMultiByte(
 				CP_UTF8,
 				0,
@@ -94,10 +96,15 @@ namespace configure {
 			else
 				throw std::runtime_error("Couldn't encode a filename to UTF8");
 # else // !UNICODE
-			res.push_back(
-				_build.source_node(base_dir / &find_data.cFileName[0])
-			);
+			if (!PathMatchSpec(find_data.cFileName, pattern.c_str()))
+				log::debug("Discarding", &find_data.cFileName[0]);
+			else
+				res.push_back(
+					_build.source_node(base_dir / &find_data.cFileName[0])
+				);
 # endif
+			log::debug("Found", res.back()->path(), "that matches", pattern);
+
 		} while (::FindNextFile(handle, &find_data));
 #else // !_WIN32
 		glob_t glob_state;
