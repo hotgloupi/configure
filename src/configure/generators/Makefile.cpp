@@ -137,6 +137,22 @@ namespace configure { namespace generators {
 		    std::ostream& out,
 		    std::vector<std::string> const& cmd) const
 	{
+#ifdef _WIN32
+		if (cmd.size() == 1)
+		{
+			// Workaroung a bug in GNU Make, when commands contain a double quote
+			// they are spawned through CreateProcess() as 'sh -c \"COMMAND HERE\"'
+			// when the argument does have any special character other than \
+			// and there is only one argument, quotes are left ...
+			auto res = quote<CommandParser::make>(cmd);
+			if (res[0] == '"' && res.back() == '"' )
+			{
+				res = res.substr(1, res.size() - 2);
+			}
+			out << res;
+			return;
+		}
+#endif
 		out << quote<CommandParser::make>(cmd);
 	}
 
