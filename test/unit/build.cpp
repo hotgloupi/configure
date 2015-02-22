@@ -1,6 +1,7 @@
 #include "tools/TemporaryProject.hpp"
 
 #include <boost/optional.hpp>
+#include <boost/optional/optional_io.hpp>
 
 using namespace configure;
 
