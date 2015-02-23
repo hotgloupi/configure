@@ -1,5 +1,6 @@
 #if defined(__GNUC__) || defined(__clang__)
-# define DLL_PUBLIC __attribute__ ((dllexport))
+# define DLL_PUBLIC __attribute__ ((visibility ("default")))
+//# define DLL_PUBLIC __attribute__ ((dllexport))
 #else
 # define DLL_PUBLIC __declspec(dllexport)
 #endif
