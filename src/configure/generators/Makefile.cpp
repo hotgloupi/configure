@@ -50,13 +50,13 @@ namespace configure { namespace generators {
 					all.insert(node.get());
 			}
 
-			// Add outputs of the all virtual node
-			for (auto in_edge_range = boost::in_edges(build.virtual_node("all")->index, g);
-			     in_edge_range.first != in_edge_range.second;
-			     ++in_edge_range.first)
+			// Add outputs of the root virtual node
+			for (auto out_edge_range = boost::out_edges(build.root_node()->index, g);
+			     out_edge_range.first != out_edge_range.second;
+			     ++out_edge_range.first)
 			{
 				all.insert(
-					bg.node(boost::source(*in_edge_range.first, g)).get()
+					bg.node(boost::target(*out_edge_range.first, g)).get()
 				);
 			}
 
