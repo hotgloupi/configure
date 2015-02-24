@@ -35,6 +35,7 @@ namespace configure {
 
 		bool has(std::string key) const;
 		Kind kind(std::string key) const;
+		std::string as_string(std::string key) const;
 
 		// Returns an existing value of type T or throws.
 		template<typename T>

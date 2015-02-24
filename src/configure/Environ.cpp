@@ -75,6 +75,13 @@ namespace configure {
 		}
 	}
 
+	std::string Environ::as_string(std::string key) const
+	{
+		std::stringstream ss;
+		ss << _this->values.at(normalize(std::move(key)));
+		return ss.str();
+	}
+
 	template<typename T>
 	typename Environ::const_ref<T>::type
 	Environ::get(std::string key) const
