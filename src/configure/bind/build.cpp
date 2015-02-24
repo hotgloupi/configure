@@ -70,6 +70,10 @@ namespace configure {
 			// @function Build:directory
 			.def("directory", &Build::directory)
 
+			/// Build root node
+			// @function Build:root_node
+			.def("root_node", &Build::root_node)
+
 			/// Source @{Node} associated to a @{Path}.
 			// @tparam Path path relative path to a source file
 			// @function Build:source_node
