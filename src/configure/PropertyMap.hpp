@@ -1,5 +1,7 @@
 #pragma once
 
+#include "fwd.hpp"
+
 #include <memory>
 
 namespace configure {
@@ -13,6 +15,10 @@ namespace configure {
 	public:
 		PropertyMap();
 		~PropertyMap();
+
+	public:
+		Environ const& values() const;
+		Environ& values();
 	};
 
 }

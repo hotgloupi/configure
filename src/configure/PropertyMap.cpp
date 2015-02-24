@@ -6,7 +6,7 @@ namespace configure {
 
 	struct PropertyMap::Impl
 	{
-		Environ map;
+		Environ values;
 	};
 
 	PropertyMap::PropertyMap()
@@ -15,5 +15,11 @@ namespace configure {
 
 	PropertyMap::~PropertyMap()
 	{}
+
+	Environ& PropertyMap::values()
+	{ return _this->values; }
+
+	Environ const& PropertyMap::values() const
+	{ return _this->values; }
 
 }
