@@ -3,6 +3,7 @@
 #include <configure/Build.hpp>
 #include <configure/Filesystem.hpp>
 #include <configure/quote.hpp>
+#include <configure/Node.hpp>
 
 namespace configure { namespace generators {
 
@@ -29,5 +30,7 @@ namespace configure { namespace generators {
 			target.empty() ? "all" : target
 		};
 	}
+
+	bool NMakefile::use_relative_path() const { return false; }
 
 }}

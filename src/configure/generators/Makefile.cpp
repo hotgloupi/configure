@@ -18,8 +18,26 @@ namespace configure { namespace generators {
 	std::string Makefile::name() const
 	{ return "Makefile"; }
 
+	static std::string relative_node_path(Build& b, Node& n)
+	{ return n.relative_path(b.directory()).string(); }
+
+	static std::string absolute_node_path(Build&, Node& n)
+	{ return n.path().string(); }
+
 	void Makefile::generate(Build& build) const
 	{
+		bool use_relpath = build.option<bool>(
+		    "GENERATOR_" + this->name() + "_USE_RELATIVE_PATH",
+		    this->name() + " generator uses relative path",
+		    this->use_relative_path()
+		);
+
+		std::string (*node_path)(Build&, Node&);
+		if (use_relpath)
+			node_path = &relative_node_path;
+		else
+			node_path = &absolute_node_path;
+
 		std::ofstream out((build.directory() / "Makefile").string());
 		out << "# Generated makefile" << std::endl;
 		BuildGraph const& bg = build.build_graph();
@@ -72,7 +90,7 @@ namespace configure { namespace generators {
 				for (auto& node: all)
 				{
 					if (node->is_file())
-						out << ' ' << this->node_path(build, *node);
+						out << ' ' << node_path(build, *node);
 					else if (node->is_virtual() && !node->name().empty())
 						out << ' ' << node->name();
 				}
@@ -95,14 +113,14 @@ namespace configure { namespace generators {
 			if (node->is_virtual())
 				out << node->name() << ':';
 			else
-				out << this->node_path(build, *node) << ':';
+				out << node_path(build, *node) << ':';
 
 			for (GraphTraits::in_edge_iterator i = in_edge_range.first;
 			     i != in_edge_range.second; ++i)
 			{
 				auto node = bg.node(boost::source(*i, g)).get();
 				if (node->is_file())
-					out << ' ' << this->node_path(build, *node);
+					out << ' ' << node_path(build, *node);
 				else if (node->is_virtual())
 					out << ' ' << node->name();
 			}
@@ -126,11 +144,6 @@ namespace configure { namespace generators {
 			out << std::endl;
 		}
 
-	}
-
-	std::string Makefile::node_path(Build&, Node& node) const
-	{
-		return node.path().string();
 	}
 
 	void Makefile::dump_command(
@@ -168,5 +181,7 @@ namespace configure { namespace generators {
 			target.empty() ? "all" : target
 		};
 	}
+
+	bool Makefile::use_relative_path() const { return true; }
 }}
 
