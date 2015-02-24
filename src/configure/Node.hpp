@@ -2,6 +2,7 @@
 
 #include "fwd.hpp"
 #include "Graph.hpp"
+#include "Environ.hpp"
 
 #include <boost/filesystem/path.hpp>
 
@@ -35,11 +36,37 @@ namespace configure {
 
 		std::string string() const;
 
+		PropertyMap& properties() const;
+
+		bool has_property(std::string key) const;
+
+		template<typename T>
+		typename Environ::const_ref<T>::type property(std::string key) const;
+
+		// Returns an existing value of type T or the default value.
+		template<typename T>
+		typename Environ::const_ref<T>::type
+		property(std::string key,
+		         typename Environ::const_ref<T>::type default_value) const;
+
+		// Assign key to value.
+		template<typename T>
+		typename Environ::const_ref<T>::type
+		set_property(std::string key, T value);
+
+		// Assign key to value not already set, returns associated value.
+		template<typename T>
+		typename Environ::const_ref<T>::type
+		set_property_default(std::string key,
+		                     typename Environ::const_ref<T>::type default_value);
+
 	public:
 		virtual Kind kind() const = 0;
 		virtual std::string const& name() const;
 		virtual boost::filesystem::path const& path() const;
-		virtual boost::filesystem::path relative_path(boost::filesystem::path const& start) const;
+		virtual
+		boost::filesystem::path
+		relative_path(boost::filesystem::path const& start) const;
 	};
 
 	// A virtual node is just a name

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "fwd.hpp"
+
 #include "Node.hpp"
 #include "DependencyLink.hpp"
 
@@ -43,6 +45,10 @@ namespace configure {
 
 		// Link by index.
 		DependencyLink const& link(DependencyLink::index_type idx) const;
+
+		// Node properties
+		PropertyMap& properties(Node const& node) const;
+
 	private:
 		Node::index_type _add_vertex();
 		DependencyLink::index_type _add_edge(Node const& source, Node const& target);

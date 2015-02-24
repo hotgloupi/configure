@@ -1,5 +1,6 @@
 #include "BuildGraph.hpp"
 #include "Graph.hpp"
+#include "PropertyMap.hpp"
 
 #include <boost/assert.hpp>
 
@@ -14,12 +15,14 @@ namespace configure {
 		typedef boost::property_map<Graph, boost::vertex_index_t>::type IndexMap;
 		typedef std::unordered_map<Node::index_type, NodePtr> NodeMap;
 		typedef std::map<DependencyLink::index_type, DependencyLink> LinkMap;
+		typedef std::unordered_map<Node::index_type, PropertyMap> NodeProperties;
 
 	public:
 		Graph    graph;
 		IndexMap index_map;
 		NodeMap  node_map;
 		LinkMap link_map;
+		NodeProperties node_properties;
 
 	public:
 		Impl()
@@ -77,10 +80,15 @@ namespace configure {
 		return res.first;
 	}
 
+	PropertyMap& BuildGraph::properties(Node const& node) const
+	{ return _this->node_properties[node.index]; }
+
 	void BuildGraph::_save(NodePtr& node)
 	{
 		BOOST_ASSERT(_this->node_map.find(node->index) == _this->node_map.end());
 		_this->node_map[node->index] = node;
 	}
+
+
 
 }
