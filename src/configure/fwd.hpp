@@ -13,6 +13,7 @@ namespace configure {
 	class Generator;
 	class Node;
 	class Platform;
+	class PropertyMap;
 	class Rule;
 	class ShellArg;
 	class ShellCommand;
