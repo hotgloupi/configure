@@ -147,7 +147,7 @@ function M:link_executable(args)
 	local standard_library = args.standard_library or self.standard_library
 	local libraries = self:_libraries(args)
 	local directory = Path:new(args.directory or self.executable_directory)
-	return self:_link_executable{
+	local target = self:_link_executable{
 		objects = self:_build_objects(args),
 		target = self.build:target_node(
 			(directory / args.name) + self:_executable_extension(args.extension)
@@ -163,6 +163,8 @@ function M:link_executable(args)
 		warnings = self:_warnings(args),
 		optimization = self:_optimization(args),
 	}
+	self.build:add_rule(Rule:new():add_target(target))
+	return target
 end
 
 --- Link a static library.
@@ -220,6 +222,7 @@ function M:link_library(args)
 		warnings = self:_warnings(args),
 		optimization = self:_optimization(args),
 	}
+	self.build:add_rule(Rule:new():add_target(target))
 	return self.Library:new{
 		name = args.name,
 		system = false,
