@@ -138,6 +138,7 @@ namespace configure {
 	INSTANCIATE(fs::path);
 	INSTANCIATE(bool);
 	INSTANCIATE(int);
+#undef INSTANCIATE
 
 	void Environ::load(boost::filesystem::path const& path)
 	{
