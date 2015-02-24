@@ -194,6 +194,8 @@ namespace configure {
 	Environ& Build::env()
 	{ return _this->env; }
 
+	std::map<std::string, std::string> const& Build::options() const
+	{ return _this->options; }
 
 	template<typename T>
 	boost::optional<T> Build::option(std::string name,
@@ -450,6 +452,19 @@ namespace configure {
 			writer,
 			writer
 		);
+	}
+
+	void Build::dump_options(std::ostream& out)
+	{
+		for (auto& p: this->options())
+		{
+			out << "  - " << p.first;
+			if (this->env().has(p.first))
+				out << " = " << this->env().as_string(p.first);
+			else
+				out << " not set";
+			out << " (" << p.second << ')' << std::endl;
+		}
 	}
 
 }

@@ -66,6 +66,7 @@ namespace configure {
 		       std::string const& description,
 		       typename Environ::const_ref<T>::type default_value);
 
+		std::map<std::string, std::string> const& options() const;
 
 	public:
 		// Return a virtual node with the given `name`.
@@ -101,6 +102,7 @@ namespace configure {
 
 	public:
 		void dump_graphviz(std::ostream& out);
+		void dump_options(std::ostream& out);
 	};
 
 }

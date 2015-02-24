@@ -52,6 +52,7 @@ namespace configure {
 		path_t                             project_directory;
 		std::map<std::string, std::string> build_variables;
 		bool                               dump_graph_mode;
+		bool                               dump_options;
 		std::string                        generator;
 		bool                               build_mode;
 		std::string                        build_target;
@@ -63,6 +64,7 @@ namespace configure {
 			, project_directory()
 			, build_variables()
 			, dump_graph_mode(false)
+			, dump_options(false)
 			, generator()
 			, build_mode(false)
 			, build_target()
@@ -114,6 +116,11 @@ namespace configure {
 			generator.generate(build);
 			log::status("Build files generated successfully in",
 						build.directory(), "(", generator.name(), ")");
+			if (_this->dump_options)
+			{
+				std::cout << "Available options:\n";
+				build.dump_options(std::cout);
+			}
 			if (_this->build_mode)
 			{
 				log::status("Starting build in", build.directory());
@@ -239,6 +246,9 @@ namespace configure {
 			<< "  --dump-graph" << "          "
 			<< "Dump the build graph\n"
 
+			<< "  --dump-options" << "        "
+			<< "Dump all options\n"
+
 			<< "  -d, --debug" << "           "
 			<< "Enable debug output\n"
 
@@ -319,6 +329,10 @@ namespace configure {
 			else if (arg == "--dump-graph")
 			{
 				_this->dump_graph_mode = true;
+			}
+			else if (arg == "--dump-options")
+			{
+				_this->dump_options = true;
 			}
 			else if (arg == "-G" || arg == "--generator")
 			{
