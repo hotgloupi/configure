@@ -1,0 +1,3 @@
+[submodule "boost-process"]
+	path = boost-process
+	url = https://github.com/hotgloupi/boost-process.git
