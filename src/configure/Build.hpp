@@ -101,8 +101,10 @@ namespace configure {
 		static path_t find_project_file(path_t project_directory);
 
 	public:
-		void dump_graphviz(std::ostream& out);
-		void dump_options(std::ostream& out);
+		void dump_graphviz(std::ostream& out) const;
+		void dump_options(std::ostream& out) const;
+		void dump_env(std::ostream& out) const;
+		void dump_targets(std::ostream& out) const;
 	};
 
 }

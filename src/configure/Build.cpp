@@ -406,13 +406,13 @@ namespace configure {
 	Platform& Build::target()
 	{ return _this->target_platform; }
 
-	void Build::dump_graphviz(std::ostream& out)
+	void Build::dump_graphviz(std::ostream& out) const
 	{
 		struct Writer {
-			Build& _b;
-			BuildGraph& _g;
+			Build const& _b;
+			BuildGraph const& _g;
 
-			Writer(Build& b, BuildGraph& g) : _b(b), _g(g) {}
+			Writer(Build const& b, BuildGraph const& g) : _b(b), _g(g) {}
 
 			void operator ()(std::ostream& out, Node::index_type idx) const
 			{
@@ -454,16 +454,35 @@ namespace configure {
 		);
 	}
 
-	void Build::dump_options(std::ostream& out)
+	void Build::dump_options(std::ostream& out) const
 	{
 		for (auto& p: this->options())
 		{
 			out << "  - " << p.first;
-			if (this->env().has(p.first))
-				out << " = " << this->env().as_string(p.first);
+			if (_this->env.has(p.first))
+				out << " = " << _this->env.as_string(p.first);
 			else
 				out << " not set";
 			out << " (" << p.second << ')' << std::endl;
+		}
+	}
+
+	void Build::dump_env(std::ostream& out) const
+	{
+		for (auto& key: _this->env.keys())
+		{
+			out << "  - " << key << " = "
+			    << _this->env.as_string(key) << std::endl;
+		}
+	}
+
+	void Build::dump_targets(std::ostream& out) const
+	{
+		for (auto& p: _this->file_nodes)
+		{
+			if (starts_with(p.first, this->directory()))
+				out << "  - " << p.second->relative_path(this->directory())
+				    << std::endl;
 		}
 	}
 

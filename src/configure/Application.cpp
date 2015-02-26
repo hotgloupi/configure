@@ -53,6 +53,8 @@ namespace configure {
 		std::map<std::string, std::string> build_variables;
 		bool                               dump_graph_mode;
 		bool                               dump_options;
+		bool                               dump_env;
+		bool                               dump_targets;
 		std::string                        generator;
 		bool                               build_mode;
 		std::string                        build_target;
@@ -65,6 +67,8 @@ namespace configure {
 			, build_variables()
 			, dump_graph_mode(false)
 			, dump_options(false)
+			, dump_env(false)
+			, dump_targets(false)
 			, generator()
 			, build_mode(false)
 			, build_target()
@@ -120,6 +124,16 @@ namespace configure {
 			{
 				std::cout << "Available options:\n";
 				build.dump_options(std::cout);
+			}
+			if (_this->dump_env)
+			{
+				std::cout << "Environment variables:\n";
+				build.dump_env(std::cout);
+			}
+			if (_this->dump_targets)
+			{
+				std::cout << "Build targets:\n";
+				build.dump_targets(std::cout);
 			}
 			if (_this->build_mode)
 			{
@@ -249,6 +263,12 @@ namespace configure {
 			<< "  --dump-options" << "        "
 			<< "Dump all options\n"
 
+			<< "  --dump-env" << "            "
+			<< "Dump all environment variables\n"
+
+			<< "  --dump-targets" << "        "
+			<< "Dump all targets\n"
+
 			<< "  -d, --debug" << "           "
 			<< "Enable debug output\n"
 
@@ -333,6 +353,14 @@ namespace configure {
 			else if (arg == "--dump-options")
 			{
 				_this->dump_options = true;
+			}
+			else if (arg == "--dump-env")
+			{
+				_this->dump_env = true;
+			}
+			else if (arg == "--dump-targets")
+			{
+				_this->dump_targets = true;
 			}
 			else if (arg == "-G" || arg == "--generator")
 			{
