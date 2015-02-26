@@ -281,8 +281,11 @@ namespace configure {
 			<< "  -h, --help" << "            "
 			<< "Show this help and exit\n"
 
-			<< "  -b,--build[=target]" << "   "
+			<< "  -b,--build" << "            "
 			<< "Start a build in specified directories\n"
+
+			<< "  -t,--target" << "           "
+			<< "Specify the target to build\n"
 
 		;
 	}
@@ -314,7 +317,7 @@ namespace configure {
 		}
 
 		bool has_project = false;
-		enum class NextArg { project, generator, other };
+		enum class NextArg { project, generator, target, other };
 		NextArg next_arg = NextArg::other;
 		for (auto const& arg: _this->args)
 		{
@@ -340,6 +343,11 @@ namespace configure {
 			else if (next_arg == NextArg::generator)
 			{
 				_this->generator = arg;
+				next_arg = NextArg::other;
+			}
+			else if (next_arg == NextArg::target)
+			{
+				_this->build_target = arg;
 				next_arg = NextArg::other;
 			}
 			else if (arg == "-p" || arg == "--project")
@@ -374,14 +382,11 @@ namespace configure {
 			{
 				log::level() = log::Level::verbose;
 			}
-			else if (boost::starts_with(arg, "--build=") ||
-			         boost::starts_with(arg, "-b="))
+			else if (arg == "-t" || arg == "--target")
 			{
-				auto it = arg.find('=');
-				_this->build_target = arg.substr(it + 1, std::string::npos);
-				_this->build_mode = true;
+				next_arg = NextArg::target;
 			}
-			else if (arg == "--build" || arg == "-b")
+			else if (arg == "-b" || arg == "--build")
 			{
 				_this->build_mode = true;
 			}
