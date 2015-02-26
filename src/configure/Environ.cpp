@@ -161,6 +161,15 @@ namespace configure {
 		ar << _this->values;
 	}
 
+	std::vector<std::string> Environ::keys() const
+	{
+		std::vector<std::string> res;
+		res.reserve(_this->values.size());
+		for (auto& p: _this->values)
+			res.push_back(p.first);
+		return res;
+	}
+
 	std::string Environ::normalize(std::string key)
 	{
 		if (key.empty())

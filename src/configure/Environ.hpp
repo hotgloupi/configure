@@ -58,6 +58,7 @@ namespace configure {
 		void load(boost::filesystem::path const& path);
 		void save(boost::filesystem::path const& path) const;
 
+		std::vector<std::string> keys() const;
 	public:
 		// Upper case and replace dashes by underscores.
 		static std::string normalize(std::string key);
