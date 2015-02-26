@@ -110,7 +110,7 @@ namespace configure {
 	{
 		Rule& self = lua::Converter<Rule>::extract(state, 1);
 		if (ShellCommand* n = lua::Converter<ShellCommand>::extract_ptr(state, 2))
-			self.add_shell_command(*n);
+			self.add_shell_command(std::move(*n));
 		else
 			throw std::runtime_error("Cannot extract a shell command");
 		lua_pushvalue(state, 1);
