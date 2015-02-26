@@ -1,12 +1,257 @@
 #include "State.hpp"
 #include "traceback.hpp"
-
+#define BOOST_POOL_INSTRUMENT
 #include <boost/algorithm/string.hpp>
+#include <boost/pool/pool.hpp>
+#include <boost/assert.hpp>
 
 #include <iostream>
 #include <map>
 
 namespace configure { namespace lua {
+
+	struct State::LuaAllocator
+	{
+		typedef std::size_t size_type;
+		typedef std::ptrdiff_t difference_type;
+		//static size_t count;
+
+		static char * malloc(const size_type bytes)
+		{
+			//count += 1;
+			return reinterpret_cast<char *>(std::malloc(bytes));
+		}
+
+		static void free(char * const block)
+		{
+			std::free(block);
+		}
+
+	};
+
+	//size_t State::LuaAllocator::count = 0;
+
+	namespace {
+
+		static void *lua_naive_allocator(void *payload,
+		                                 void *ptr,
+		                                 size_t original_size,
+		                                 size_t new_size)
+		{
+			if (new_size == 0)
+			{
+				std::free(ptr);
+				ptr = nullptr;
+			}
+			else if (original_size == 0 || ptr == nullptr)
+			{
+				ptr = std::malloc(new_size);
+			}
+			else if (new_size > original_size)
+			{
+				ptr = std::realloc(ptr, new_size);
+			}
+			return ptr;
+		}
+
+		static void *lua_allocator(void *payload,
+		                          void *ptr,
+		                          size_t original_size,
+		                          size_t new_size)
+		{
+			// The type of the memory-allocation function used by Lua states.
+			// The allocator function must provide a functionality similar to
+			// realloc, but not exactly the same.
+			// Its arguments are:
+			//   - payload: an opaque pointer passed to lua_newstate;
+			//   - ptr: a pointer to the block being allocated/reallocated/freed;
+			//   - original_size: the original size of the block;
+			//   - new_size: the new size of the block.
+			//
+			// ptr is NULL if and only if original_size is zero.
+			//
+			// When new_size is zero, the allocator must return NULL;
+			//
+			// if original_size is not zero, it should free the block pointed
+			// to by ptr.
+			//
+			// When new_size is not zero, the allocator returns NULL if and
+			// only if it cannot fill the request.
+			//
+			// When new_size is not zero and original_size is zero, the
+			// allocator should behave like malloc.
+			//
+			// When new_size and original_size are not zero, the allocator behaves
+			// like realloc.
+			//
+			// Lua assumes that the allocator never fails when original_size >= new_size.
+
+			auto& pool = *static_cast<State::Pool*>(payload);
+
+
+			//struct Stats {
+			//	std::map<size_t, size_t> raw_mallocs;
+			//	std::map<size_t, size_t> pool_mallocs;
+			//	~Stats() {
+			//		size_t sum = 0;
+
+			//		for (auto& p: raw_mallocs)
+			//			sum += p.second;
+
+			//		std::cout << "Raw mallocs: " << sum << "\n";
+			//		for (auto& p: raw_mallocs)
+			//			std::cout << p.first << '\t' << p.second << " times\n";
+
+			//		sum = 0;
+			//		for (auto& p: pool_mallocs)
+			//			sum += p.second;
+			//		std::cout << "Pool mallocs: " << sum << "\n";
+			//		for (auto& p: pool_mallocs)
+			//			std::cout << p.first << '\t' << p.second << " times\n";
+
+			//		std::cout << "Pool chunks skipped realloc'd: " << skipped_realloc << std::endl;
+			//		std::cout << "Pool mallocs: " << State::LuaAllocator::count << std::endl;
+			//		//std::cout << "Raw mallocs: " << raw_mallocs << std::endl;
+			//		//std::cout << "Pool mallocs: " << pool_mallocs << std::endl;
+			//	}
+			//	size_t skipped_realloc = 0;
+			//};
+			//static Stats stats;
+
+
+			//struct Tracker
+			//{
+			//	std::map<void*, size_t> pointers;
+			//	~Tracker()
+			//	{
+			//		for (auto& p: pointers)
+			//			std::cout << "Leak of " << p.first << " of " << p.second << " bytes\n";
+			//	}
+
+			//	void remove(void* ptr, size_t size)
+			//	{
+			//		assert(pointers.at(ptr) == size);
+			//		pointers.erase(ptr);
+			//	}
+			//	void add(void* ptr, size_t size)
+			//	{
+			//		assert(pointers.count(ptr) == 0);
+			//		pointers[ptr] = size;
+			//	}
+			//	void move(void* old, size_t osize, void* new_, size_t nsize)
+			//	{
+			//		this->remove(old, osize);
+			//		this->add(new_, nsize);
+			//	}
+			//};
+			//static Tracker tracker;
+
+			size_t chunk_size = pool.get_requested_size();
+			if (new_size == 0)
+			{
+				// pool does not check for null pointer
+				if (ptr != nullptr)
+				{
+					if (original_size > chunk_size)
+						std::free(ptr);
+					else
+						pool.free(ptr);
+					//tracker.remove(ptr, original_size);
+					ptr = nullptr;
+				}
+			}
+			else if (original_size == 0 || ptr == nullptr)
+			{
+				assert(ptr == nullptr);
+				if (new_size > chunk_size)
+				{
+					ptr = std::malloc(new_size);
+					//stats.raw_mallocs[new_size] += 1;
+				}
+				else
+				{
+					ptr = pool.malloc();
+					//stats.pool_mallocs[new_size] += 1;
+				}
+				//tracker.add(ptr, new_size);
+			}
+			else if (new_size > original_size)
+			{
+				if (original_size > chunk_size)
+				{
+					// Memory wasn't handled by the memory pool
+					void* new_ptr = std::realloc(ptr, new_size);
+					if (new_ptr == nullptr)
+					{
+						std::free(ptr);
+						return nullptr;
+					}
+					//tracker.move(ptr, original_size, new_ptr, new_size);
+					ptr = new_ptr;
+					//stats.raw_mallocs[new_size] += 1;
+				}
+				else if (new_size > chunk_size)
+				{
+					// original chunk was handled by the bool
+					// the new one will be handled by malloc
+					void* new_ptr = std::malloc(new_size);
+					std::memcpy(new_ptr, ptr, original_size);
+					pool.free(ptr);
+					//tracker.move(ptr, original_size, new_ptr, new_size);
+					ptr = new_ptr;
+					//stats.raw_mallocs[new_size] += 1;
+				}
+				else
+				{
+					//  The new size fits in a chunk
+					// tracker.move(ptr, original_size, ptr, new_size);
+				}
+			}
+			else
+			{
+				assert(new_size <= original_size && ptr != nullptr);
+				if (original_size > chunk_size && new_size <= chunk_size)
+				{
+					// We must move that chunk to the pool
+					void* new_ptr = pool.malloc();
+					std::memcpy(new_ptr, ptr, new_size);
+					std::free(ptr);
+					//tracker.move(ptr, original_size, new_ptr, new_size);
+					ptr = new_ptr;
+				}
+				//else
+				//	tracker.move(ptr, original_size, ptr, new_size);
+			}
+			return ptr;
+		}
+
+		static int lua_panic(lua_State* state)
+		{
+			CONFIGURE_THROW(error::LuaError(lua_tostring(state, -1)));
+		}
+
+	}
+
+	State::State(bool with_libs)
+		: _state(nullptr)
+		, _owner(true)
+		, _error_handler(0)
+		, _pool(new Pool(64, 1024))
+	{
+		if (getenv("CONFIGURE_USE_NAIVE_ALLOCATOR") != nullptr)
+			_state = lua_newstate(&lua_naive_allocator, _pool.get());
+		else
+			_state = lua_newstate(&lua_allocator, _pool.get());
+		if (_state == nullptr)
+			throw std::bad_alloc();
+		lua_atpanic(_state, &lua_panic);
+		if (with_libs)
+		{
+			luaL_openlibs(_state);
+			lua_register(_state, "print", &_print_override);
+			_register_extensions();
+		}
+	}
 
 	State::~State()
 	{

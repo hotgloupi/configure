@@ -9,40 +9,28 @@
 #include <configure/error.hpp>
 
 #include <boost/filesystem/path.hpp>
+#include <boost/pool/poolfwd.hpp>
 
 namespace configure { namespace lua {
 
 	class State
 	{
+	public:
+		struct LuaAllocator;
+		typedef boost::pool<LuaAllocator> Pool;
+
 	private:
 		lua_State* _state;
 		bool       _owner;
 		int        _error_handler;
+		std::unique_ptr<Pool> _pool;
 		//int        _error_handler_ref;
 
 	public:
 		inline lua_State* ptr() const { return _state; }
 
 	public:
-		explicit State(bool with_libs = true)
-			: _state(luaL_newstate())
-			, _owner(true)
-			, _error_handler(0)
-		{
-			if (with_libs)
-			{
-				luaL_openlibs(_state);
-				lua_register(_state, "print", &_print_override);
-				_register_extensions();
-			}
-		}
-
-		//explicit State(lua_State* other)
-		//	: _state(other)
-		//	, _owner(false)
-		//	, _error_handler(0)
-		//{}
-
+		explicit State(bool with_libs = true);
 		~State();
 
 	private:
