@@ -23,4 +23,4 @@ before_build:
 build_script:
     - configure.exe build BOOST_INCLUDE_DIR="c:/Libraries/boost" BOOST_LIBRARY_DIR="c:/Libraries/boost/stage/lib" -d
     - cat build/Makefile
-    - configure.exe build --build=check -d
+    - configure.exe build --build --target check -d

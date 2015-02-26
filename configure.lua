@@ -176,7 +176,7 @@ function configure(build)
 					:add_shell_command(ShellCommand:new(
 						configure_exe,
 						'-p', dir, build:directory() / "test/functional" / test_name,
-						'--build=check', '-d'
+						'--build', '--target', 'check', '-d'
 					))
 					:add_source(configure_exe)
 			)
