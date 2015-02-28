@@ -38,19 +38,6 @@ namespace std {
 
 namespace configure {
 
-	static bool starts_with(fs::path const& path, fs::path const& prefix)
-	{
-		auto it = path.begin(), end = path.end();
-		for (auto&& p: prefix)
-		{
-			if (it == end) return false;
-			if (p == ".") continue;
-			if (*it != p) return false;
-			++it;
-		}
-		return true;
-	}
-
 	struct Build::Impl
 	{
 		path_t                                   root_directory;

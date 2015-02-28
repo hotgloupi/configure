@@ -2,6 +2,7 @@
 
 #include "error.hpp"
 #include "log.hpp"
+#include "utils/path.hpp"
 
 #include <boost/filesystem/path.hpp>
 #include <boost/variant.hpp>
@@ -16,26 +17,6 @@
 #include <fstream>
 
 namespace fs = boost::filesystem;
-
-namespace boost { namespace serialization {
-
-	template<typename Archive>
-	void save(Archive& ar, fs::path const& path, unsigned int const)
-	{
-		ar & path.string();
-	}
-
-	template<typename Archive>
-	void load(Archive& ar, fs::path& path, unsigned int const)
-	{
-		std::string s;
-		ar & s;
-		path = s;
-	}
-}}
-
-BOOST_SERIALIZATION_SPLIT_FREE(fs::path);
-
 
 namespace configure {
 
