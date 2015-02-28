@@ -21,7 +21,7 @@ namespace configure {
 	std::string error_string(std::exception_ptr const& e, unsigned int indent)
 	{
 		using boost::get_error_info;
-		std::string padding(' ', indent);
+		std::string padding(indent, ' ');
 		std::string res = padding + what(e) + "\n";
 		try { std::rethrow_exception(e); }
 		catch (boost::exception const& e) {
