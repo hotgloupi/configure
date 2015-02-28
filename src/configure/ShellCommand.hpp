@@ -10,15 +10,27 @@
 
 namespace configure {
 
+	class ShellFormatter
+	{
+	public:
+		virtual ~ShellFormatter();
+
+	public:
+		virtual std::string operator ()(std::string value) const;
+		virtual std::string operator ()(boost::filesystem::path const& value) const;
+		virtual std::string operator ()(Node const& value) const;
+	};
+
 	// Dynamic shell argument
 	class ShellArg
 	{
 	public:
 		virtual ~ShellArg();
 		virtual
-		std::string string(Build const& build,
-		                   std::vector<NodePtr> const& sources,
-		                   std::vector<NodePtr> const& targets) const = 0;
+		std::vector<std::string> string(Build const& build,
+		                                DependencyLink const& link,
+		                                ShellFormatter const& formatter) const = 0;
+		virtual std::string dump() const;
 	};
 
 	// Store one shell command.
@@ -85,8 +97,12 @@ namespace configure {
 		// Generate a shell command.
 		std::vector<std::string>
 		string(Build const& build,
-		       std::vector<NodePtr> const& sources,
-		       std::vector<NodePtr> const& targets) const;
+		       DependencyLink const& link,
+		       ShellFormatter const& formatter) const;
+
+		std::vector<std::string>
+		string(Build const& build,
+		       DependencyLink const& link) const;
 
 		// Dump command without any build context (for debugging purposes).
 		std::vector<std::string> dump() const;

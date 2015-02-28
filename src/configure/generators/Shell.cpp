@@ -19,7 +19,8 @@ namespace configure { namespace generators {
 	std::string Shell::name() const
 	{ return "shell"; }
 
-	void Shell::generate(Build& build) const
+	void Shell::generate(Build& build,
+	                     boost::filesystem::path const&) const
 	{
 		std::ofstream out((build.directory() / "build.sh").string());
 		out << "#!/bin/sh" << std::endl;
@@ -43,13 +44,14 @@ namespace configure { namespace generators {
 			std::unordered_set<Command const*> seen_commands;
 			for (; it != end; ++it)
 			{
-				Command const* cmd_ptr = &bg.link(*it).command();
+				auto& link = bg.link(*it);
+				Command const* cmd_ptr = &link.command();
 				if (seen_commands.count(cmd_ptr) != 0)
 					continue;
 				seen_commands.insert(cmd_ptr);
 				for (auto const& shell_command: cmd_ptr->shell_commands())
 				{
-					out <<  quote<CommandParser::unix_shell>(shell_command.dump()) << std::endl;
+					out <<  quote<CommandParser::unix_shell>(shell_command.string(build, link)) << std::endl;
 				}
 			}
 		}

@@ -6,73 +6,103 @@
 
 namespace configure {
 
+	ShellFormatter::~ShellFormatter()
+	{}
+
+	std::string ShellFormatter::operator ()(std::string value) const
+	{ return std::move(value); }
+
+	std::string ShellFormatter::operator ()(boost::filesystem::path const& value) const
+	{ return value.string(); }
+
+	std::string ShellFormatter::operator ()(Node const& value) const
+	{ return (*this)(value.path()); }
+
 	ShellArg::~ShellArg()
 	{}
+
+	std::string ShellArg::dump() const
+	{ return "<ShellArg>"; }
 
 	ShellCommand::~ShellCommand()
 	{}
 
-	std::vector<std::string>
-	ShellCommand::string(Build const& build,
-	                     std::vector<NodePtr> const& sources,
-	                     std::vector<NodePtr> const& targets) const
-	{
-		struct Visitor
+	namespace {
+
+		struct ShellCommandVisitor
 			: boost::static_visitor<>
 		{
 			Build const& _build;
-			std::vector<NodePtr> const& _sources;
-			std::vector<NodePtr> const& _targets;
+			DependencyLink const& _link;
+			ShellFormatter const& _formatter;
 			std::vector<std::string> _res;
 
-			Visitor(Build const& build,
-			        std::vector<NodePtr> const& sources,
-			        std::vector<NodePtr> const& targets)
+			ShellCommandVisitor(Build const& build,
+			                    DependencyLink const& link,
+			                    ShellFormatter const& formatter)
 				: _build(build)
-				, _sources(sources)
-				, _targets(targets)
+				, _link(link)
+				, _formatter(formatter)
 			{}
+			void operator ()(std::string const& value)
+			{ _res.push_back(_formatter(value)); }
+			void operator ()(boost::filesystem::path const& value)
+			{ _res.push_back(_formatter(value)); }
+			void operator ()(ShellArgPtr const& value)
+			{
+				for (auto& el: value->string(_build, _link, _formatter))
+					_res.push_back(el);
+			}
+			void operator ()(NodePtr const& value)
+			{ _res.push_back(_formatter(*value)); }
+		};
+
+	}
+
+	std::vector<std::string>
+	ShellCommand::string(Build const& build,
+	                     DependencyLink const& link,
+	                     ShellFormatter const& formatter) const
+	{
+		ShellCommandVisitor visitor(build, link, formatter);
+		for (auto const& arg: _args)
+			boost::apply_visitor(visitor, arg);
+		return std::move(visitor._res);
+	}
+
+	std::vector<std::string>
+	ShellCommand::string(Build const& build,
+	                     DependencyLink const& link) const
+	{ return this->string(build, link, ShellFormatter()); }
+
+	namespace {
+
+		struct ShellCommandDumpVisitor
+			: boost::static_visitor<>
+		{
+			std::vector<std::string> _res;
+
 			void operator ()(std::string const& value)
 			{ _res.push_back(value); }
 			void operator ()(boost::filesystem::path const& value)
 			{ _res.push_back(value.string()); }
 			void operator ()(ShellArgPtr const& value)
 			{
-				_res.push_back(
-					value->string(_build, _sources, _targets)
-				);
+				_res.push_back(value->dump());
 			}
 			void operator ()(NodePtr const& value)
-			{ _res.push_back(value->path().string()); }
-		} visitor(build, sources, targets);
-		for (auto const& arg: _args)
-			boost::apply_visitor(visitor, arg);
-		return std::move(visitor._res);
+			{ _res.push_back(value->string()); }
+		};
+
 	}
 
 	std::vector<std::string>
 	ShellCommand::dump() const
 	{
-		struct Visitor
-			: boost::static_visitor<>
-		{
-			std::vector<std::string> _res;
-
-			void operator ()(std::string const& value)
-			{ _res.push_back(value); }
-			void operator ()(boost::filesystem::path const& value)
-			{ _res.push_back(value.string()); }
-			void operator ()(ShellArgPtr const& value)
-			{
-				_res.push_back(
-					"<ShellArg>" // XXX do better
-				);
-			}
-			void operator ()(NodePtr const& value)
-			{ _res.push_back(value->path().string()); }
-		} visitor;
+		ShellCommandDumpVisitor visitor;
 		for (auto const& arg: _args)
 			boost::apply_visitor(visitor, arg);
 		return std::move(visitor._res);
 	}
+
 }

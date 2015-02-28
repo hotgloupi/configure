@@ -6,6 +6,7 @@
 #include <configure/Filesystem.hpp>
 #include <configure/Graph.hpp>
 #include <configure/quote.hpp>
+#include <configure/utils/path.hpp>
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/graph/topological_sort.hpp>
@@ -24,13 +25,47 @@ namespace configure { namespace generators {
 	static std::string absolute_node_path(Build&, Node& n)
 	{ return n.path().string(); }
 
-	void Makefile::generate(Build& build) const
+	namespace {
+
+		struct RelativePathShellFormatter
+			: public ShellFormatter
+		{
+			boost::filesystem::path const& _build_dir;
+			boost::filesystem::path const& _project_dir;
+
+			RelativePathShellFormatter(Build& build,
+			                           boost::filesystem::path const& project_dir)
+				: _build_dir(build.directory())
+				, _project_dir(project_dir)
+			{}
+
+			std::string
+			operator ()(boost::filesystem::path const& value) const override
+			{
+				if (utils::starts_with(value, _project_dir))
+					return utils::relative_path(value, _build_dir).string();
+				return value.string();
+			}
+
+		};
+
+	}
+
+	void Makefile::generate(Build& build,
+	                        boost::filesystem::path const& root_project_directory) const
 	{
 		bool use_relpath = build.option<bool>(
 		    "GENERATOR_" + this->name() + "_USE_RELATIVE_PATH",
 		    this->name() + " generator uses relative path",
 		    this->use_relative_path()
 		);
+		std::unique_ptr<ShellFormatter> formatter;
+		if (use_relpath)
+			formatter = std::unique_ptr<ShellFormatter>(
+				new RelativePathShellFormatter(build, root_project_directory)
+			);
+		else
+			formatter = std::unique_ptr<ShellFormatter>(new ShellFormatter);
 
 		std::string (*node_path)(Build&, Node&);
 		if (use_relpath)
@@ -130,14 +165,18 @@ namespace configure { namespace generators {
 			for (; in_edge_range.first != in_edge_range.second;
 			     ++in_edge_range.first)
 			{
-				Command const* cmd_ptr = &bg.link(*in_edge_range.first).command();
+				auto& link = bg.link(*in_edge_range.first);
+				Command const* cmd_ptr = &link.command();
 				if (seen_commands.count(cmd_ptr) != 0)
 					continue;
 				seen_commands.insert(cmd_ptr);
 				for (auto const& shell_command: cmd_ptr->shell_commands())
 				{
 					out << '\t';
-					this->dump_command(out, shell_command.dump());
+					this->dump_command(
+						out,
+						shell_command.string(build, link, *formatter)
+					);
 					out << std::endl;
 				}
 			}
