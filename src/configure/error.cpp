@@ -2,6 +2,7 @@
 #include "Node.hpp"
 
 #include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 
 namespace configure {
@@ -63,7 +64,7 @@ namespace configure {
 				res += padding + "  Initial error: " + error_string(*ptr, indent + 2);
 		}
 		catch (...) {}
-		return res;
+		return boost::trim_right_copy(res);
 	}
 
 }
