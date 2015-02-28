@@ -1,4 +1,5 @@
 #include "error.hpp"
+#include "Node.hpp"
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/exception/diagnostic_information.hpp>
@@ -27,6 +28,8 @@ namespace configure {
 				res += padding + "  Path: " + ptr->string() + "\n";
 			if (auto ptr = get_error_info<error::lua_function>(e))
 				res += padding + "  Lua function: " + *ptr + "\n";
+			if (auto ptr = get_error_info<error::node>(e))
+				res += padding + "  Node: " + (*ptr)->string() + "\n";
 			if (auto ptr = get_error_info<error::lua_traceback>(e))
 			{
 				res += padding + "  Lua traceback:\n";

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "fwd.hpp"
 #include "lua/traceback.hpp"
 
 #include <boost/exception/all.hpp>
@@ -41,6 +42,7 @@ namespace configure {
 		MAKE_EXCEPTION(InvalidEnviron);
 		MAKE_EXCEPTION(InvalidGenerator);
 		MAKE_EXCEPTION(InvalidKey);
+		MAKE_EXCEPTION(InvalidNode);
 		MAKE_EXCEPTION(InvalidOption);
 		MAKE_EXCEPTION(InvalidPath);
 		MAKE_EXCEPTION(InvalidProject);
@@ -73,6 +75,7 @@ namespace configure {
 		MAKE_ERROR_INFO(nested, std::exception_ptr);
 		MAKE_ERROR_INFO(lua_function, std::string);
 		MAKE_ERROR_INFO(lua_traceback, std::vector<lua::Frame>);
+		MAKE_ERROR_INFO(node, NodePtr);
 
 #undef MAKE_ERROR_INFO
 
