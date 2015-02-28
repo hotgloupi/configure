@@ -1,24 +1,38 @@
 #pragma once
 
-#include "fwd.hpp"
+#include "Environ.hpp"
+
+#include <boost/serialization/base_object.hpp>
 
 #include <memory>
+#include <vector>
 
 namespace configure {
 
 	class PropertyMap
+		: public Environ
 	{
 	private:
-		struct Impl;
-		std::unique_ptr<Impl> _this;
+		std::vector<std::string> _dirty_keys;
 
 	public:
 		PropertyMap();
 		~PropertyMap();
 
-	public:
-		Environ const& values() const;
-		Environ& values();
+		bool dirty() const;
+		bool dirty(std::string key) const;
+
+		template<typename Archive>
+		void serialize(Archive& ar, unsigned int const)
+		{ ar & boost::serialization::base_object<Environ>(*this); }
+
+	protected:
+		void value_changed(std::string const& key) override;
+		void new_key(std::string const& key) override;
+
+	private:
+		// Do not normalize the key.
+		bool _dirty(std::string const& key) const;
 	};
 
 }

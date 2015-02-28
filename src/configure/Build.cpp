@@ -11,6 +11,8 @@
 #include "Platform.hpp"
 #include "Rule.hpp"
 #include "quote.hpp"
+#include "utils/path.hpp"
+#include "PropertyMap.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -19,10 +21,15 @@
 #include <boost/scope_exit.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/optional.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/map.hpp>
 
+#include <map>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <fstream>
 
 namespace fs = boost::filesystem;
 
@@ -40,36 +47,40 @@ namespace configure {
 
 	struct Build::Impl
 	{
-		path_t                                   root_directory;
+		fs::path                                 root_directory;
 		lua::State&                              lua;
-		std::vector<path_t>                      project_stack;
-		std::vector<path_t>                      build_stack;
-		BuildGraph                               build_graph;
+		std::vector<fs::path>                    project_stack;
+		std::vector<fs::path>                    build_stack;
 		std::unordered_map<std::string, NodePtr> virtual_nodes;
-		std::unordered_map<path_t, NodePtr>      file_nodes;
-		std::unordered_map<path_t, NodePtr>      directory_nodes;
+		std::unordered_map<fs::path, NodePtr>    file_nodes;
+		std::unordered_map<fs::path, NodePtr>    directory_nodes;
+		std::map<fs::path, PropertyMap>          properties;
+		BuildGraph                               build_graph;
 		NodePtr                                  root_node;
 		Filesystem                               fs;
 		Environ                                  env;
 		fs::path                                 env_path;
+		fs::path                                 properties_path;
 		std::map<std::string, std::string>       options;
 		std::map<std::string, std::string>       build_args;
 		Platform                                 host_platform;
 		Platform                                 target_platform;
 
-		Impl(Build& build, lua::State& lua, path_t directory)
+		Impl(Build& build, lua::State& lua, fs::path directory)
 			: root_directory(std::move(directory))
 			, lua(lua)
 			, project_stack()
 			, build_stack()
-			, build_graph()
 			, virtual_nodes()
 			, file_nodes()
 			, directory_nodes()
+			, properties()
+			, build_graph(properties)
 			, root_node(this->build_graph.add_node<VirtualNode>(""))
 			, fs(build)
 			, env()
-			, env_path(root_directory / ".configure.env")
+			, env_path(root_directory / ".build" / "env")
+			, properties_path(root_directory / ".build" / "properties")
 			, options()
 			, build_args()
 			, host_platform(Platform::current())
@@ -77,7 +88,7 @@ namespace configure {
 		{}
 	};
 
-	Build::Build(lua::State& lua, path_t directory)
+	Build::Build(lua::State& lua, fs::path directory)
 		: _this(new Impl(*this, lua, std::move(directory)))
 	{
 		_this->build_stack.push_back(_this->root_directory);
@@ -92,9 +103,24 @@ namespace configure {
 				);
 			}
 		}
+
+		if (fs::is_regular_file(_this->properties_path))
+		{
+			try {
+				std::ifstream in(_this->properties_path.string(), std::ios::binary);
+				boost::archive::binary_iarchive ar(in);
+				ar & _this->properties;
+			} catch (...) {
+				CONFIGURE_THROW(
+					error::InvalidEnviron("Couldn't load properties")
+						<< error::path(_this->properties_path)
+						<< error::nested(std::current_exception())
+				);
+			}
+		}
 	}
 
-	Build::Build(lua::State& lua, path_t root_directory,
+	Build::Build(lua::State& lua, fs::path root_directory,
 	      std::map<std::string, std::string> build_args)
 		: Build(lua, std::move(root_directory))
 	{
@@ -106,21 +132,31 @@ namespace configure {
 	{
 		if (fs::is_directory(_this->root_directory))
 		{
-			try { _this->env.save(_this->env_path); }
+			try {
+				_this->env.save(_this->env_path);
+			}
 			catch (...) {
 				log::error("Couldn't save environ in", _this->env_path, ":",
 						   error_string());
-				std::abort();
+			}
+			try {
+				std::ofstream out(_this->properties_path.string(), std::ios::binary);
+				boost::archive::binary_oarchive ar(out);
+				ar & _this->properties;
+			} catch (...) {
+				log::error("Couldn't save properties in", _this->env_path, ":",
+						   error_string());
 			}
 		}
 		else
 		{
-			log::debug("Non-existant build directory, drop the environ");
+			log::debug("Build directory", _this->root_directory,
+			           "not found, dropping the environ");
 		}
 	}
 
-	void Build::configure(path_t const& project_directory,
-	                      path_t const& sub_directory)
+	void Build::configure(fs::path const& project_directory,
+	                      fs::path const& sub_directory)
 	{
 		try {
 			if (!project_directory.is_absolute())
@@ -157,16 +193,16 @@ namespace configure {
 		}
 	}
 
-	Build::path_t const& Build::project_directory() const
+	fs::path const& Build::project_directory() const
 	{
 		if (_this->project_stack.empty())
 			throw std::logic_error("No project on the stack");
 		return _this->project_stack.back();
 	}
-	Build::path_t const& Build::root_directory() const
+	fs::path const& Build::root_directory() const
 	{ return _this->root_directory; }
 
-	Build::path_t const& Build::directory() const
+	fs::path const& Build::directory() const
 	{ return _this->build_stack.back(); }
 
 	NodePtr const& Build::root_node() const
@@ -250,9 +286,9 @@ namespace configure {
 	INSTANCIATE(bool);
 	INSTANCIATE(fs::path);
 
-	Build::path_t Build::_prepare_build_directory(path_t const& sub_directory)
+	fs::path Build::_prepare_build_directory(fs::path const& sub_directory)
 	{
-		fs::create_directories(this->directory() / sub_directory);
+		fs::create_directories(this->directory() / sub_directory / ".build");
 		return fs::canonical(this->directory() / sub_directory);
 	}
 
@@ -262,7 +298,7 @@ namespace configure {
 		std::unordered_set<fs::path> directories;
 		for (auto const& pair: _this->file_nodes)
 		{
-			if (starts_with(pair.first, this->root_directory()))
+			if (utils::starts_with(pair.first, this->root_directory()))
 				directories.insert(pair.first.parent_path());
 		}
 
@@ -270,9 +306,9 @@ namespace configure {
 			fs::create_directories(d);
 	}
 
-	std::vector<Build::path_t> const& Build::possible_configure_files()
+	std::vector<fs::path> const& Build::possible_configure_files()
 	{
-		static std::vector<path_t> ret {
+		static std::vector<fs::path> ret {
 			"configure.lua",
 			".configure.lua",
 			".config/project.lua",
@@ -280,7 +316,7 @@ namespace configure {
 		return ret;
 	}
 
-	Build::path_t Build::find_project_file(path_t project_directory)
+	fs::path Build::find_project_file(fs::path project_directory)
 	{
 		for (auto&& p: possible_configure_files())
 			if (fs::is_regular_file(project_directory / p))
@@ -299,7 +335,7 @@ namespace configure {
 		return (_this->virtual_nodes[name] = std::move(node));
 	}
 
-	NodePtr& Build::file_node(path_t path)
+	NodePtr& Build::file_node(fs::path path)
 	{
 		path.make_preferred();
 		if (!path.is_absolute())
@@ -311,7 +347,7 @@ namespace configure {
 		return (_this->file_nodes[path] = std::move(node));
 	}
 
-	NodePtr& Build::directory_node(path_t path)
+	NodePtr& Build::directory_node(fs::path path)
 	{
 		path.make_preferred();
 		if (!path.is_absolute())
@@ -323,7 +359,7 @@ namespace configure {
 		return (_this->directory_nodes[path] = std::move(node));
 	}
 
-	NodePtr& Build::source_node(path_t const& path)
+	NodePtr& Build::source_node(fs::path const& path)
 	{
 		fs::path src;
 		if (!path.is_absolute())
@@ -331,7 +367,7 @@ namespace configure {
 		else
 		{
 			src = path;
-			if (starts_with(src, this->root_directory()))
+			if (utils::starts_with(src, this->root_directory()))
 				CONFIGURE_THROW(
 					error::InvalidSourceNode("Generated file cannot be a source node")
 						<< error::path(src)
@@ -344,7 +380,7 @@ namespace configure {
 		return this->file_node(src);
 	}
 
-	NodePtr& Build::target_node(path_t const& path)
+	NodePtr& Build::target_node(fs::path const& path)
 	{
 		if (path.is_absolute())
 			return this->file_node(path);
@@ -420,6 +456,7 @@ namespace configure {
 
 			void operator ()(std::ostream& out, DependencyLink::index_type idx) const
 			{
+				return;
 				auto const& cmd = _g.link(idx).command();
 				out << "[label=\"";
 				bool first = true;
@@ -467,7 +504,7 @@ namespace configure {
 	{
 		for (auto& p: _this->file_nodes)
 		{
-			if (starts_with(p.first, this->directory()))
+			if (utils::starts_with(p.first, this->directory()))
 				out << "  - " << p.second->relative_path(this->directory())
 				    << std::endl;
 		}

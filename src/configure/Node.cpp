@@ -2,6 +2,7 @@
 #include "BuildGraph.hpp"
 #include "error.hpp"
 #include "PropertyMap.hpp"
+#include "utils/path.hpp"
 
 #include <boost/filesystem.hpp>
 
@@ -44,18 +45,18 @@ namespace configure {
 	{ return this->graph.properties(*this); }
 
 	bool Node::has_property(std::string key) const
-	{ return this->properties().values().has(std::move(key)); }
+	{ return this->properties().has(std::move(key)); }
 
 	template<typename T>
 	typename Environ::const_ref<T>::type Node::property(std::string key) const
-	{ return this->properties().values().get<T>(std::move(key)); }
+	{ return this->properties().get<T>(std::move(key)); }
 
 	template<typename T>
 	typename Environ::const_ref<T>::type
 	Node::property(std::string key,
 	               typename Environ::const_ref<T>::type default_value) const
 	{
-		return this->properties().values().get<T>(
+		return this->properties().get<T>(
 		    std::move(key),
 		    std::move(default_value)
 		);
@@ -65,7 +66,7 @@ namespace configure {
 	typename Environ::const_ref<T>::type
 	Node::set_property(std::string key, T value)
 	{
-		return this->properties().values().set<T>(
+		return this->properties().set<T>(
 		    std::move(key),
 		    std::move(value)
 		);
@@ -76,7 +77,7 @@ namespace configure {
 	Node::set_property_default(std::string key,
 	                     typename Environ::const_ref<T>::type default_value)
 	{
-		return this->properties().values().set_default<T>(
+		return this->properties().set_default<T>(
 		    std::move(key),
 		    std::move(default_value)
 		);

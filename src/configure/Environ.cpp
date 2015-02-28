@@ -35,6 +35,10 @@ namespace configure {
 		: _this(new Impl)
 	{}
 
+	Environ::Environ(Environ const& other)
+		: _this(new Impl)
+	{ _this->values = other._this->values; }
+
 	Environ::~Environ()
 	{}
 
@@ -88,9 +92,24 @@ namespace configure {
 	Environ::set(std::string key_, T value)
 	{
 		std::string key = normalize(std::move(key_));
-		log::debug("ENV: set", key, '=', value);
-		Impl::Value& v = (_this->values[std::move(key)] = std::move(value));
-		return boost::get<typename const_ref<T>::type>(v);
+		auto it = _this->values.find(key);
+		if (it == _this->values.end())
+		{
+			Impl::Value& v = (_this->values[key] = std::move(value));
+			this->new_key(key);
+			return boost::get<typename const_ref<T>::type>(v);
+		}
+		else
+		{
+			auto& old_value = boost::get<typename const_ref<T>::type>(it->second);
+			if (old_value == value)
+				return old_value;
+
+			it->second = std::move(value);
+			this->value_changed(key);
+
+			return boost::get<typename const_ref<T>::type>(it->second);
+		}
 	}
 
 	template<typename T>
@@ -128,19 +147,37 @@ namespace configure {
 	INSTANCIATE(int);
 #undef INSTANCIATE
 
+	void Environ::value_changed(std::string const&) { /* Nothing to do */ }
+
+	void Environ::new_key(std::string const&) { /* Nothing to do */ }
+
 	void Environ::load(boost::filesystem::path const& path)
 	{
 		std::ifstream in(path.string(), std::ios::binary);
 		boost::archive::binary_iarchive ar(in);
-		ar >> _this->values;
+		ar & *this;
 	}
 
 	void Environ::save(boost::filesystem::path const& path) const
 	{
 		std::ofstream out(path.string(), std::ios::binary);
 		boost::archive::binary_oarchive ar(out);
-		ar << _this->values;
+		ar & *this;
 	}
+
+	template<typename Archive>
+	void Environ::serialize(Archive& ar, unsigned int const)
+	{
+		ar & _this->values;
+	}
+
+#define INSTANCIATE(T) \
+	template \
+	void Environ::serialize<T>(T&, unsigned int const); \
+
+	INSTANCIATE(boost::archive::binary_iarchive);
+	INSTANCIATE(boost::archive::binary_oarchive);
+#undef INSTANCIATE
 
 	std::vector<std::string> Environ::keys() const
 	{

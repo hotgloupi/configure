@@ -8,6 +8,7 @@ namespace configure {
 	class Build;
 	class BuildGraph;
 	class Command;
+	class DependencyLink;
 	class Environ;
 	class Filesystem;
 	class Generator;

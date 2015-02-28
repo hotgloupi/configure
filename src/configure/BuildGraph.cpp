@@ -1,6 +1,7 @@
 #include "BuildGraph.hpp"
 #include "Graph.hpp"
 #include "PropertyMap.hpp"
+#include "error.hpp"
 
 #include <boost/assert.hpp>
 
@@ -15,24 +16,26 @@ namespace configure {
 		typedef boost::property_map<Graph, boost::vertex_index_t>::type IndexMap;
 		typedef std::unordered_map<Node::index_type, NodePtr> NodeMap;
 		typedef std::map<DependencyLink::index_type, DependencyLink> LinkMap;
-		typedef std::unordered_map<Node::index_type, PropertyMap> NodeProperties;
 
 	public:
 		Graph    graph;
 		IndexMap index_map;
 		NodeMap  node_map;
 		LinkMap link_map;
-		NodeProperties node_properties;
+		FileProperties& properties;
 
 	public:
-		Impl()
+		Impl(FileProperties& properties)
 			: graph()
 			, index_map(boost::get(boost::vertex_index, graph))
+			, node_map()
+			, link_map()
+			, properties(properties)
 		{}
 	};
 
-	BuildGraph::BuildGraph()
-		: _this{new Impl}
+	BuildGraph::BuildGraph(FileProperties& properties)
+		: _this{new Impl(properties)}
 	{}
 
 	BuildGraph::~BuildGraph()
@@ -81,7 +84,14 @@ namespace configure {
 	}
 
 	PropertyMap& BuildGraph::properties(Node const& node) const
-	{ return _this->node_properties[node.index]; }
+	{
+		if (!node.is_file())
+			CONFIGURE_THROW(
+			    error::InvalidNode("Only file node have properties")
+					<< error::node(_this->node_map[node.index])
+			);
+		return _this->properties[node.path()];
+	}
 
 	void BuildGraph::_save(NodePtr& node)
 	{

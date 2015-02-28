@@ -38,7 +38,7 @@ namespace configure {
 
 		bool is_build_directory(fs::path const& dir)
 		{
-			return fs::is_regular_file(dir / ".configure.env");
+			return fs::is_regular_file(dir / ".build" / "env");
 		}
 
 	}
@@ -117,7 +117,7 @@ namespace configure {
 				build.dump_graphviz(std::cout);
 			log::debug("Generating the build files in", build.directory());
 			auto& generator = this->_generator(build);
-			generator.generate(build);
+			generator.generate(build, _this->project_directory);
 			log::status("Build files generated successfully in",
 						build.directory(), "(", generator.name(), ")");
 			if (_this->dump_options)

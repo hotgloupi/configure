@@ -12,12 +12,15 @@ namespace configure {
 	// Store nodes and links.
 	class BuildGraph
 	{
+	public:
+		typedef std::map<boost::filesystem::path, PropertyMap> FileProperties;
+
 	private:
 		struct Impl;
 		std::unique_ptr<Impl> _this;
 
 	public:
-		BuildGraph();
+		BuildGraph(FileProperties& properties);
 		~BuildGraph();
 
 	public:

@@ -2,24 +2,39 @@
 
 #include "Environ.hpp"
 
+#include <algorithm>
+
 namespace configure {
 
-	struct PropertyMap::Impl
-	{
-		Environ values;
-	};
-
 	PropertyMap::PropertyMap()
-		: _this{new Impl}
 	{}
 
 	PropertyMap::~PropertyMap()
 	{}
 
-	Environ& PropertyMap::values()
-	{ return _this->values; }
+	void PropertyMap::value_changed(std::string const& key)
+	{
+		if (!this->_dirty(key))
+			_dirty_keys.push_back(key);
+	}
 
-	Environ const& PropertyMap::values() const
-	{ return _this->values; }
+	void PropertyMap::new_key(std::string const& key)
+	{
+		_dirty_keys.push_back(key);
+	}
 
+	bool PropertyMap::dirty() const
+	{ return _dirty_keys.size() > 0; }
+
+	bool PropertyMap::dirty(std::string key) const
+	{ return _dirty(Environ::normalize(std::move(key))); }
+
+	bool PropertyMap::_dirty(std::string const& key) const
+	{
+		return std::find(
+			_dirty_keys.begin(),
+			_dirty_keys.end(),
+			key
+		) == _dirty_keys.end();
+	}
 }

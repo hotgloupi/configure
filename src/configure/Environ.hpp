@@ -31,6 +31,7 @@ namespace configure {
 
 	public:
 		Environ();
+		Environ(Environ const& other);
 		~Environ();
 
 		bool has(std::string key) const;
@@ -58,7 +59,19 @@ namespace configure {
 		void load(boost::filesystem::path const& path);
 		void save(boost::filesystem::path const& path) const;
 
+		template<typename Archive>
+		void serialize(Archive& ar, unsigned int const version);
+
 		std::vector<std::string> keys() const;
+
+	protected:
+		// Called when the value of an existing key has changed (default implem
+		// does nothing).
+		virtual void value_changed(std::string const& key);
+
+		// Called when a key has been added (default implem does nothing).
+		virtual void new_key(std::string const& key);
+
 	public:
 		// Upper case and replace dashes by underscores.
 		static std::string normalize(std::string key);
