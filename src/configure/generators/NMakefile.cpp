@@ -15,12 +15,8 @@ namespace configure { namespace generators {
 		return build.fs().which("nmake") != boost::none;
 	}
 
-	void NMakefile::dump_command(
-		    std::ostream& out,
-		    std::vector<std::string> const& cmd) const
-	{
-		out << quote<CommandParser::nmake>(cmd);
-	}
+	std::string NMakefile::dump_command(std::vector<std::string> const& cmd) const
+	{ return quote<CommandParser::nmake>(cmd); }
 
 	std::vector<std::string>
 	NMakefile::build_command(Build& build, std::string const& target) const

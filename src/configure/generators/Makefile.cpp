@@ -7,9 +7,11 @@
 #include <configure/Graph.hpp>
 #include <configure/quote.hpp>
 #include <configure/utils/path.hpp>
+#include <configure/PropertyMap.hpp>
+#include <configure/log.hpp>
 
 #include <boost/algorithm/string/join.hpp>
-#include <boost/graph/topological_sort.hpp>
+#include <boost/filesystem.hpp>
 
 #include <fstream>
 #include <unordered_set>
@@ -133,6 +135,7 @@ namespace configure { namespace generators {
 			}
 		}
 
+		std::unordered_set<Node const*> to_delete;
 		for (auto vertex_range = boost::vertices(g);
 		     vertex_range.first != vertex_range.second;
 		     ++vertex_range.first)
@@ -161,6 +164,7 @@ namespace configure { namespace generators {
 			}
 			out << std::endl;
 
+			std::vector<std::string> command_strings;
 			std::unordered_set<Command const*> seen_commands;
 			for (; in_edge_range.first != in_edge_range.second;
 			     ++in_edge_range.first)
@@ -172,22 +176,35 @@ namespace configure { namespace generators {
 				seen_commands.insert(cmd_ptr);
 				for (auto const& shell_command: cmd_ptr->shell_commands())
 				{
-					out << '\t';
-					this->dump_command(
-						out,
-						shell_command.string(build, link, *formatter)
+					command_strings.push_back(
+						this->dump_command(
+							shell_command.string(build, link, *formatter)
+						)
 					);
-					out << std::endl;
+					out << '\t' << command_strings.back() << std::endl;
 				}
 			}
 			out << std::endl;
+			if (node->is_file())
+			{
+				node->set_property<std::string>(
+					this->name() + "_GENERATED_COMMANDS",
+					boost::join(command_strings, "\n")
+				);
+				if (node->properties().dirty())
+					to_delete.insert(node);
+			}
+		}
+
+		for (auto node: to_delete)
+		{
+			log::debug("Deleting node", node->string(), "(command line changed)");
+			boost::filesystem::remove(node->string());
 		}
 
 	}
 
-	void Makefile::dump_command(
-		    std::ostream& out,
-		    std::vector<std::string> const& cmd) const
+	std::string Makefile::dump_command(std::vector<std::string> const& cmd) const
 	{
 #ifdef _WIN32
 		if (cmd.size() == 1)
@@ -201,11 +218,10 @@ namespace configure { namespace generators {
 			{
 				res = res.substr(1, res.size() - 2);
 			}
-			out << res;
-			return;
+			return res;
 		}
 #endif
-		out << quote<CommandParser::make>(cmd);
+		return quote<CommandParser::make>(cmd);
 	}
 
 	bool Makefile::is_available(Build& build) const

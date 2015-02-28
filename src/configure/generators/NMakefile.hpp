@@ -13,9 +13,7 @@ namespace configure { namespace generators {
 		std::vector<std::string>
 		build_command(Build& build, std::string const& target) const override;
 	protected:
-		void dump_command(
-		    std::ostream& out,
-		    std::vector<std::string> const& cmd) const override;
+		std::string dump_command(std::vector<std::string> const& cmd) const override;
 		bool use_relative_path() const override;
 	};
 

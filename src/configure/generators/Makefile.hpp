@@ -2,7 +2,6 @@
 
 #include <configure/Generator.hpp>
 
-#include <iosfwd>
 #include <vector>
 #include <string>
 
@@ -19,9 +18,7 @@ namespace configure { namespace generators {
 		std::vector<std::string>
 		build_command(Build& build, std::string const& target) const override;
 	protected:
-		virtual void dump_command(
-		    std::ostream& out,
-		    std::vector<std::string> const& cmd) const;
+		virtual std::string dump_command(std::vector<std::string> const& cmd) const;
 		virtual bool use_relative_path() const;
 	};
 
