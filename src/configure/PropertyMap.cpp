@@ -35,6 +35,10 @@ namespace configure {
 			_dirty_keys.begin(),
 			_dirty_keys.end(),
 			key
-		) == _dirty_keys.end();
+		) != _dirty_keys.end();
 	}
+
+	void PropertyMap::mark_clean()
+	{ _dirty_keys.clear(); }
+
 }

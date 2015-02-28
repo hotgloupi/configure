@@ -21,6 +21,7 @@ namespace configure {
 
 		bool dirty() const;
 		bool dirty(std::string key) const;
+		void mark_clean();
 
 		template<typename Archive>
 		void serialize(Archive& ar, unsigned int const)
