@@ -1,5 +1,3 @@
-#pragma once
-
 #include <configure/error.hpp>
 
 #include <boost/filesystem/path.hpp>
