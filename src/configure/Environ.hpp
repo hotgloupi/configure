@@ -46,8 +46,9 @@ namespace configure {
 		template<typename Char>
 		static inline Char normalize_char(Char c)
 		{
+			static std::locale const locale;
 			if (c == '-') return '_';
-			return std::toupper(c);
+			return std::toupper(c, locale);
 		}
 
 		struct Hash
