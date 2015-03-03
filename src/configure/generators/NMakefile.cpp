@@ -29,7 +29,10 @@ namespace configure { namespace generators {
 	void NMakefile::include_dependencies(std::ostream& out, bool /* XXX relative */) const
 	{
 		for (auto& node: _includes)
-			out << "!include " << node->path().string() << std::endl;
+			out
+				<< "!IF EXISTS(" << node->path().string() << ")" << std::endl
+				<< "  !INCLUDE " << node->path().string() << std::endl
+				<< "!ENDIF" << std::endl;
 	}
 
 }}
