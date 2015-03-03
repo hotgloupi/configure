@@ -1,8 +1,8 @@
 #pragma once
 
 #include "fwd.hpp"
-#include "Graph.hpp"
 #include "Environ.hpp"
+#include "PropertyMap.hpp"
 
 #include <boost/filesystem/path.hpp>
 
@@ -13,7 +13,7 @@ namespace configure {
 	{
 		friend class BuildGraph;
 	public:
-		typedef Vertex index_type;
+		typedef size_t index_type;
 		enum Kind
 		{
 			file_node,
@@ -40,25 +40,21 @@ namespace configure {
 
 		bool has_property(std::string key) const;
 
-		template<typename T>
-		typename Environ::const_ref<T>::type property(std::string key) const;
-
-		// Returns an existing value of type T or the default value.
-		template<typename T>
-		typename Environ::const_ref<T>::type
-		property(std::string key,
-		         typename Environ::const_ref<T>::type default_value) const;
+		template<typename Ret = Environ::Value>
+		typename Environ::const_ref<Ret>::type property(std::string const& key) const
+		{ return this->properties().get<Ret>(key); }
 
 		// Assign key to value.
-		template<typename T>
-		typename Environ::const_ref<T>::type
-		set_property(std::string key, T value);
+		template<typename Ret = Environ::Value, typename T>
+		typename Environ::const_ref<Ret>::type
+		set_property(std::string const& key, T&& value)
+		{ return this->properties().set<Ret>(key, std::forward<T>(value)); }
 
 		// Assign key to value not already set, returns associated value.
-		template<typename T>
+		template<typename Ret = Environ::Value, typename T>
 		typename Environ::const_ref<T>::type
-		set_property_default(std::string key,
-		                     typename Environ::const_ref<T>::type default_value);
+		set_property_default(std::string const& key, T&& value)
+		{ return this->properties().set_default<Ret>(key, std::forward<T>(value)); }
 
 	public:
 		virtual Kind kind() const = 0;

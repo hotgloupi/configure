@@ -3,11 +3,12 @@
 #include "error.hpp"
 #include "log.hpp"
 #include "utils/path.hpp"
+#include "Node.hpp"
 
-#include <boost/filesystem/path.hpp>
-#include <boost/variant.hpp>
-#include <boost/serialization/map.hpp>
+#include <boost/serialization/vector.hpp>
 #include <boost/serialization/variant.hpp>
+#include <boost/serialization/split_member.hpp>
+#include <boost/serialization/utility.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
@@ -18,37 +19,40 @@
 
 namespace fs = boost::filesystem;
 
+namespace std {
+
+	// This overload has to be in std namespace
+	static ostream& operator <<(ostream& out,
+	                            vector<configure::Environ::Value> const& values)
+	{
+		out << "{";
+		for (auto const& el: values)
+			out << el << ", ";
+		out << "}";
+		return out;
+	}
+
+}
+
 namespace configure {
 
-	struct Environ::Impl
-	{
-		typedef boost::variant<
-			std::string,
-			boost::filesystem::path,
-			bool,
-			int
-		> Value;
-		std::map<std::string, Value> values;
-	};
-
 	Environ::Environ()
-		: _this(new Impl)
 	{}
 
 	Environ::Environ(Environ const& other)
-		: _this(new Impl)
-	{ _this->values = other._this->values; }
+		: _values(other._values)
+	{}
 
 	Environ::~Environ()
 	{}
 
-	bool Environ::has(std::string key) const
-	{ return _this->values.find(normalize(std::move(key))) != _this->values.end(); }
+	bool Environ::has(std::string const& key) const
+	{ return _values.find(key) != _values.end(); }
 
-	Environ::Kind Environ::kind(std::string key) const
+	Environ::Kind Environ::kind(std::string const& key) const
 	{
-		auto it = _this->values.find(normalize(std::move(key)));
-		if (it == _this->values.end())
+		auto it = _values.find(key);
+		if (it == _values.end())
 			return Kind::none;
 		switch (it->second.which())
 		{
@@ -56,6 +60,7 @@ namespace configure {
 			case 1: return Kind::path;
 			case 2: return Kind::boolean;
 			case 3: return Kind::integer;
+			case 4: return Kind::list;
 			default: std::abort();
 		}
 	}
@@ -63,89 +68,9 @@ namespace configure {
 	std::string Environ::as_string(std::string key) const
 	{
 		std::stringstream ss;
-		ss << _this->values.at(normalize(std::move(key)));
+		ss << _values.at(key);
 		return ss.str();
 	}
-
-	template<typename T>
-	typename Environ::const_ref<T>::type
-	Environ::get(std::string key) const
-	{
-		return boost::get<typename const_ref<T>::type>(
-			_this->values.at(normalize(std::move(key)))
-		);
-	}
-
-	template<typename T>
-	typename Environ::const_ref<T>::type
-	Environ::get(std::string key,
-	             typename const_ref<T>::type default_value) const
-	{
-		auto it = _this->values.find(normalize(std::move(key)));
-		if (it == _this->values.end())
-			return default_value;
-		return boost::get<typename const_ref<T>::type>(it->second);
-	}
-
-	template<typename T>
-	typename Environ::const_ref<T>::type
-	Environ::set(std::string key_, T value)
-	{
-		std::string key = normalize(std::move(key_));
-		auto it = _this->values.find(key);
-		if (it == _this->values.end())
-		{
-			Impl::Value& v = (_this->values[key] = std::move(value));
-			this->new_key(key);
-			return boost::get<typename const_ref<T>::type>(v);
-		}
-		else
-		{
-			auto& old_value = boost::get<typename const_ref<T>::type>(it->second);
-			if (old_value == value)
-				return old_value;
-
-			it->second = std::move(value);
-			this->value_changed(key);
-
-			return boost::get<typename const_ref<T>::type>(it->second);
-		}
-	}
-
-	template<typename T>
-	typename Environ::const_ref<T>::type
-	Environ::set_default(std::string key_,
-	                     typename const_ref<T>::type default_value)
-	{
-		std::string key = normalize(std::move(key_));
-		auto it = _this->values.find(key);
-		if (it == _this->values.end())
-			return this->set<T>(std::move(key), default_value);
-		return boost::get<typename const_ref<T>::type>(it->second);
-	}
-
-#define INSTANCIATE(T) \
-	template \
-	Environ::const_ref<T>::type \
-	Environ::get<T>(std::string key) const; \
-	template \
-	Environ::const_ref<T>::type \
-	Environ::get<T>(std::string key, \
-	                const_ref<T>::type default_value) const; \
-	template \
-	Environ::const_ref<T>::type \
-	Environ::set<T>(std::string key, T value); \
-	template \
-	Environ::const_ref<T>::type \
-	Environ::set_default<T>(std::string key, \
-	                        const_ref<T>::type default_value); \
-/**/
-
-	INSTANCIATE(std::string);
-	INSTANCIATE(fs::path);
-	INSTANCIATE(bool);
-	INSTANCIATE(int);
-#undef INSTANCIATE
 
 	void Environ::value_changed(std::string const&) { /* Nothing to do */ }
 
@@ -165,10 +90,32 @@ namespace configure {
 		ar & *this;
 	}
 
-	template<typename Archive>
-	void Environ::serialize(Archive& ar, unsigned int const)
+	template<class Archive>
+	void Environ::save(Archive& ar, unsigned int) const
 	{
-		ar & _this->values;
+		Values::size_type s = _values.size();
+		ar << s;
+		for (auto& el: _values)
+			ar << el;
+	}
+
+	template<class Archive>
+	void Environ::load(Archive& ar, unsigned int)
+	{
+		Values::size_type size;
+		ar >> size;
+		for (Values::size_type i = 0; i < size; ++i)
+		{
+			Values::value_type el;
+			ar >> el;
+			_values.insert(std::move(el));
+		}
+	}
+
+	template<typename Archive>
+	void Environ::serialize(Archive& ar, unsigned int version)
+	{
+		boost::serialization::split_member(ar, *this, version);
 	}
 
 #define INSTANCIATE(T) \
@@ -182,8 +129,8 @@ namespace configure {
 	std::vector<std::string> Environ::keys() const
 	{
 		std::vector<std::string> res;
-		res.reserve(_this->values.size());
-		for (auto& p: _this->values)
+		res.reserve(_values.size());
+		for (auto& p: _values)
 			res.push_back(p.first);
 		return res;
 	}
@@ -222,9 +169,20 @@ namespace configure {
 			case Environ::Kind::boolean: return out << "Kind::boolean";
 			case Environ::Kind::path: return out << "Kind::path";
 			case Environ::Kind::string: return out << "Kind::string";
+			case Environ::Kind::list: return out << "Kind::list";
 			case Environ::Kind::none: return out << "Kind::none";
 		}
 		std::abort();
+	}
+
+
+	boost::filesystem::path const& Environ::_node_path(Node const& node)
+	{
+		if (node.is_virtual())
+			CONFIGURE_THROW(
+				error::InvalidNode("Cannot store a virtual node in the environ")
+			);
+		return node.path();
 	}
 
 }

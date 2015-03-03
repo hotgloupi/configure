@@ -47,64 +47,6 @@ namespace configure {
 	bool Node::has_property(std::string key) const
 	{ return this->properties().has(std::move(key)); }
 
-	template<typename T>
-	typename Environ::const_ref<T>::type Node::property(std::string key) const
-	{ return this->properties().get<T>(std::move(key)); }
-
-	template<typename T>
-	typename Environ::const_ref<T>::type
-	Node::property(std::string key,
-	               typename Environ::const_ref<T>::type default_value) const
-	{
-		return this->properties().get<T>(
-		    std::move(key),
-		    std::move(default_value)
-		);
-	}
-
-	template<typename T>
-	typename Environ::const_ref<T>::type
-	Node::set_property(std::string key, T value)
-	{
-		return this->properties().set<T>(
-		    std::move(key),
-		    std::move(value)
-		);
-	}
-
-	template<typename T>
-	typename Environ::const_ref<T>::type
-	Node::set_property_default(std::string key,
-	                     typename Environ::const_ref<T>::type default_value)
-	{
-		return this->properties().set_default<T>(
-		    std::move(key),
-		    std::move(default_value)
-		);
-	}
-#define INSTANCIATE(T) \
-	template \
-	Environ::const_ref<T>::type \
-	Node::property<T>(std::string key) const; \
-	template \
-	Environ::const_ref<T>::type \
-	Node::property<T>(std::string key, \
-	                  Environ::const_ref<T>::type default_value) const; \
-	template \
-	Environ::const_ref<T>::type \
-	Node::set_property<T>(std::string key, T value); \
-	template \
-	Environ::const_ref<T>::type \
-	Node::set_property_default<T>(std::string key, \
-	                              Environ::const_ref<T>::type default_value); \
-/**/
-
-	INSTANCIATE(std::string);
-	INSTANCIATE(fs::path);
-	INSTANCIATE(bool);
-	INSTANCIATE(int);
-#undef INSTANCIATE
-
 	std::string const& Node::name() const
 	{ throw std::runtime_error("This node has no name"); }
 

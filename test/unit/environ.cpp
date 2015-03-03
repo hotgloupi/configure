@@ -77,18 +77,14 @@ BOOST_AUTO_TEST_CASE(all_types)
 		BOOST_CHECK(!e.has("test_1")); \
 		BOOST_CHECK(!e.has("test-2")); \
 		BOOST_CHECK(!e.has("test3")); \
-		BOOST_CHECK_EQUAL(e.get<type>("test", value), value); \
-		BOOST_CHECK_EQUAL(e.get<type>("test_1", value), value); \
-		BOOST_CHECK_EQUAL(e.get<type>("test-2", value), value); \
-		BOOST_CHECK_EQUAL(e.get<type>("test3", value), value); \
 		e.set<type>("test", value); \
 		e.set<type>("test_1", value); \
 		e.set<type>("test-2", value); \
 		e.set<type>("test3", value); \
-		BOOST_CHECK_EQUAL(e.get<type>("test", value), value); \
-		BOOST_CHECK_EQUAL(e.get<type>("test_1", value), value); \
-		BOOST_CHECK_EQUAL(e.get<type>("test-2", value), value); \
-		BOOST_CHECK_EQUAL(e.get<type>("test3", value), value); \
+		BOOST_CHECK_EQUAL(e.get<type>("test"), value); \
+		BOOST_CHECK_EQUAL(e.get<type>("test_1"), value); \
+		BOOST_CHECK_EQUAL(e.get<type>("test-2"), value); \
+		BOOST_CHECK_EQUAL(e.get<type>("test3"), value); \
 		BOOST_CHECK(e.has("test")); \
 		BOOST_CHECK(e.has("Test")); \
 		BOOST_CHECK(e.has("Test-1")); \
