@@ -65,7 +65,7 @@ namespace configure {
 		}
 	}
 
-	std::string Environ::as_string(std::string key) const
+	std::string Environ::as_string(std::string const& key) const
 	{
 		std::stringstream ss;
 		ss << _values.at(key);
