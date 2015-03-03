@@ -16,21 +16,21 @@ namespace configure {
 	{
 		NodePtr& self = lua::Converter<NodePtr>::extract(state, 1);
 		Environ& env = self->properties();
-		return utils::env_get(state, env);
+		return utils::env_get(state, env, 2);
 	}
 
 	static int Node_set_property(lua_State* state)
 	{
 		NodePtr& self = lua::Converter<NodePtr>::extract(state, 1);
 		Environ& env = self->properties();
-		return utils::env_set(state, env);
+		return utils::env_set(state, env, 2);
 	}
 
 	static int Node_set_property_default(lua_State* state)
 	{
 		NodePtr& self = lua::Converter<NodePtr>::extract(state, 1);
 		Environ& env = self->properties();
-		return utils::env_set_default(state, env);
+		return utils::env_set_default(state, env, 2);
 	}
 
 	void bind_node(lua::State& state)
