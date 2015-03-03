@@ -4,6 +4,8 @@
 #include "Build.hpp"
 #include "bind.hpp"
 #include "quote.hpp"
+#include "commands.hpp"
+#include "Filesystem.hpp"
 
 #include "generators/Shell.hpp"
 #include "generators/Makefile.hpp"
@@ -58,6 +60,7 @@ namespace configure {
 		std::string                        generator;
 		bool                               build_mode;
 		std::string                        build_target;
+		std::vector<std::string>           builtin_command_args;
 		Impl(std::vector<std::string> args)
 			: program_name(args.at(0))
 			, args(std::move(args))
@@ -72,6 +75,7 @@ namespace configure {
 			, generator()
 			, build_mode(false)
 			, build_target()
+			, builtin_command_args()
 		{ this->args.erase(this->args.begin()); }
 	};
 
@@ -87,6 +91,8 @@ namespace configure {
 
 	void Application::run()
 	{
+		if (!_this->builtin_command_args.empty())
+			return commands::execute(_this->builtin_command_args);
 		log::debug("Current directory:", _this->current_directory);
 		log::debug("Program name:", _this->program_name);
 		if (_this->build_directories.empty())
@@ -287,6 +293,8 @@ namespace configure {
 			<< "  -t,--target" << "           "
 			<< "Specify the target to build\n"
 
+			<< "  -E,--execute" << "          "
+			<< "Execute a builtin command\n"
 		;
 	}
 
@@ -317,7 +325,7 @@ namespace configure {
 		}
 
 		bool has_project = false;
-		enum class NextArg { project, generator, target, other };
+		enum class NextArg { project, generator, target, builtin_command, other };
 		NextArg next_arg = NextArg::other;
 		for (auto const& arg: _this->args)
 		{
@@ -350,46 +358,30 @@ namespace configure {
 				_this->build_target = arg;
 				next_arg = NextArg::other;
 			}
+			else if (next_arg == NextArg::builtin_command)
+				_this->builtin_command_args.push_back(arg);
 			else if (arg == "-p" || arg == "--project")
-			{
 				next_arg = NextArg::project;
-			}
 			else if (arg == "--dump-graph")
-			{
 				_this->dump_graph_mode = true;
-			}
 			else if (arg == "--dump-options")
-			{
 				_this->dump_options = true;
-			}
 			else if (arg == "--dump-env")
-			{
 				_this->dump_env = true;
-			}
 			else if (arg == "--dump-targets")
-			{
 				_this->dump_targets = true;
-			}
 			else if (arg == "-G" || arg == "--generator")
-			{
 				next_arg = NextArg::generator;
-			}
 			else if (arg == "-d" || arg == "--debug")
-			{
 				log::level() = log::Level::debug;
-			}
 			else if (arg == "-v" || arg == "--verbose")
-			{
 				log::level() = log::Level::verbose;
-			}
 			else if (arg == "-t" || arg == "--target")
-			{
 				next_arg = NextArg::target;
-			}
 			else if (arg == "-b" || arg == "--build")
-			{
 				_this->build_mode = true;
-			}
+			else if (arg == "-E" || arg == "--execute")
+				next_arg = NextArg::builtin_command;
 			else if (arg.find('=') != std::string::npos)
 			{
 				auto it = arg.find('=');
@@ -413,7 +405,7 @@ namespace configure {
 				);
 			}
 		}
-		if (next_arg != NextArg::other)
+		if (next_arg != NextArg::other && next_arg != NextArg::builtin_command)
 		{
 			CONFIGURE_THROW(
 				error::InvalidArgument(
@@ -421,7 +413,7 @@ namespace configure {
 				)
 			);
 		}
-		if (!has_project)
+		if (!has_project && _this->builtin_command_args.empty())
 		{
 			if (is_project_directory(_this->current_directory))
 				_this->project_directory = _this->current_directory;
