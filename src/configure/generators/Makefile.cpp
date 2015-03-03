@@ -77,7 +77,8 @@ namespace configure { namespace generators {
 			if (out_edge_range.first == out_edge_range.second)
 			{
 				// Nothing depends on this node, this target is final.
-				_final_targets.push_back(node);
+				if (!node->is_virtual())
+					_final_targets.push_back(node);
 			}
 			else
 			{
@@ -119,7 +120,7 @@ namespace configure { namespace generators {
 				auto& target = _build.target_node(
 					first_target->relative_path(_build.directory()).string() + ".mk"
 				);
-				_dependencies.push_back(target);
+				_includes.push_back(target);
 				ShellCommand cmd;
 				cmd.append(
 					_configure_exe, "-E" , "c-header-dependencies",
@@ -142,7 +143,7 @@ namespace configure { namespace generators {
 		}
 
 		// We still need to add dependencies to the final targets
-		for (auto& node: _dependencies)
+		for (auto& node: _includes)
 			_targets.push_back(node);
 	}
 
@@ -290,10 +291,17 @@ namespace configure { namespace generators {
 				log::warning("Couldn't remove", node->string(), ":", error_string());
 			}
 		}
+		this->include_dependencies(out, use_relpath);
+	}
 
-		for (auto& node: _dependencies)
-			out << "-include " << node_path(_build, *node) << std::endl;
-
+	void Makefile::include_dependencies(std::ostream& out, bool relative) const
+	{
+		if (relative)
+			for (auto& node: _includes)
+				out << "-include " << relative_node_path(_build, *node) << std::endl;
+		else
+			for (auto& node: _includes)
+				out << "-include " << absolute_node_path(_build, *node) << std::endl;
 	}
 
 	std::string Makefile::dump_command(std::vector<std::string> const& cmd) const

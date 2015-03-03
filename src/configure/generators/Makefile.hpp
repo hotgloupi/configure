@@ -10,8 +10,8 @@ namespace configure { namespace generators {
 	class Makefile
 		: public Generator
 	{
-	private:
-		std::vector<NodePtr> _dependencies;
+	protected:
+		std::vector<NodePtr> _includes;
 		std::vector<NodePtr> _sources;
 		std::vector<NodePtr> _targets;
 		std::vector<NodePtr> _final_targets;
@@ -35,6 +35,7 @@ namespace configure { namespace generators {
 	protected:
 		virtual std::string dump_command(std::vector<std::string> const& cmd) const;
 		virtual bool use_relative_path() const;
+		virtual void include_dependencies(std::ostream& out, bool relative) const;
 	};
 
 }}

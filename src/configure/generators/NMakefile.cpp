@@ -26,4 +26,10 @@ namespace configure { namespace generators {
 
 	bool NMakefile::use_relative_path() const { return false; }
 
+	void NMakefile::include_dependencies(std::ostream& out, bool /* XXX relative */) const
+	{
+		for (auto& node: _includes)
+			out << "!include " << node->path().string() << std::endl;
+	}
+
 }}
