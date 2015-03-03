@@ -5,12 +5,12 @@
 namespace configure { namespace log {
 
 	template<bool>
-	void _print() { std::cout << std::endl; }
+	void _print() { std::cerr << std::endl; }
 
 	template<bool is_first, typename T, typename... Args>
 	void _print(T&& first, Args&&... tail)
 	{
-		if (!is_first) std::cout << ' ';
+		if (!is_first) std::cerr << ' ';
 		std::cerr << first;
 		_print<false>(std::forward<Args>(tail)...);
 	}
