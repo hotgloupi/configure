@@ -61,7 +61,8 @@ namespace configure {
 			if (auto ptr = get_error_info<error::command>(e))
 				res += padding + "  Command: " + boost::join(*ptr, " ");
 			if (auto ptr = get_error_info<error::nested>(e))
-				res += padding + "  Initial error: " + error_string(*ptr, indent + 2);
+				res += padding + "  Initial error: " +
+					boost::trim_left_copy(error_string(*ptr, indent + 2));
 		}
 		catch (...) {}
 		return boost::trim_right_copy(res);
