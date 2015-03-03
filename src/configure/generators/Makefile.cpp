@@ -53,8 +53,9 @@ namespace configure { namespace generators {
 
 			if (node->is_virtual())
 			{
-				if (!node->name().empty())
-					_virtual_nodes.push_back(node);
+				if (node->name().empty())
+					continue;
+				_virtual_nodes.push_back(node);
 			}
 			else
 			{
