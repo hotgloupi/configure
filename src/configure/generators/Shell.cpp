@@ -16,17 +16,13 @@
 
 namespace configure { namespace generators {
 
-	std::string Shell::name() const
-	{ return "shell"; }
-
-	void Shell::generate(Build& build,
-	                     boost::filesystem::path const&) const
+	void Shell::generate() const
 	{
-		std::ofstream out((build.directory() / "build.sh").string());
+		std::ofstream out((_build.directory() / "build.sh").string());
 		out << "#!/bin/sh" << std::endl;
 		out << "set -x" << std::endl;
 		out << "set -e" << std::endl;
-		BuildGraph const& bg = build.build_graph();
+		BuildGraph const& bg = _build.build_graph();
 		Graph const& g = bg.graph();
 		std::list<Vertex> ordered;
 		boost::topological_sort(g, std::front_inserter(ordered));
@@ -51,24 +47,22 @@ namespace configure { namespace generators {
 				seen_commands.insert(cmd_ptr);
 				for (auto const& shell_command: cmd_ptr->shell_commands())
 				{
-					out <<  quote<CommandParser::unix_shell>(shell_command.string(build, link)) << std::endl;
+					out <<  quote<CommandParser::unix_shell>(shell_command.string(_build, link)) << std::endl;
 				}
 			}
 		}
 	}
 
-	bool Shell::is_available(Build& build) const
-	{
-		return build.fs().which("sh") != boost::none;
-	}
+	bool Shell::is_available(Build& build)
+	{ return build.fs().which("sh") != boost::none; }
 
 	std::vector<std::string>
-	Shell::build_command(Build& build, std::string const& target) const
+	Shell::build_command(std::string const& target) const
 	{
 		if (!target.empty())
 			log::warning("Shell generator does not support targets");
 		return {
-			"sh", (build.directory() / "build.sh").string(),
+			"sh", (_build.directory() / "build.sh").string(),
 		};
 	}
 

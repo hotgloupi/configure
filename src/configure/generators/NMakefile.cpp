@@ -7,10 +7,7 @@
 
 namespace configure { namespace generators {
 
-	std::string NMakefile::name() const
-	{ return "NMakefile"; }
-
-	bool NMakefile::is_available(Build& build) const
+	bool NMakefile::is_available(Build& build)
 	{
 		return build.fs().which("nmake") != boost::none;
 	}
@@ -19,10 +16,10 @@ namespace configure { namespace generators {
 	{ return quote<CommandParser::nmake>(cmd); }
 
 	std::vector<std::string>
-	NMakefile::build_command(Build& build, std::string const& target) const
+	NMakefile::build_command(std::string const& target) const
 	{
 		return {
-			"nmake", "-nologo", "-f", (build.directory() / "Makefile").string(),
+			"nmake", "-nologo", "-f", (_build.directory() / "Makefile").string(),
 			target.empty() ? "all" : target
 		};
 	}

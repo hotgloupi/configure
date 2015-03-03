@@ -12,17 +12,34 @@ namespace configure {
 	class Generator
 	{
 	public:
-		Generator();
-		virtual ~Generator();
+		typedef boost::filesystem::path path_t;
+
+	protected:
+		Build& _build;
+		path_t _project_directory;
+		path_t _configure_exe;
+		std::string const _name;
 
 	public:
-		virtual bool is_available(Build& build) const = 0;
+		Generator(Build& build,
+		          path_t project_directory,
+		          path_t configure_exe,
+		          std::string name);
+		virtual ~Generator();
+
+		std::string const& name() const { return _name; }
+
+	public:
+		// Prepare the generator and the build, might alter the build graph.
+		virtual void prepare();
+
+		// Generate necessary build files.
+		virtual void generate() const = 0;
+
+		// Return a command that triggers the build.
 		virtual
-		void generate(Build& build,
-		              boost::filesystem::path const& root_project_directory) const = 0;
-		virtual std::string name() const = 0;
-		virtual std::vector<std::string>
-		build_command(Build& build, std::string const& target) const = 0;
+		std::vector<std::string>
+		build_command(std::string const& target) const = 0;
 	};
 
 }

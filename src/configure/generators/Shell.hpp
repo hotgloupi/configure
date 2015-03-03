@@ -8,12 +8,21 @@ namespace configure { namespace generators {
 		: public Generator
 	{
 	public:
-		bool is_available(Build& build) const override;
-		void generate(Build& build,
-		              boost::filesystem::path const& root_project_directory) const override;
-		std::string name() const override;
+		Shell(Build& build, path_t project_directory, path_t configure_exe)
+			: Generator(
+			    build,
+			    std::move(project_directory),
+			    std::move(configure_exe),
+			    name()
+			)
+		{}
+		void generate() const override;
 		std::vector<std::string>
-		build_command(Build& build, std::string const& target) const override;
+		build_command(std::string const& target) const override;
+
+	public:
+		static char const* name() { return "Shell"; }
+		static bool is_available(Build& build);
 	};
 
 }}

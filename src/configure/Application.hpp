@@ -2,7 +2,7 @@
 
 #include "fwd.hpp"
 
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/path.hpp>
 
 #include <string>
 #include <vector>
@@ -31,14 +31,14 @@ namespace configure {
 		virtual void exit();
 
 	public:
-		std::string const& program_name() const;
+		path_t const& program_name() const;
 
 		path_t const& project_directory() const;
 
 		std::vector<path_t> const& build_directories() const;
 
 	private:
-		Generator const& _generator(Build& build) const;
+		std::unique_ptr<Generator> _generator(Build& build) const;
 		void _parse_args();
 	};
 

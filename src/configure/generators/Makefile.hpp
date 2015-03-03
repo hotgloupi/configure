@@ -10,13 +10,28 @@ namespace configure { namespace generators {
 	class Makefile
 		: public Generator
 	{
+	private:
+		std::vector<NodePtr> _dependencies;
+		std::vector<NodePtr> _sources;
+		std::vector<NodePtr> _targets;
+		std::vector<NodePtr> _final_targets;
+		std::vector<NodePtr> _virtual_nodes;
+
 	public:
-		bool is_available(Build& build) const override;
-		void generate(Build& build,
-		              boost::filesystem::path const& root_project_directory) const override;
-		std::string name() const override;
+		Makefile(Build& build,
+		         path_t project_directory,
+		         path_t configure_exe,
+		         char const* name = nullptr);
+
+		void prepare() override;
+		void generate() const override;
 		std::vector<std::string>
-		build_command(Build& build, std::string const& target) const override;
+		build_command(std::string const& target) const override;
+
+	public:
+		static char const* name() { return "Makefile"; }
+		static bool is_available(Build& build);
+
 	protected:
 		virtual std::string dump_command(std::vector<std::string> const& cmd) const;
 		virtual bool use_relative_path() const;

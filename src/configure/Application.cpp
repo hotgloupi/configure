@@ -7,11 +7,12 @@
 #include "commands.hpp"
 #include "Filesystem.hpp"
 
-#include "generators/Shell.hpp"
-#include "generators/Makefile.hpp"
-#include "generators/NMakefile.hpp"
+#include "generators.hpp"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/optional.hpp>
+
 #include <algorithm>
 #include <iostream>
 #include <map>
@@ -47,7 +48,7 @@ namespace configure {
 
 	struct Application::Impl
 	{
-		std::string                        program_name;
+		fs::path                           program_name;
 		std::vector<std::string>           args;
 		path_t                             current_directory;
 		std::vector<path_t>                build_directories;
@@ -57,7 +58,6 @@ namespace configure {
 		bool                               dump_options;
 		bool                               dump_env;
 		bool                               dump_targets;
-		std::string                        generator;
 		bool                               build_mode;
 		std::string                        build_target;
 		std::vector<std::string>           builtin_command_args;
@@ -72,7 +72,6 @@ namespace configure {
 			, dump_options(false)
 			, dump_env(false)
 			, dump_targets(false)
-			, generator()
 			, build_mode(false)
 			, build_target()
 			, builtin_command_args()
@@ -104,7 +103,7 @@ namespace configure {
 			package = lib;
 		else
 			package = fs::canonical(
-				fs::absolute(_this->program_name).parent_path().parent_path()
+				_this->program_name.parent_path().parent_path()
 				/ "share" / "configure" / "lib"
 			);
 		package /= "?.lua";
@@ -122,10 +121,12 @@ namespace configure {
 			if (_this->dump_graph_mode)
 				build.dump_graphviz(std::cout);
 			log::debug("Generating the build files in", build.directory());
-			auto& generator = this->_generator(build);
-			generator.generate(build, _this->project_directory);
+			auto generator = this->_generator(build);
+			assert(generator != nullptr);
+			generator->prepare();
+			generator->generate();
 			log::status("Build files generated successfully in",
-						build.directory(), "(", generator.name(), ")");
+						build.directory(), "(", generator->name(), ")");
 			if (_this->dump_options)
 			{
 				std::cout << "Available options:\n";
@@ -144,7 +145,7 @@ namespace configure {
 			if (_this->build_mode)
 			{
 				log::status("Starting build in", build.directory());
-				auto cmd = generator.build_command(build, _this->build_target);
+				auto cmd = generator->build_command(_this->build_target);
 				int res = ::system(
 #ifdef _WIN32
 				    quote<CommandParser::windows_shell>(cmd).c_str()
@@ -163,7 +164,7 @@ namespace configure {
 
 	}
 
-	std::string const& Application::program_name() const
+	fs::path const& Application::program_name() const
 	{ return _this->program_name; }
 
 	fs::path const& Application::project_directory() const
@@ -172,71 +173,21 @@ namespace configure {
 	std::vector<fs::path> const& Application::build_directories() const
 	{ return _this->build_directories; }
 
-	Generator const& Application::_generator(Build& build) const
+	std::unique_ptr<Generator> Application::_generator(Build& build) const
 	{
-		static std::vector<std::unique_ptr<Generator>> generators;
-		if (generators.empty())
-		{
-#define ADD_GENERATOR(T) \
-			{ \
-				std::unique_ptr<Generator> g(new T()); \
-				log::debug( \
-					"Generator", g->name(), "is", \
-					(g->is_available(build) ? "available" : "not available")); \
-				generators.push_back(std::move(g));\
-			} \
-/**/
-			ADD_GENERATOR(generators::NMakefile);
-			ADD_GENERATOR(generators::Makefile);
-			ADD_GENERATOR(generators::Shell);
-#undef ADD_GENERATOR
-		}
-
-		std::string generator_name = _this->generator;
-		if (generator_name.empty())
-		{
-			log::debug("No generator specified on command line, searching for a default one");
-			for (auto& gen: generators)
-				if (gen->is_available(build))
-				{
-					generator_name = gen->name();
-					log::debug("Found generator", generator_name, "as default");
-					break;
-				}
-			if (generator_name.empty())
-				CONFIGURE_THROW(
-					error::InvalidGenerator(
-						"No generator available for your platform"
-					)
-				);
-		}
-		else
-			build.env().set<std::string>("GENERATOR", generator_name);
-
-		generator_name = build.option<std::string>(
+		std::string name = build.option<std::string>(
 			"GENERATOR",
 			"Generator to use",
-			generator_name
+			generators::first_available(build)
 		);
-		log::debug("Chosen generator is", generator_name);
-
-
-		boost::algorithm::to_lower(generator_name);
-		for (auto& gen: generators)
-			if (boost::algorithm::to_lower_copy(gen->name()) == generator_name)
-			{
-				if (!gen->is_available(build))
-					CONFIGURE_THROW(
-						error::InvalidGenerator(
-							"Generator '" + generator_name + "' is not available"
-						)
-					);
-				return *gen;
-			}
-		CONFIGURE_THROW(
-			error::InvalidGenerator("Unknown generator '" + generator_name + "'")
+		return generators::from_name(
+			name,
+			build,
+			_this->project_directory,
+			*build.fs().which(_this->program_name.string())
 		);
 	}
+
 	void Application::print_help()
 	{
 		std::cout
@@ -350,7 +301,7 @@ namespace configure {
 			}
 			else if (next_arg == NextArg::generator)
 			{
-				_this->generator = arg;
+				_this->build_variables["GENERATOR"] = arg;
 				next_arg = NextArg::other;
 			}
 			else if (next_arg == NextArg::target)
