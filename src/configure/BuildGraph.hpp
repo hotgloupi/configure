@@ -39,6 +39,7 @@ namespace configure {
 
 		// A (possibly new) link from source to target nodes.
 		DependencyLink& link(Node const& source, Node const& target);
+		bool has_link(Node const& source, Node const& target) const;
 
 		// The underlying boost graph.
 		Graph const& graph() const;

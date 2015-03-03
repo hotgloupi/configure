@@ -61,6 +61,8 @@ namespace configure {
 		return res.first->second;
 	}
 
+	bool BuildGraph::has_link(Node const& source, Node const& target) const
+	{ return boost::edge(source.index, target.index, _this->graph).second; }
 
 	NodePtr const& BuildGraph::node(Node::index_type idx) const
 	{ return _this->node_map.at(idx); }
