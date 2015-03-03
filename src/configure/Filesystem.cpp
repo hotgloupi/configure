@@ -186,8 +186,8 @@ namespace configure {
 	boost::optional<fs::path> Filesystem::which(std::string const& program_name)
 	{
 		fs::path program(program_name);
-		if (program.is_absolute() && fs::is_regular_file(program))
-			return program;
+		if ((program.is_absolute() || program.is_relative()) && fs::is_regular_file(program))
+			return fs::absolute(program);
 		char const* PATH = ::getenv("PATH");
 		if (PATH == nullptr)
 			return boost::none;
