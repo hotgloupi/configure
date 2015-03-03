@@ -194,9 +194,12 @@ namespace configure { namespace generators {
 
 		std::ofstream out((_build.directory() / "Makefile").string());
 		out << "# Generated makefile" << std::endl;
-		// This speed up the makefile
-		out << "MAKEFLAGS += --no-builtin-rules" << std::endl;
-		out << ".SUFFIXES:" << std::endl;
+		if (_name == "Makefile")
+		{
+			// This speed up the makefile
+			out << "MAKEFLAGS += --no-builtin-rules" << std::endl;
+			out << ".SUFFIXES:" << std::endl;
+		}
 		BuildGraph const& bg = _build.build_graph();
 		Graph const& g = bg.graph();
 
