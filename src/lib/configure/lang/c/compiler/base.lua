@@ -275,6 +275,8 @@ function M:_build_objects(args)
 		if getmetatable(source) ~= Node then
 			source = self.build:source_node(Path:new(source))
 		end
+		source:set_property('language', self.lang)
+		source:set_property('include_directories', include_directories)
 		objects[idx] = self:_build_object{
 			source = source,
 			target = self.build:target_node(
