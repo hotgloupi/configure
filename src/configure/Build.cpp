@@ -266,7 +266,7 @@ namespace configure {
 	{
 		this->option<T>(name, description);
 		if (!_this->env.has(name))
-			_this->env.set(name, default_value);
+			return _this->env.set<T>(name, default_value);
 		return _this->env.get<T>(name);
 	}
 
