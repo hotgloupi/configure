@@ -4,6 +4,7 @@
 
 #include "Node.hpp"
 #include "DependencyLink.hpp"
+#include "utils/path.hpp"
 
 #include <memory>
 
@@ -13,7 +14,9 @@ namespace configure {
 	class BuildGraph
 	{
 	public:
-		typedef std::map<boost::filesystem::path, PropertyMap> FileProperties;
+		typedef
+			std::unordered_map<boost::filesystem::path, PropertyMap>
+			FileProperties;
 
 	private:
 		struct Impl;

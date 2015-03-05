@@ -33,3 +33,13 @@ namespace boost { namespace serialization {
 }}
 
 BOOST_SERIALIZATION_SPLIT_FREE(boost::filesystem::path);
+
+namespace std {
+
+	template<> struct hash<boost::filesystem::path>
+	{
+		size_t operator ()(boost::filesystem::path const& p) const
+		{ return hash_value(p); }
+	};
+
+}

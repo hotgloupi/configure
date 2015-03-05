@@ -104,6 +104,7 @@ namespace configure {
 	{
 		Values::size_type size;
 		ar >> size;
+		_values.reserve(size);
 		for (Values::size_type i = 0; i < size; ++i)
 		{
 			Values::value_type el;

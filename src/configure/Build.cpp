@@ -13,6 +13,7 @@
 #include "quote.hpp"
 #include "utils/path.hpp"
 #include "PropertyMap.hpp"
+#include "utils/path.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -23,25 +24,14 @@
 #include <boost/optional.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
-#include <boost/serialization/map.hpp>
+#include <boost/serialization/utility.hpp>
 
-#include <map>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 #include <fstream>
 
 namespace fs = boost::filesystem;
-
-namespace std {
-
-	template<> struct hash<boost::filesystem::path>
-	{
-		size_t operator ()(boost::filesystem::path const& p) const
-		{ return hash_value(p); }
-	};
-
-}
 
 namespace configure {
 
@@ -54,7 +44,7 @@ namespace configure {
 		std::unordered_map<std::string, NodePtr> virtual_nodes;
 		std::unordered_map<fs::path, NodePtr>    file_nodes;
 		std::unordered_map<fs::path, NodePtr>    directory_nodes;
-		std::map<fs::path, PropertyMap>          properties;
+		BuildGraph::FileProperties               properties;
 		BuildGraph                               build_graph;
 		NodePtr                                  root_node;
 		Filesystem                               fs;
@@ -109,7 +99,16 @@ namespace configure {
 			try {
 				std::ifstream in(_this->properties_path.string(), std::ios::binary);
 				boost::archive::binary_iarchive ar(in);
-				ar & _this->properties;
+				// ar & _this->properties; // XXX Unordered map not yet supported
+				BuildGraph::FileProperties::size_type size;
+				ar >> size;
+				_this->properties.reserve(size);
+				for (BuildGraph::FileProperties::size_type i = 0; i < size; ++i)
+				{
+					BuildGraph::FileProperties::value_type el;
+					ar >> el;
+					_this->properties.insert(std::move(el));
+				}
 			} catch (...) {
 				CONFIGURE_THROW(
 					error::InvalidEnviron("Couldn't load properties")
@@ -142,7 +141,11 @@ namespace configure {
 			try {
 				std::ofstream out(_this->properties_path.string(), std::ios::binary);
 				boost::archive::binary_oarchive ar(out);
-				ar & _this->properties;
+				// ar & _this->properties; // XXX Unordered map not yet supported
+				BuildGraph::FileProperties::size_type s = _this->properties.size();
+				ar << s;
+				for (auto& el: _this->properties)
+					ar << el;
 			} catch (...) {
 				log::error("Couldn't save properties in", _this->env_path, ":",
 						   error_string());
