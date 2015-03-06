@@ -40,6 +40,8 @@ namespace configure { namespace utils {
 		// Now navigate down the directory branch
 		for (; it_full != end_full; ++it_full)
 			ret /= *it_full;
+		if (ret.empty())
+			return ".";
 		return ret;
 	}
 
