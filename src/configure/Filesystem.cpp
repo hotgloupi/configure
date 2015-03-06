@@ -143,9 +143,14 @@ namespace configure {
 		return this->glob(_build.project_directory(), pattern);
 	}
 
-	std::vector<NodePtr> Filesystem::rglob(path_t const& dir,
+	std::vector<NodePtr> Filesystem::rglob(path_t const& dir_,
 	                                       std::string const& pattern)
 	{
+		fs::path dir;
+		if (dir_.is_absolute())
+			dir = dir_;
+		else
+			dir = _build.project_directory() / dir_;
 		std::vector<NodePtr> res = this->glob(dir, pattern);
 		fs::recursive_directory_iterator it(dir), end;
 		for (; it != end; ++it)
