@@ -44,6 +44,29 @@ namespace configure { namespace generators {
 		BuildGraph const& bg = _build.build_graph();
 		Graph const& g = bg.graph();
 
+		{
+			Rule regen;
+			regen.add_target(_build.target_node("Makefile"));
+			for (auto& project_dir: _build.project_stack())
+			{
+				auto p = Build::find_project_file(project_dir);
+				auto& n = _build.source_node(p);
+				regen.add_source(n);
+			}
+			ShellCommand regen_cmd;
+			regen_cmd.append(
+				_build.target_node(_configure_exe),
+				"--project", _build.project_stack().at(0),
+				_build.directory()
+			);
+			regen.add_shell_command(std::move(regen_cmd));
+			//ShellCommand make_cmd;
+			//make_cmd.extend(this->build_command("all"));
+			//regen.add_shell_command(std::move(make_cmd));
+			_build.add_rule(std::move(regen));
+		}
+
+
 		for (auto vertex_range = boost::vertices(g);
 		     vertex_range.first != vertex_range.second;
 		     ++vertex_range.first)
@@ -194,7 +217,8 @@ namespace configure { namespace generators {
 		else
 			node_path = &absolute_node_path;
 
-		std::ofstream out((_build.directory() / "Makefile").string());
+		auto& makefile_node = _build.target_node("Makefile");
+		std::ofstream out(makefile_node->path().string());
 		out << "# Generated makefile" << std::endl;
 		if (_name == "Makefile")
 		{
@@ -231,6 +255,8 @@ namespace configure { namespace generators {
 			out << "\n";
 		}
 
+		auto generated_commands_property_name =
+			std::string(this->name()) + "_GENERATED_COMMANDS";
 		std::unordered_set<Node const*> to_delete;
 		for (auto& node: _targets)
 		{
@@ -273,11 +299,16 @@ namespace configure { namespace generators {
 			out << std::endl;
 			if (node->is_file())
 			{
+				bool had_commands_property = node->has_property(
+					generated_commands_property_name
+				);
 				node->set_property<std::string>(
-					std::string(this->name()) + "_GENERATED_COMMANDS",
+					generated_commands_property_name,
 					boost::join(command_strings, "\n")
 				);
-				if (node->properties().dirty())
+				if (had_commands_property &&
+				    node != makefile_node &&
+				    node->properties().dirty())
 					to_delete.insert(node.get());
 			}
 		}
