@@ -2,9 +2,18 @@
 
 namespace configure { namespace log {
 
+	static Level get_default_log_level()
+	{
+		if (getenv("CONFIGURE_DEBUG") != nullptr)
+			return Level::debug;
+		else if(getenv("CONFIGURE_VERBOSE") != nullptr)
+			return Level::verbose;
+		else return Level::status;
+	}
+
 	Level& level()
 	{
-		static Level value = Level::status;
+		static Level value = get_default_log_level();
 		return value;
 	}
 
