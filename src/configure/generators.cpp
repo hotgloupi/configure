@@ -6,7 +6,8 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 
-#include <map>
+#include <vector>
+#include <utility>
 
 namespace fs = boost::filesystem;
 
@@ -31,7 +32,7 @@ namespace configure { namespace generators {
 		available_t is_available;
 	};
 
-	typedef std::map<std::string, GeneratorDescription> GeneratorMap;
+	typedef std::vector<std::pair<std::string, GeneratorDescription>> GeneratorMap;
 
 	static GeneratorMap const& all()
 	{
@@ -39,9 +40,9 @@ namespace configure { namespace generators {
 		if (res.empty())
 		{
 #define ADD_GENERATOR(T)\
-			res[T::name()] = {&create<T>, &T::is_available};
-			ADD_GENERATOR(Makefile);
+			res.push_back(std::make_pair<std::string, GeneratorDescription>(T::name(), {&create<T>, &T::is_available}));
 			ADD_GENERATOR(NMakefile);
+			ADD_GENERATOR(Makefile);
 			ADD_GENERATOR(Shell);
 #undef ADD_GENERATOR
 		}
