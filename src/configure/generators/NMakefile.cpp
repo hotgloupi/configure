@@ -40,7 +40,7 @@ namespace configure { namespace generators {
 		for (auto& node: _includes)
 			out
 				<< "!IF EXISTS(" << node->path().string() << ")" << std::endl
-				<< "  !INCLUDE " << node->path().string() << std::endl
+				<< "!INCLUDE " << node->path().string() << std::endl
 				<< "!ENDIF" << std::endl;
 	}
 
