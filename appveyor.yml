@@ -19,6 +19,8 @@ install:
     - SET PIP="%PYTHON%/Scripts/pip.exe"
     - "%PIP% --version"
     - "%PIP% install behave"
+    - SET BEHAVE="%PYTHON%/Scripts/behave.exe"
+    - "%BEHAVE% --version"
     - CALL "C:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/vcvarsall.bat" x86
     - SET CONFIGURE_LIBRARY_DIR=%APPVEYOR_BUILD_FOLDER%/src/lib
 
@@ -32,4 +34,4 @@ build_script:
 test_script:
     - configure.exe build --build --target check
     - SET CONFIGURE_EXE=%APPVEYOR_BUILD_FOLDER%/build/bin/configure.exe
-    - behave test/features -q -m -k
+    - "%BEHAVE% test/features -q -m -k"
