@@ -7,12 +7,6 @@ before_install:
       fi
     - if [ "${COVERALLS}" = "true" ]; then
         sudo pip install cpp-coveralls ;
-        if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-            sudo apt-get install luarocks;
-        else
-            brew install luarocks;
-        fi;
-        sudo luarocks install luacov-coveralls ;
       fi
 install:
     - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
@@ -40,7 +34,7 @@ script:
 after_success:
     - if [ "${COVERALLS}" = "true" ]; then
         ${GCOV} --version ;
-        cd build && coveralls --gcov ${GCOV} --exclude lua --exclude test --gcov-options '\-lp' ;
+        coveralls --build-root build --gcov ${GCOV} --exclude lua --exclude test --gcov-options '\-lp' ;
       fi
 git:
     submodules: false
