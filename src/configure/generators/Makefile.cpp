@@ -199,8 +199,8 @@ namespace configure { namespace generators {
 	void Makefile::generate() const
 	{
 		bool use_relpath = _build.option<bool>(
-		    "GENERATOR_" + std::string(this->name()) + "_USE_RELATIVE_PATH",
-		    std::string(this->name()) + " generator uses relative path",
+		    "GENERATOR_" + std::string(_name) + "_USE_RELATIVE_PATH",
+		    std::string(_name) + " generator uses relative path",
 		    this->use_relative_path()
 		);
 		std::unique_ptr<ShellFormatter> formatter;
