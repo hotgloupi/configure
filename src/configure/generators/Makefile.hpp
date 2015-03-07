@@ -23,8 +23,6 @@ namespace configure { namespace generators {
 		         path_t configure_exe,
 		         char const* name = nullptr);
 
-		void prepare() override;
-		void generate() const override;
 		std::vector<std::string>
 		build_command(std::string const& target) const override;
 
@@ -36,6 +34,8 @@ namespace configure { namespace generators {
 		virtual std::string dump_command(std::vector<std::string> const& cmd) const;
 		virtual bool use_relative_path() const;
 		virtual void include_dependencies(std::ostream& out, bool relative) const;
+		void prepare();
+		void generate() const override;
 	};
 
 }}

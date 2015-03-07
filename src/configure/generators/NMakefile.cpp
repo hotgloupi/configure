@@ -5,7 +5,16 @@
 #include <configure/quote.hpp>
 #include <configure/Node.hpp>
 
+#include <iostream>
+
 namespace configure { namespace generators {
+
+	void NMakefile::prepare()
+	{
+		Makefile::prepare();
+		for (auto& node: _includes)
+			_final_targets.push_back(node);
+	}
 
 	bool NMakefile::is_available(Build& build)
 	{
