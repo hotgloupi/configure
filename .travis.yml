@@ -20,6 +20,7 @@ install:
         if [ "$CXX_COMPILER" = g++-4.8 ]; then sudo apt-get install -qq g++-4.8; fi;
         sudo apt-get install libboost1.48-all-dev;
       fi
+    - sudo pip install behave
     - $CXX_COMPILER --version
     - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         CXX=$CXX_COMPILER ./bootstrap/unix.sh;
