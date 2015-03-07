@@ -61,6 +61,7 @@ namespace configure {
 		bool                               build_mode;
 		std::string                        build_target;
 		std::vector<std::string>           builtin_command_args;
+		std::string                        print_var;
 		Impl(std::vector<std::string> args)
 			: program_name(args.at(0))
 			, args(std::move(args))
@@ -120,6 +121,13 @@ namespace configure {
 			build.configure(_this->project_directory);
 			if (_this->dump_graph_mode)
 				build.dump_graphviz(std::cout);
+			if (!_this->print_var.empty())
+			{
+				if (!build.env().has(_this->print_var))
+					CONFIGURE_THROW(error::InvalidKey(_this->print_var));
+				std::cout << build.env().as_string(_this->print_var) << std::endl;
+				continue;
+			}
 			log::debug("Generating the build files in", build.directory());
 			auto generator = this->_generator(build);
 			assert(generator != nullptr);
@@ -223,6 +231,9 @@ namespace configure {
 			<< "  --dump-env" << "            "
 			<< "Dump all environment variables\n"
 
+			<< "  -P, --print-var" << "       "
+			<< "Print a variable and exit\n"
+
 			<< "  --dump-targets" << "        "
 			<< "Dump all targets\n"
 
@@ -276,7 +287,9 @@ namespace configure {
 		}
 
 		bool has_project = false;
-		enum class NextArg { project, generator, target, builtin_command, other };
+		enum class NextArg {
+			project, generator, target, builtin_command, print_var, other
+		};
 		NextArg next_arg = NextArg::other;
 		for (auto const& arg: _this->args)
 		{
@@ -309,6 +322,12 @@ namespace configure {
 				_this->build_target = arg;
 				next_arg = NextArg::other;
 			}
+			else if (next_arg == NextArg::print_var)
+			{
+				_this->print_var = arg;
+				next_arg = NextArg::other;
+				log::level() = log::Level::error;
+			}
 			else if (next_arg == NextArg::builtin_command)
 				_this->builtin_command_args.push_back(arg);
 			else if (arg == "-p" || arg == "--project")
@@ -319,6 +338,8 @@ namespace configure {
 				_this->dump_options = true;
 			else if (arg == "--dump-env")
 				_this->dump_env = true;
+			else if (arg == "-P" || arg == "--print-var")
+				next_arg = NextArg::print_var;
 			else if (arg == "--dump-targets")
 				_this->dump_targets = true;
 			else if (arg == "-G" || arg == "--generator")
