@@ -87,7 +87,7 @@ namespace configure {
 	public:
 		Environ();
 		Environ(Environ const& other);
-		~Environ();
+		virtual ~Environ();
 
 		bool has(std::string const& key) const;
 		Kind kind(std::string const& key) const;
