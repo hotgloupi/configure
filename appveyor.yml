@@ -13,6 +13,12 @@ platform:
     - x86
 
 install:
+    - SET PYTHON=C:/Python27
+    - ps: (new-object net.webclient).DownloadFile('https://raw.github.com/pypa/pip/master/contrib/get-pip.py', 'C:/get-pip.py')
+    - "%PYTHON%/python.exe C:/get-pip.py"
+    - SET PIP="%PYTHON%/Scripts/pip.exe"
+    - "%PIP% --version"
+    - "%PIP% install behave"
     - CALL "C:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/vcvarsall.bat" x86
     - SET CONFIGURE_LIBRARY_DIR=%APPVEYOR_BUILD_FOLDER%/src/lib
 
