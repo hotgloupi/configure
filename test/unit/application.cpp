@@ -30,6 +30,6 @@ BOOST_AUTO_TEST_CASE(no_build_dir)
 	TemporaryDirectory env;
 	env.create_file("configure.lua", "-- nothing\n");
 	app_t app({"pif"});
-	BOOST_CHECK_EQUAL(app.build_directories().size(), 0);
+	BOOST_CHECK_EQUAL(app.build_directories().size(), 0u);
 	BOOST_CHECK_EQUAL(app.project_directory(), env.dir());
 }
