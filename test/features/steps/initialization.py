@@ -1,6 +1,7 @@
 import os
 import shlex
 import sys
+import time
 
 @given('a temporary directory')
 def step_impl(ctx):
@@ -45,6 +46,8 @@ def step_impl(ctx):
 @given('a source file {filename}')
 @when('a source file {filename}')
 def step_impl(ctx, filename):
+    if sys.platform.startswith('darwin') and os.path.exists(filename):
+        time.sleep(1)
     with open(filename, 'w') as f:
         if sys.platform.startswith('win'):
             ctx.text = ctx.text.replace('\r','')
