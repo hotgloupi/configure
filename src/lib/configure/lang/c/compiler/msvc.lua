@@ -38,18 +38,24 @@ end
 function Compiler:_build_object(args)
 	command = { self.binary_path, '-nologo', self._language_flag }
 	self:_add_optimization_flag(command, args)
-	if self.exception == true then
+	if args.exception == true then
 		table.append(command, '-EHsc')
 	end
+	if args.debug then
+		table.append(command, '-Z7')
+	end
+	if args.warnings then
+		table.append(command, '-W3')
+	end
 	local defines = table.extend({}, args.defines)
-	if self.runtime == 'static' then
-		if self.threading then
+	if args.runtime == 'static' then
+		if args.threading then
 			table.append(command, '-MT')
 		else
 			table.append(command, '-ML')
 		end
 	else -- dynamic runtime
-		if self.threading then
+		if args.threading then
 			table.append(command, '-MD')
 		else
 			table.append(command, '-ML') -- Single threaded app
@@ -84,6 +90,13 @@ end
 
 function Compiler:_link_executable(args)
 	command = {self.link_path, '-nologo',}
+
+	if args.debug then
+		table.append(command, '-DEBUG')
+	end
+	if args.coverage then
+		table.append(command, '-Profile')
+	end
 
 	for _, dir in ipairs(args.library_directories)
 	do
@@ -132,6 +145,12 @@ function Compiler:_link_library(args)
 		)
 		rule:add_target(linker_lib)
 		table.extend(command, {self.link_path, '-DLL', '-IMPLIB:' .. tostring(linker_lib:path())})
+		if args.debug then
+			table.append(command, '-DEBUG')
+		end
+		if args.coverage then
+			table.append(command, '-Profile')
+		end
 	else
 		table.extend(command, {self.lib_path})
 		linker_lib = args.target
