@@ -40,7 +40,7 @@ script:
 after_success:
     - if [ "${COVERALLS}" = "true" ]; then
         ${GCOV} --version ;
-        coveralls --gcov ${GCOV} --exclude lua --exclude test --gcov-options '\-lp' ;
+        cd build && coveralls --gcov ${GCOV} --exclude lua --exclude test --gcov-options '\-lp' ;
       fi
 git:
     submodules: false
