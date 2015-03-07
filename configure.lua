@@ -165,31 +165,27 @@ function configure(build)
 	end
 	build:add_rule(unit_tests)
 
-	local functional_tests = Rule:new():add_target(build:virtual_node("check/functional"))
-	for _, dir in ipairs(build:fs():list_directory("test/functional")) do
-		if dir:path():is_directory() then
-			local test_name = tostring(dir:path():filename())
-			local test_node = build:virtual_node("check/function/" .. test_name)
-			build:add_rule(
+	behave_exe = build:fs():which("behave")
+	if behave_exe ~= nil then
+		build:add_rule(
 				Rule:new()
-					:add_target(test_node)
+					:add_target(build:virtual_node("check/features"))
 					:add_shell_command(ShellCommand:new(
-						configure_exe,
-						'-p', dir, build:directory() / "test/functional" / test_name,
-						'--build', '--target', 'check', '-d'
+						behave_exe,
+						build:project_directory() / "test/features",
+						"-q", "-m", "-k"
 					))
 					:add_source(configure_exe)
-			)
-			functional_tests:add_source(test_node)
-		end
+		)
+	else
+		build:warn("Behave not installed, functional tests won't be executed")
 	end
-	build:add_rule(functional_tests)
 
 	build:add_rule(
 		Rule:new()
 			:add_target(build:virtual_node("check"))
 			:add_source(build:virtual_node("check/unit"))
-			:add_source(build:virtual_node("check/functional"))
+			:add_source(build:virtual_node("check/features"))
 	)
 
 end
