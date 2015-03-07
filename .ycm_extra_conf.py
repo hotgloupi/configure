@@ -34,6 +34,7 @@ elif sys.platform.startswith('darwin'):
         '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/System/Library/Frameworks',
         '/Users/hotgloupi/local/lib/c++/v1',
         '/usr/lib/c++/v1',
+        '/usr/local/include'
     ])
 elif sys.platform.startswith('linux'):
     for gcc_version in ['4.8', '4.7']:
