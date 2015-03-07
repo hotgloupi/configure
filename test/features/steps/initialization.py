@@ -36,7 +36,7 @@ def step_impl(ctx):
 
 @given('a project configuration')
 def step_impl(ctx):
-    ctx.execute_steps("Given a temporary directory")
+    ctx.execute_steps(u"Given a temporary directory")
     with open("configure.lua", 'w') as f:
         f.write(ctx.text)
     ctx.initialized = True
@@ -46,8 +46,10 @@ def step_impl(ctx):
 @when('a source file {filename}')
 def step_impl(ctx, filename):
     with open(filename, 'w') as f:
+        if sys.platform.startswith('win'):
+            ctx.text = ctx.text.replace('\r','')
         f.write(ctx.text)
-    with open(filename, 'r') as f:
+    with open(filename, 'rU') as f:
         print("Source file", filename, "content:")
         print(f.read())
 
@@ -64,7 +66,7 @@ def step_impl(ctx, exe):
 @when('I configure and build')
 def step_impl(ctx):
     ctx.execute_steps(
-        """
+        u"""
         When I configure the build
         And I build everything
         """
@@ -76,5 +78,5 @@ def impl(ctx, args):
 
 @when('I configure with {args}')
 def impl(ctx, args):
-    ctx.execute_steps("When I try configure with %s" % args)
+    ctx.execute_steps(u"When I try configure with %s" % args)
     assert ctx.configured
