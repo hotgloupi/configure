@@ -1,6 +1,4 @@
 from __future__ import print_function
-
-import configure
 import sys
 
 @given('a system executable {exe}')

@@ -1,5 +1,4 @@
 import os
-import configure
 
 @then('{path} is a directory')
 def impl(ctx, path):
