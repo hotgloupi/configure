@@ -219,7 +219,7 @@ namespace configure { namespace generators {
 
 		auto& makefile_node = _build.target_node("Makefile");
 		std::ofstream out(makefile_node->path().string());
-		out << "# Generated makefile" << std::endl;
+		out << "# Generated " << _name << std::endl;
 		if (_name == "Makefile")
 		{
 			// This speed up the makefile
