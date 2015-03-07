@@ -132,7 +132,7 @@ namespace configure {
 		std::vector<std::string> res;
 		res.reserve(_values.size());
 		for (auto& p: _values)
-			res.push_back(p.first);
+			res.push_back(Environ::normalize(p.first));
 		return res;
 	}
 
