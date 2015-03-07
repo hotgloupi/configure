@@ -86,16 +86,13 @@ function configure(build)
 	local library_directories = {}
 	local include_directories = {'src'}
 
+	local boost_include_dir = build:string_option("BOOST_INCLUDE_DIR", "Boost include dir")
+	local boost_library_dir = build:string_option("BOOST_LIBRARY_DIR", "Boost library dir")
+	table.extend(include_directories, {boost_include_dir})
+	table.extend(library_directories, {boost_library_dir})
+
 	if build:host():os() == Platform.OS.windows then
 		build:status("XXX Using boost auto link feature")
-
-		local boost_include_dir = build:string_option("BOOST_INCLUDE_DIR", "Boost include dir")
-		build:status("XXX Using boost include dir:", boost_include_dir)
-		table.extend(include_directories, {boost_include_dir})
-
-		local boost_library_dir = build:string_option("BOOST_LIBRARY_DIR", "Boost library dir")
-		build:status("XXX Using boost library dir:", boost_library_dir)
-		table.extend(library_directories, {boost_library_dir})
 		table.extend(libs, {
 			cxx.Library:new{name = 'Shlwapi', system = true, kind = 'static'},
 		})
