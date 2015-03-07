@@ -178,7 +178,7 @@ function configure(build)
 					:add_source(configure_exe)
 		)
 	else
-		build:warn("Behave not installed, functional tests won't be executed")
+		build:warning("Behave not installed, functional tests won't be executed")
 	end
 
 	build:add_rule(
