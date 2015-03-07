@@ -143,7 +143,7 @@ function configure(build)
 	end
 
 	local test_include_directories = table.append({}, 'test/unit')
-	local unit_tests = Rule:new():add_target(build:virtual_node("check/unit"))
+	local unit_tests = Rule:new():add_target(build:virtual_node("check"))
 	for i, src in pairs(fs:rglob("test/unit", "*.cpp"))
 	do
 		local test_name = src:path():stem()
@@ -155,7 +155,11 @@ function configure(build)
 			defines = {{"BOOST_TEST_MODULE", test_name},},
 			include_directories = test_include_directories,
 			include_files = {
-				build:host():os() == Platform.OS.osx and 'boost/test/unit_test.hpp' or 'boost/test/included/unit_test.hpp',
+				(
+					build:host():os() == Platform.OS.osx and
+					'boost/test/unit_test.hpp' or
+					'boost/test/included/unit_test.hpp'
+				),
 			},
 			coverage = with_coverage,
 			library_directories = library_directories,
@@ -164,28 +168,4 @@ function configure(build)
 		unit_tests:add_shell_command(ShellCommand:new(bin))
 	end
 	build:add_rule(unit_tests)
-
-	behave_exe = build:fs():which("behave")
-	if behave_exe ~= nil then
-		build:add_rule(
-				Rule:new()
-					:add_target(build:virtual_node("check/features"))
-					:add_shell_command(ShellCommand:new(
-						behave_exe,
-						build:project_directory() / "test/features",
-						"-q", "-m", "-k"
-					))
-					:add_source(configure_exe)
-		)
-	else
-		build:warning("Behave not installed, functional tests won't be executed")
-	end
-
-	build:add_rule(
-		Rule:new()
-			:add_target(build:virtual_node("check"))
-			:add_source(build:virtual_node("check/unit"))
-			:add_source(build:virtual_node("check/features"))
-	)
-
 end
