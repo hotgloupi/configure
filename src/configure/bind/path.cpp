@@ -54,6 +54,13 @@ namespace configure {
 		return 1;
 	}
 
+	static int Path_exists(lua_State* state)
+	{
+		auto& self = lua::Converter<fs::path>::extract(state, 1);
+		lua_pushboolean(state, fs::exists(self));
+		return 1;
+	}
+
 	static int Path_tostring(lua_State* state)
 	{
 		auto& self = lua::Converter<fs::path>::extract(state, 1);
@@ -122,6 +129,11 @@ namespace configure {
 			/// @function Path:is_absolute
 			/// @treturn bool True when the path is absolute
 			.def("is_absolute", &fs::path::is_absolute)
+
+			/// Check if a path refers to an existing item.
+			/// @function Path:exists
+			/// @treturn bool True when the filesystem item exists
+			.def("exists", &Path_exists)
 
 			/// True when a path refers to a directory
 			// @function Path:is_directory
