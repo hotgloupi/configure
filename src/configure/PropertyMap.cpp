@@ -14,13 +14,14 @@ namespace configure {
 
 	void PropertyMap::value_changed(std::string const& key)
 	{
-		if (!this->_dirty(key))
-			_dirty_keys.push_back(key);
+		std::string normalized = Environ::normalize(key);
+		if (!this->_dirty(normalized))
+			_dirty_keys.push_back(std::move(normalized));
 	}
 
 	void PropertyMap::new_key(std::string const& key)
 	{
-		_dirty_keys.push_back(key);
+		_dirty_keys.push_back(Environ::normalize(key));
 	}
 
 	bool PropertyMap::dirty() const
