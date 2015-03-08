@@ -65,18 +65,21 @@ namespace configure {
 			/// Retrieve a Node property
 			// @string name The property name
 			// @treturn string|Path|boolean|nil
+			// @function Node:property
 			.def("property", &Node_property)
 
 			/// Set a Node property
 			// @string name The property name
 			// @tparam string|Path|boolean|nil the value to set
 			// @treturn string|Path|boolean|nil
+			// @function Node:set_property
 			.def("set_property", &Node_set_property)
 
 			/// Set a Node property default value
 			// @string name The property name
 			// @tparam string|Path|boolean|nil the default value to set
 			// @treturn string|Path|boolean|nil
+			// @function Node:set_property_default
 			.def("set_property_default", &Node_set_property_default)
 		;
 	}
