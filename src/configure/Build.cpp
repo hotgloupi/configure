@@ -243,7 +243,8 @@ namespace configure {
 		auto it = _this->build_args.find(name);
 		if (it != _this->build_args.end())
 		{
-			log::debug("Found option", name, "in command line arguments:", it->second);
+			log::debug(
+				"Found option", name, "in command line arguments:", it->second);
 			if (std::is_same<T, bool>::value)
 			{
 				std::string str = boost::to_lower_copy(it->second);
