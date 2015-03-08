@@ -189,7 +189,7 @@ namespace configure {
 			// XXX check if not nil
 			_this->lua.construct<std::reference_wrapper<Build>>(*this);
 			_this->lua.call(1);
-		} catch (error::Base& e) {
+		} catch (error::Base&) { //XXX insert project stack here
 			//e << error::message(
 			//	"While configuring project " + project_directory.string()
 			//);

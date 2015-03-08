@@ -135,7 +135,7 @@ namespace configure { namespace lua {
 	{
 		typedef bool extract_type;
 		static extract_type extract(lua_State* state, int index)
-		{ return lua_toboolean(state, index); }
+		{ return lua_toboolean(state, index) != 0; }
 
 		static void push(lua_State* state, bool value)
 		{ lua_pushboolean(state, value); }

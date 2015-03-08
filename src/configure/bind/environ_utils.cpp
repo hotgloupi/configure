@@ -100,7 +100,7 @@ namespace configure { namespace lua {
 		else if (auto ptr = lua_tostring(state, index))
 			return Value(std::string(ptr));
 		else if (lua_isboolean(state, index))
-			return Value((bool) lua_toboolean(state, index));
+			return Value(lua_toboolean(state, index) != 0);
 		else if (lua_isnumber(state, index))
 			return Value((int)lua_tointeger(state, index));
 		else if (lua_istable(state, index))
