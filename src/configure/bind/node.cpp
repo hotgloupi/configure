@@ -81,6 +81,21 @@ namespace configure {
 			// @treturn string|Path|boolean|nil
 			// @function Node:set_property_default
 			.def("set_property_default", &Node_set_property_default)
+
+			/// Check if the node is a directory node
+			// @treturn bool
+			// @function Node:is_directory
+			.def("is_directory", &Node::is_directory)
+
+			/// Check if the node is a file node
+			// @treturn bool
+			// @function Node:is_file
+			.def("is_file", &Node::is_file)
+
+			/// Check if the node is a virtual node
+			// @treturn bool
+			// @function Node:is_virtual
+			.def("is_virtual", &Node::is_virtual)
 		;
 	}
 
