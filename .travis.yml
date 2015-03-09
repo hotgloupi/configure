@@ -3,6 +3,7 @@ cache: apt
 before_install:
     - if [ "$TRAVIS_OS_NAME" = linux ]; then
         sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test;
+        sudo apt-add-repository -y ppa:boost-latest/ppa;
         sudo apt-get update -qq;
       fi
     - if [ "${COVERALLS}" = "true" ]; then
@@ -12,7 +13,7 @@ install:
     - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
         if [ "$CXX_COMPILER" = clang++ ]; then sudo apt-get install -qq clang-3.4; fi;
         if [ "$CXX_COMPILER" = g++-4.8 ]; then sudo apt-get install -qq g++-4.8; fi;
-        sudo apt-get install libboost1.48-all-dev;
+        sudo apt-get install libboost1.55-all-dev;
       fi
     - sudo pip install behave
     - $CXX_COMPILER --version
