@@ -132,8 +132,29 @@ function M:new(args)
 	end
 	setmetatable(o, self)
 	self.__index = self
+	o:init()
 	return o
 end
+
+
+
+--- Initialize the compiler.
+--
+-- This method is called at the end of the new() method when all attributes
+-- are set. A sub-class should call its parent method before doing anything.
+function M:init()
+	self.binary = self.build:file_node(self.binary_path)
+	--self.binary:set_lazy_property(
+	--	"version",
+	--	self._find_compiler_version,
+	--	self
+	--)
+end
+
+
+function M:_find_compiler_version()
+end
+
 
 --- Link an executable.
 --
@@ -524,7 +545,7 @@ function M:find_tool(var_name, description, default_value)
 		end
 		self.build:env():set(var_name, path)
 	end
-	return path
+	return self.build:file_node(path)
 end
 
 --- Implementation API methods

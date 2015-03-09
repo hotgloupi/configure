@@ -6,6 +6,8 @@
 
 #include <boost/filesystem/path.hpp>
 
+#include <functional>
+
 namespace configure {
 
 	// Base type used to store them.
@@ -55,6 +57,9 @@ namespace configure {
 		typename Environ::const_ref<T>::type
 		set_property_default(std::string const& key, T&& value)
 		{ return this->properties().set_default<Ret>(key, std::forward<T>(value)); }
+
+		void set_lazy_property(std::string const& key,
+		                       std::function<Environ::Value()> const& cb);
 
 	public:
 		virtual Kind kind() const = 0;

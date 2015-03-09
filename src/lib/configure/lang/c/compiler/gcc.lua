@@ -10,11 +10,10 @@ Compiler.name = "gcc"
 Compiler.binary_names = {'gcc', }
 Compiler.lang = 'c'
 
-function Compiler:new(args)
-	o = BaseCompiler.new(self, args)
-	o.ar_path = o:find_tool("AR", "ar program", "ar")
-	o.ranlib_path = o:find_tool("RANLIB", "ranlib program", "ranlib")
-	return o
+function Compiler:init()
+	BaseCompiler.init(self)
+	self.ar = self:find_tool("AR", "ar program", "ar")
+	self.ranlib = self:find_tool("RANLIB", "ranlib program", "ranlib")
 end
 
 Compiler._optimization_flags = {
@@ -56,7 +55,7 @@ function Compiler:_add_warnings_flag(cmd, args)
 end
 
 function Compiler:_build_object(args)
-	command = {self.binary_path}
+	command = {self.binary}
 
 	self:_add_language_flag(command, args)
 	self:_add_optimization_flag(command, args)
@@ -131,7 +130,7 @@ function Compiler:_add_linker_library_flags(cmd, args, sources)
 end
 
 function Compiler:_link_executable(args)
-	local command = {self.binary_path, }
+	local command = {self.binary, }
 
 	local sources = {}
 	self:_add_linker_flags(command, args, sources)
@@ -155,12 +154,12 @@ function Compiler:_link_library(args)
 			Rule:new()
 				:add_sources(args.objects)
 				:add_target(args.target)
-				:add_shell_command(ShellCommand:new(self.ar_path, 'rcs', args.target, table.unpack(args.objects)))
-				:add_shell_command(ShellCommand:new(self.ranlib_path, args.target))
+				:add_shell_command(ShellCommand:new(self.ar, 'rcs', args.target, table.unpack(args.objects)))
+				:add_shell_command(ShellCommand:new(self.ranlib, args.target))
 		)
 	else
 		assert(args.kind == 'shared')
-		local command = { self.binary_path,}
+		local command = { self.binary,}
 		if self.build:host():os() == Platform.OS.osx then
 			table.extend(
 				command,
