@@ -2,10 +2,14 @@
 
 #include "Environ.hpp"
 
+#include <boost/serialization/base_object.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+
 #include <algorithm>
 
-namespace configure {
-
+namespace configure
+{
 	PropertyMap::PropertyMap()
 	{}
 
@@ -32,14 +36,27 @@ namespace configure {
 
 	bool PropertyMap::_dirty(std::string const& key) const
 	{
-		return std::find(
-			_dirty_keys.begin(),
-			_dirty_keys.end(),
-			key
-		) != _dirty_keys.end();
+		auto it = std::find(_dirty_keys.begin(), _dirty_keys.end(), key);
+		return it != _dirty_keys.end();
 	}
 
 	void PropertyMap::mark_clean()
 	{ _dirty_keys.clear(); }
 
+	template <typename Archive>
+	void PropertyMap::serialize(Archive& ar, unsigned int const version)
+	{
+		for (auto& pair: _deferred)
+			this->set<Value>(pair.first, pair.second);
+		_deferred.clear();
+		ar & boost::serialization::base_object<Environ>(*this);
+	}
+
+#define INSTANCIATE(T) \
+	template \
+	void PropertyMap::serialize<T>(T&, unsigned int const); \
+
+	INSTANCIATE(boost::archive::binary_iarchive);
+	INSTANCIATE(boost::archive::binary_oarchive);
+#undef INSTANCIATE
 }
