@@ -65,7 +65,7 @@ namespace configure {
 			log::debug("Computing lazy property", key);
 			this->set_property(key, cb());
 			this->properties().deferred_set(
-			  "last-write-time", Environ::Value(modification_time));
+			  "last-write-time", Environ::Value(static_cast<int64_t>(modification_time)));
 		}
 		else
 		{
