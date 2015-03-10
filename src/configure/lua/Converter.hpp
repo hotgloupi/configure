@@ -7,6 +7,7 @@
 #include <typeinfo>
 #include <type_traits>
 #include <stdexcept>
+#include <cstdint>
 
 namespace configure { namespace lua {
 
