@@ -10,13 +10,6 @@ namespace fs = boost::filesystem;
 
 namespace configure { namespace lua {
 
-	template<> struct Converter<Environ::Value>
-	{
-		typedef Environ::Value extract_type;
-		static extract_type extract(lua_State* state, int index);
-		static void push(lua_State* state, extract_type const& value);
-	};
-
 	template<>
 	struct Converter<std::vector<Environ::Value>>
 	{

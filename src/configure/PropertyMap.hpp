@@ -38,5 +38,4 @@ namespace configure
 		// Do not normalize the key.
 		bool _dirty(std::string const& key) const;
 	};
-
 }

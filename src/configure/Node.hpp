@@ -58,8 +58,9 @@ namespace configure {
 		set_property_default(std::string const& key, T&& value)
 		{ return this->properties().set_default<Ret>(key, std::forward<T>(value)); }
 
-		void set_lazy_property(std::string const& key,
-		                       std::function<Environ::Value()> const& cb);
+		Environ::Value
+		set_cached_property(std::string const& key,
+		                    std::function<Environ::Value()> const& cb);
 
 	public:
 		virtual Kind kind() const = 0;

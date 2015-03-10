@@ -3,6 +3,7 @@
 #include "error.hpp"
 #include "PropertyMap.hpp"
 #include "utils/path.hpp"
+#include "log.hpp"
 
 #include <boost/filesystem.hpp>
 
@@ -46,6 +47,34 @@ namespace configure {
 
 	bool Node::has_property(std::string key) const
 	{ return this->properties().has(std::move(key)); }
+
+	Environ::Value
+	Node::set_cached_property(std::string const& key,
+	                          std::function<Environ::Value()> const& cb)
+	{
+		if (!this->is_file())
+			CONFIGURE_THROW(error::InvalidNode(
+			  "Only file nodes support lazy properties, got " +
+			  this->string()));
+		std::time_t modification_time =
+		  boost::filesystem::last_write_time(this->path());
+		if (!this->has_property(key) ||
+		    !this->has_property("last-write-time") ||
+		    this->property<int64_t>("last-write-time") != modification_time)
+		{
+			log::debug("Computing lazy property", key);
+			this->set_property(key, cb());
+			this->properties().deferred_set(
+			  "last-write-time", Environ::Value(modification_time));
+		}
+		else
+		{
+			log::debug("Keep", key, "lazy property value:",
+			           this->property<int64_t>("last-write-time"), "!=",
+			           modification_time);
+		}
+		return this->properties().get(key);
+	}
 
 	std::string const& Node::name() const
 	{ throw std::runtime_error("This node has no name"); }
