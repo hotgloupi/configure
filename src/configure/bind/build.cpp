@@ -126,7 +126,7 @@ namespace configure {
 			// @tparam[opt] int default_value
 			// @treturn int|nil Associated value
 			// @function Build:int_option
-			.def("int_option", &Build_option<int>)
+			.def("int_option", &Build_option<int64_t>)
 
 			/// Declare an option of type bool and return it's value.
 			// @string name

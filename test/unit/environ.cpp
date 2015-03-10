@@ -103,8 +103,8 @@ BOOST_AUTO_TEST_CASE(all_types)
 /**/
 	CHECK(boolean, bool, true);
 	CHECK(boolean, bool, false);
-	CHECK(integer, int, 42);
-	CHECK(integer, int, 0);
+	CHECK(integer, int64_t, 42);
+	CHECK(integer, int64_t, 0);
 	CHECK(path, fs::path, "test");
 	CHECK(string, std::string, "test");
 #undef CHECK_HAS
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(serialize)
 		e.set<bool>("b1", true);
 		e.set<bool>("b2", false);
 		e.set<std::string>("s1", "custom string éàô");
-		e.set<int>("i1", 42);
+		e.set<int64_t>("i1", 42);
 		e.set<fs::path>("p1", "pif/paf/pouf");
 		e.save(temp.dir() / "env");
 	}
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(serialize)
 		BOOST_CHECK_EQUAL(e.get<bool>("b1"), true);
 		BOOST_CHECK_EQUAL(e.get<bool>("b2"), false);
 		BOOST_CHECK_EQUAL(e.get<std::string>("s1"), "custom string éàô");
-		BOOST_CHECK_EQUAL(e.get<int>("i1"), 42);
+		BOOST_CHECK_EQUAL(e.get<int64_t>("i1"), 42);
 		BOOST_CHECK_EQUAL(e.get<fs::path>("p1"), "pif/paf/pouf");
 	}
 }

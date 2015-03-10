@@ -38,7 +38,7 @@ namespace configure {
 			std::string,
 			boost::filesystem::path,
 			bool,
-			int,
+			int64_t,
 			std::vector<boost::recursive_variant_>
 		>::type Value;
 

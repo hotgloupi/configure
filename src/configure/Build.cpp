@@ -297,7 +297,7 @@ namespace configure {
 /**/
 
 	INSTANCIATE(std::string);
-	INSTANCIATE(int);
+	INSTANCIATE(int64_t);
 	INSTANCIATE(bool);
 	INSTANCIATE(fs::path);
 

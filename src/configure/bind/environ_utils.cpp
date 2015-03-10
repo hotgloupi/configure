@@ -72,9 +72,9 @@ namespace configure { namespace lua {
 				);
 				break;
 			case 3:
-				Converter<int>::push(
+				Converter<int64_t>::push(
 					state,
-					boost::get<int>(value)
+					boost::get<int64_t>(value)
 				);
 				break;
 			case 4:
@@ -97,12 +97,12 @@ namespace configure { namespace lua {
 			return Value(fs::path(*ptr));
 		else if (auto ptr = lua::Converter<NodePtr>::extract_ptr(state, index))
 			return Value((*ptr)->path());
-		else if (auto ptr = lua_tostring(state, index))
-			return Value(std::string(ptr));
 		else if (lua_isboolean(state, index))
 			return Value(lua_toboolean(state, index) != 0);
 		else if (lua_isnumber(state, index))
-			return Value((int)lua_tointeger(state, index));
+			return Value(static_cast<int64_t>(lua_tointeger(state, index)));
+		else if (lua_isstring(state, index))
+			return Value(std::string(lua_tostring(state, index)));
 		else if (lua_istable(state, index))
 			return lua::Converter<std::vector<Environ::Value>>::extract(state, index);
 		else
@@ -130,7 +130,7 @@ namespace configure { namespace utils {
 			lua::Converter<bool>::push(state, self.get<bool>(key));
 			break;
 		case Environ::Kind::integer:
-			lua::Converter<int>::push(state, self.get<int>(key));
+			lua::Converter<int64_t>::push(state, self.get<int64_t>(key));
 			break;
 		case Environ::Kind::list:
 		{

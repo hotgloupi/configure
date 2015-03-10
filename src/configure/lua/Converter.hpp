@@ -109,13 +109,24 @@ namespace configure { namespace lua {
 	struct Converter<const char[size]> : Converter<char const*> {};
 
 	template<>
-	struct Converter<int>
+	struct Converter<int32_t>
+	{
+		typedef int32_t extract_type;
+		static extract_type extract(lua_State* state, int index)
+		{ return lua_tointeger(state, index); }
+
+		static void push(lua_State* state, extract_type value)
+		{ lua_pushinteger(state, value); }
+	};
+
+	template<>
+	struct Converter<int64_t>
 	{
 		typedef int extract_type;
 		static extract_type extract(lua_State* state, int index)
 		{ return lua_tointeger(state, index); }
 
-		static void push(lua_State* state, int value)
+		static void push(lua_State* state, extract_type value)
 		{ lua_pushinteger(state, value); }
 	};
 
