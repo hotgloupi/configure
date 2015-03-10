@@ -68,6 +68,14 @@ namespace configure {
 		return 1;
 	}
 
+	static int Path_eq(lua_State* state)
+	{
+		auto& lhs = lua::Converter<fs::path>::extract(state, 1);
+		auto& rhs = lua::Converter<fs::path>::extract(state, 2);
+		lua_pushboolean(state, (lhs == rhs));
+		return 1;
+	}
+
 	void bind_path(lua::State& state)
 	{
 		/// Store a filesystem path.
@@ -111,6 +119,12 @@ namespace configure {
 			// -- p == "path/to/file.extension"
 			//
 			.def("__add", &Path_add)
+
+			/// Equality binary operator
+			// @function Path:__eq
+			// @tparam Path right hand side of the operator
+			// @treturn boolean
+			.def("__eq", &Path_eq)
 
 			/// Last component of a path.
 			// @function Path:filename
