@@ -3,6 +3,10 @@ import shlex
 import sys
 import time
 
+@then('it should pass')
+def step_impl(ctx):
+    pass
+
 @given('a temporary directory')
 def step_impl(ctx):
     assert os.path.isdir(ctx.directory)
