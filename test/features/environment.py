@@ -49,7 +49,9 @@ def after_tag(ctx, tag):
     ctx.disable_coverage = False
 
 def before_scenario(ctx, scenario):
-    ctx.directory = tempfile.mkdtemp(prefix = 'configure-%s-' % scenario.name.replace(' ', ''))
+    ctx.directory = tempfile.mkdtemp(
+        prefix = 'configure-%s-' % scenario.name.replace(' ', '-').replace('/', '-')
+    )
     ctx.old_cwd = os.getcwd()
     os.chdir(ctx.directory)
 
