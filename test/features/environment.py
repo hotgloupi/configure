@@ -50,7 +50,7 @@ def after_tag(ctx, tag):
 
 def before_scenario(ctx, scenario):
     ctx.directory = tempfile.mkdtemp(
-        prefix = 'configure-%s-' % scenario.name.replace(' ', '-').replace('/', '-')
+        prefix = 'configure-%s-' % scenario.name.replace(' ', '-').replace('/', '-').replace('"', '').replace('--', '-')
     )
     ctx.old_cwd = os.getcwd()
     os.chdir(ctx.directory)
