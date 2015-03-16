@@ -166,7 +166,7 @@ namespace configure {
 			if (this->options.inherit_env)
 				all.push_back(make_initializer(inherit_env()));
 
-			if (this->options.stdout == Stream::PIPE)
+			if (this->options.stdout_ == Stream::PIPE)
 				all.push_back(make_initializer(bind_stdout(this->stdout_sink)));
 
 			log::debug("Spawning process:", boost::join(this->command, " "), "with", all.size(), "initializers");
@@ -234,7 +234,7 @@ namespace configure {
 
 	std::string Process::check_output(Command cmd, Options options)
 	{
-		options.stdout = Stream::PIPE;
+		options.stdout_ = Stream::PIPE;
 		Process p(std::move(cmd), std::move(options));
 		if (p.wait() != 0)
 			throw std::runtime_error("Program failed");

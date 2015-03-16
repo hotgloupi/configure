@@ -25,15 +25,15 @@ namespace configure {
 		struct Options
 		{
 			boost::optional<boost::filesystem::path> working_directory;
-			Stream stdin;
-			Stream stdout;
-			Stream stderr;
+			Stream stdin_;
+			Stream stdout_;
+			Stream stderr_;
 			bool inherit_env;
 
 			Options()
-				: stdin(Stream::STDIN)
-				, stdout(Stream::STDOUT)
-				, stderr(Stream::STDERR)
+				: stdin_(Stream::STDIN)
+				, stdout_(Stream::STDOUT)
+				, stderr_(Stream::STDERR)
 				, inherit_env(true)
 			{}
 		};
