@@ -14,6 +14,7 @@ SCRIPT_DIR = os.getcwd()
 include_dirs = [
     'src',
     'lua/src',
+    'boost-process',
 ]
 
 if sys.platform.startswith('win32'):

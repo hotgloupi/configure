@@ -84,7 +84,7 @@ function configure(build)
 	}
 	local libs = {lua,}
 	local library_directories = {}
-	local include_directories = {'src'}
+	local include_directories = {'src', 'boost-process'}
 
 	local boost_include_dir = build:string_option("BOOST_INCLUDE_DIR", "Boost include dir")
 	local boost_library_dir = build:string_option("BOOST_LIBRARY_DIR", "Boost library dir")
@@ -101,6 +101,7 @@ function configure(build)
 			cxx.Library:new{name = 'boost_system', system = true, kind = 'static'},
 			cxx.Library:new{name = 'boost_filesystem', system = true, kind = 'static'},
 			cxx.Library:new{name = 'boost_serialization', system = true, kind = 'static'},
+			cxx.Library:new{name = 'boost_iostreams', system = true, kind = 'static'},
 		})
 	end
 
