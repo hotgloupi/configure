@@ -9,6 +9,7 @@ SCRIPT="$0"
 SCRIPT_DIR="$(cd "$(dirname ${SCRIPT})" && pwd)"
 LUA_SRC_DIR="${SCRIPT_DIR}/../lua/src"
 SRC_DIR="${SCRIPT_DIR}/../src"
+BOOST_PROCESS_DIR="${SCRIPT_DIR}/../src/boost-process"
 CXX="${CXX:-g++}"
 CXXFLAGS="${CXXFLAGS:-}"
 LDFLAGS="${LDFLAGS:-}"
@@ -55,9 +56,9 @@ SRCS=$(find "${SRC_DIR}" -name '*.cpp')
 
 "${CXX}" -x c++ -std=c++11 ${CXXFLAGS} \
 	-o "${BIN}" \
-	-I "${LUA_SRC_DIR}" -I "${SRC_DIR}" \
+	-I "${LUA_SRC_DIR}" -I "${SRC_DIR}" -I "${BOOST_PROCESS_DIR}" \
 	${LUA_SRCS} \
 	${SRCS} \
-	-lboost_filesystem -lboost_serialization -lboost_system ${LDFLAGS}
+	-lboost_filesystem -lboost_serialization -lboost_iostreams -lboost_system ${LDFLAGS}
 
 echo "Created bootstrap at ${BIN}"
