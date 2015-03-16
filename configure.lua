@@ -145,12 +145,17 @@ function configure(build)
 	for i, src in pairs(fs:rglob("test/unit", "*.cpp"))
 	do
 		local test_name = src:path():stem()
+
+		local defines = {{"BOOST_TEST_MODULE", test_name},}
+		if tostring(test_name) == 'process' then
+			table.append(defines, "BOOST_TEST_IGNORE_SIGCHLD")
+		end
 		local bin = compiler:link_executable{
 			name = test_name,
 			directory = 'test/unit',
 			sources = {src, },
 			libraries = test_libs,
-			defines = {{"BOOST_TEST_MODULE", test_name},},
+			defines = defines,
 			include_directories = test_include_directories,
 			include_files = {
 				(
