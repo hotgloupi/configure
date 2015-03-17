@@ -98,10 +98,11 @@ function configure(build)
 		})
 	else
 		table.extend(libs, {
-			cxx.Library:new{name = 'boost_system', system = true, kind = 'static'},
 			cxx.Library:new{name = 'boost_filesystem', system = true, kind = 'static'},
 			cxx.Library:new{name = 'boost_serialization', system = true, kind = 'static'},
 			cxx.Library:new{name = 'boost_iostreams', system = true, kind = 'static'},
+			cxx.Library:new{name = 'boost_exception', system = true, kind = 'static'},
+			cxx.Library:new{name = 'boost_system', system = true, kind = 'static'},
 		})
 	end
 
