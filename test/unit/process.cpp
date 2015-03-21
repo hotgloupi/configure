@@ -13,3 +13,11 @@ BOOST_AUTO_TEST_CASE(ls)
 	auto out = Process::check_output({LS_COMMAND});
 	BOOST_CHECK(!out.empty());
 }
+
+BOOST_AUTO_TEST_CASE(empty_output)
+{
+#ifdef BOOST_POSIX_API
+		auto out = Process::check_output({"true"});
+		BOOST_CHECK(out.empty());
+#endif
+}
