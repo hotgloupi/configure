@@ -190,16 +190,29 @@ namespace configure {
 
 		char buf[4096];
 		std::string res;
-		std::streamsize size;
+		ssize_t size;
 		auto& src = p._this->stdout_source;
-		do {
-			size = src.read(buf, sizeof(buf));
+		while (true)
+		{
+			size = ::read(src.handle(), buf, sizeof(buf));
+			log::debug("Read from", p._this->child, "returned", size);
+			if (size < 0)
+			{
+				if (errno == EINTR)
+				{
+					log::debug("Read interrupted by a signal, let's retry");
+					continue;
+				}
+				throw std::runtime_error("read(): " + std::string(strerror(errno)));
+			}
 			if (size > 0)
 			{
 				log::debug("read", size, "bytes from child", p._this->child, "stdout");
 				res.append(buf, size);
 			}
-		} while (size > 0);
+			if (size == 0)
+				break;
+		}
 		if (p.wait() != 0)
 			throw std::runtime_error("Program failed");
 		return res;

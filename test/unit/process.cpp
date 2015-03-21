@@ -1,5 +1,7 @@
 #include <configure/Process.hpp>
 
+#include <iostream>
+
 using configure::Process;
 
 #ifdef _WIN32
@@ -10,8 +12,12 @@ using configure::Process;
 
 BOOST_AUTO_TEST_CASE(ls)
 {
-	auto out = Process::check_output({LS_COMMAND});
-	BOOST_CHECK(!out.empty());
+	for (int i = 0; i < 1000; i++)
+	{
+		auto out = Process::check_output({"cat", "configure.lua"});
+		BOOST_CHECK(!out.empty());
+		BOOST_CHECK(out.size() == 4650);
+	}
 }
 
 BOOST_AUTO_TEST_CASE(empty_output)
