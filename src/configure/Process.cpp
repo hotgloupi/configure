@@ -8,12 +8,26 @@
 
 #include <cassert>
 #include <sys/wait.h>
+#include <unistd.h>
+
+#if defined(__APPLE__) && defined(__DYNAMIC__)
+#include <crt_externs.h>
+#endif
 
 namespace io = boost::iostreams;
 
 namespace configure {
 
 	namespace {
+
+		char** get_environ()
+		{
+#if defined(__APPLE__) && defined(__DYNAMIC__)
+			return *_NSGetEnviron();
+#else
+			return environ;
+#endif
+		}
 
 		struct Pipe
 		{
@@ -71,7 +85,7 @@ namespace configure {
 
 			if (this->options.inherit_env)
 			{
-				env = environ;
+				env = get_environ();
 			}
 
 			std::unique_ptr<Pipe> stdout_pipe;
