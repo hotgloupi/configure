@@ -7,6 +7,8 @@
 #include <boost/iostreams/device/file_descriptor.hpp>
 
 #include <cassert>
+#include <stdexcept>
+
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -88,13 +90,29 @@ namespace configure {
 				env = get_environ();
 			}
 
+			std::unique_ptr<Pipe> stdin_pipe;
 			std::unique_ptr<Pipe> stdout_pipe;
-			if (this->options.stdout_ == Stream::PIPE)
-			{
-				stdout_pipe = std::unique_ptr<Pipe>(new Pipe);
-			}
+			std::unique_ptr<Pipe> stderr_pipe;
+			std::tuple<bool, Stream, std::unique_ptr<Pipe>&, int> channels[] = {
+				std::make_tuple(false,
+				                this->options.stdin_,
+				                std::ref(stdin_pipe),
+				                STDIN_FILENO),
+				std::make_tuple(true,
+				                this->options.stdout_,
+				                std::ref(stdout_pipe),
+				                STDOUT_FILENO),
+				std::make_tuple(true,
+				                this->options.stderr_,
+				                std::ref(stderr_pipe),
+				                STDERR_FILENO),
+			};
 
-			log::debug("Spawning process:", boost::join(this->command, " "), "initializers");
+			for (auto& channel: channels)
+				if (std::get<1>(channel) == Stream::PIPE)
+					std::get<2>(channel).reset(new Pipe);
+
+			log::debug("Spawning process:", boost::join(this->command, " "));
 			pid_t child = ::fork();
 			if (child < 0)
 			{
@@ -102,16 +120,31 @@ namespace configure {
 			}
 			else if (child == 0) // Child
 			{
-				if (this->options.stdout_ == Stream::PIPE)
+				for (auto& channel: channels)
 				{
-				retry_dup2:
-					int ret = ::dup2(stdout_pipe->sink().handle(), STDOUT_FILENO);
-					if (ret == -1) {
-						if (errno == EINTR) goto retry_dup2;
-						::exit(EXIT_FAILURE);
+					Stream kind = std::get<1>(channel);
+					bool is_sink = std::get<0>(channel);
+					int old_fd = std::get<3>(channel);
+					if (kind == Stream::PIPE)
+					{
+						int new_fd = (is_sink ?
+						              std::get<2>(channel)->sink().handle() :
+						              std::get<2>(channel)->source().handle());
+					retry_dup2:
+						int ret = ::dup2(new_fd, old_fd);
+						if (ret == -1) {
+							if (errno == EINTR) goto retry_dup2;
+							::exit(EXIT_FAILURE);
+						}
+					}
+					else if (kind == Stream::DEVNULL)
+					{
+						::close(old_fd);
 					}
 				}
+				stdin_pipe.reset();
 				stdout_pipe.reset();
+				stderr_pipe.reset();
 				std::vector<char const*> args;
 				for (auto& arg: this->command)
 					args.push_back(arg.c_str());
@@ -186,6 +219,7 @@ namespace configure {
 	std::string Process::check_output(Command cmd, Options options)
 	{
 		options.stdout_ = Stream::PIPE;
+		options.stderr_ = Stream::DEVNULL;
 		Process p(std::move(cmd), std::move(options));
 
 		char buf[4096];
