@@ -12,6 +12,7 @@ namespace configure {
 	void bind_node(lua::State& state);
 	void bind_path(lua::State& state);
 	void bind_platform(lua::State& state);
+	void bind_process(lua::State& state);
 	void bind_rule(lua::State& state);
 	void bind_shell_command(lua::State& state);
 

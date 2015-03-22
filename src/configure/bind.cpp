@@ -10,6 +10,7 @@ namespace configure {
 		bind_node(state);
 		bind_path(state);
 		bind_platform(state);
+		bind_process(state);
 		bind_rule(state);
 		bind_shell_command(state);
 	}
