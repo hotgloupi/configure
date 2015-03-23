@@ -2,6 +2,7 @@
 #include "log.hpp"
 #include "Filesystem.hpp"
 
+#include <boost/config.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
@@ -9,11 +10,16 @@
 #include <cassert>
 #include <stdexcept>
 
-#include <sys/wait.h>
-#include <unistd.h>
-
-#if defined(__APPLE__) && defined(__DYNAMIC__)
-#include <crt_externs.h>
+#if defined(BOOST_POSIX_API)
+# include <sys/wait.h>
+# include <unistd.h>
+# if defined(__APPLE__) && defined(__DYNAMIC__)
+#  include <crt_externs.h> // For _NSGetEnviron()
+# endif
+#elif defined(BOOST_WINDOWS_API)
+# include <Windows.h>
+#else
+# error "Unsupported platform"
 #endif
 
 namespace io = boost::iostreams;
@@ -31,6 +37,12 @@ namespace configure {
 #endif
 		}
 
+#ifdef BOOST_WINDOWS_API
+		typedef HANDLE file_descriptor_t;
+#else
+		typedef int file_descriptor_t;
+#endif
+
 		struct Pipe
 		{
 		private:
@@ -40,11 +52,17 @@ namespace configure {
 		public:
 			Pipe()
 			{
-				int fds[2];
+				file_descriptor_t fds[2];
+#ifdef BOOST_WINDOWS_API
+				if (!::CreatePipe(&fds[0], &fds[1], NULL, 0))
+#else
 				if (::pipe(fds) == -1)
+#endif
 					throw std::runtime_error("pipe error");
-				_source = io::file_descriptor_source(fds[0], io::file_descriptor_flags::close_handle);
-				_sink = io::file_descriptor_sink(fds[1], io::file_descriptor_flags::close_handle);
+				_source = io::file_descriptor_source(
+				  fds[0], io::file_descriptor_flags::close_handle);
+				_sink = io::file_descriptor_sink(
+				  fds[1], io::file_descriptor_flags::close_handle);
 			}
 
 		public:
@@ -59,6 +77,49 @@ namespace configure {
 			}
 		};
 
+#ifdef BOOST_WINDOWS_API
+		struct Child
+		{
+		private:
+			PROCESS_INFORMATION _proc_info;
+
+		public:
+			explicit Child(PROCESS_INFORMATION const& proc_info)
+			    : _proc_info(proc_info)
+			{}
+
+			Child(Child&& other)
+				: _proc_info(other._proc_info)
+			{
+				other._proc_info.hProcess = INVALID_HANDLE_VALUE;
+				other._proc_info.hThread = INVALID_HANDLE_VALUE;
+			}
+
+			~Child()
+			{
+				::CloseHandle(proc_info.hProcess);
+				::CloseHandle(proc_info.hThread);
+			}
+
+			HANDLE process_handle() const { return proc_info.hProcess; }
+		};
+#else
+		struct Child
+		{
+		private:
+			pid_t _pid;
+
+		public:
+			explicit Child(pid_t pid) : _pid(pid) {}
+			pid_t process_handle() const { return _pid; }
+		};
+#endif
+
+		std::ostream& operator <<(std::ostream& out, Child const& child)
+		{
+			return out << "<Process " << child.process_handle() << ">";
+		}
+
 	} // !anonymous
 
 	struct Process::Impl
@@ -66,8 +127,10 @@ namespace configure {
 		Command const command;
 		Options const options;
 		boost::optional<ExitCode> exit_code;
+		io::file_descriptor_sink stdin_sink;
 		io::file_descriptor_source stdout_source;
-		pid_t child;
+		io::file_descriptor_source stderr_source;
+		Child child;
 
 		Impl(Command cmd, Options options)
 			: command(_prepare_command(std::move(cmd)))
@@ -76,6 +139,7 @@ namespace configure {
 			, child(_create_child())
 		{}
 
+#ifdef BOOST_POSIX_API
 		pid_t _create_child()
 		{
 			char** env = nullptr;
@@ -154,11 +218,102 @@ namespace configure {
 			}
 			else // Parent
 			{
+				if (this->options.stdin_ == Stream::PIPE)
+					this->stdin_sink = stdin_pipe->sink();
 				if (this->options.stdout_ == Stream::PIPE)
 					this->stdout_source = stdout_pipe->source();
+				if (this->options.stderr_ == Stream::PIPE)
+					this->stderr_source = stderr_pipe->source();
 			}
 			return child;
 		}
+#elif defined(BOOST_WINDOWS_API)
+		PROCESS_INFORMATION _create_child()
+		{
+			LPCTSTR exe = cmd[0].c_str();
+			LPTSTR cmd_line;
+			LPSECURITY_ATTRIBUTES proc_attrs = 0
+			LPSECURITY_ATTRIBUTES thread_attrs = 0;
+			BOOL inherit_handles = false;
+			LPVOID env = nullptr;
+			LPCTSTR work_dir = nullptr;
+#if (_WIN32_WINNT >= 0x0600)
+			DWORD creation_flags = EXTENDED_STARTUPINFO_PRESENT;
+			STARTUPINFOEX startup_info_ex;
+			ZeroMemory(&startup_info_ex, sizeof(STARTUPINFOEX));
+			STARTUPINFO& startup_info = startup_info_ex.StartupInfo;
+			startup_info.cb = sizeof(STARTUPINFOEX);
+#else
+			DWORD creation_flags = 0;
+			STARTUPINFO startup_info;
+			ZeroMemory(&startup_info, sizeof(STARTUPINFO));
+			startup_info.cb = sizeof(STARTUPINFO);
+#endif
+
+			std::unique_ptr<Pipe> stdin_pipe;
+			if (this->options.stdin_ == Stream::PIPE)
+			{
+				stdin_pipe.reset(new Pipe);
+				::SetHandleInformation(stdin_pipe->source().handle(),
+				                       HANDLE_FLAG_INHERIT,
+				                       HANDLE_FLAG_INHERIT);
+				startup_info.hStdInput = stdin_pipe->source().handle();
+				startup_info.dwFlags |= STARTF_USESTDHANDLES;
+				inherit_handles = true;
+				this->stdin_sink = stdin_pipe->sink();
+			}
+			else if (this->options.stdin_ == Stream::DEVNULL)
+			{
+				startup_info.hStdInput = INVALID_HANDLE_VALUE;
+				startup_info.dwFlags |= STARTF_USESTDHANDLES;
+			}
+
+			std::unique_ptr<Pipe> stdout_pipe;
+			if (this->options.stdout_ == Stream::PIPE)
+			{
+				stdout_pipe.reset(new Pipe);
+				::SetHandleInformation(stdout_pipe->sink().handle(),
+				                       HANDLE_FLAG_INHERIT,
+				                       HANDLE_FLAG_INHERIT);
+				startup_info.hStdOutput = stdout_pipe->sink().handle();
+				startup_info.dwFlags |= STARTF_USESTDHANDLES;
+				inherit_handles = true;
+				this->stdout_source = stdout_pipe->source();
+			}
+			else if (this->options.stdout_ == Stream::DEVNULL)
+			{
+				startup_info.hStdOutput = INVALID_HANDLE_VALUE;
+				startup_info.dwFlags |= STARTF_USESTDHANDLES;
+			}
+
+			std::unique_ptr<Pipe> stderr_pipe;
+			if (this->options.stderr_ == Stream::PIPE)
+			{
+				stderr_pipe.reset(new Pipe);
+				::SetHandleInformation(stderr_pipe->sink().handle(),
+				                       HANDLE_FLAG_INHERIT,
+				                       HANDLE_FLAG_INHERIT);
+				startup_info.hStdError = stderr_pipe->sink().handle();
+				startup_info.dwFlags |= STARTF_USESTDHANDLES;
+				inherit_handles = true;
+				this->stderr_source = stderr_pipe->source();
+			}
+			else if (this->options.stderr_ == Stream::DEVNULL)
+			{
+				startup_info.hStdError = INVALID_HANDLE_VALUE;
+				startup_info.dwFlags |= STARTF_USESTDHANDLES;
+			}
+
+			PROCESS_INFORMATION proc_info;
+			auto ret = ::CreateProcess(
+			  cmd[0].c_str(), quote<CommandParser::windows_shell>(cmd).c_str(),
+			  proc_attrs, thread_attrs, inherit_handles, creation_flags, env,
+			  work_dir, &startup_info, &proc_info);
+			if (!ret)
+				throw std::runtime_error("CreateProcess() error");
+			return Child(proc_info);
+		}
+#endif // !BOOST_WINDOWS_API
 
 		Command _prepare_command(Command cmd)
 		{
@@ -182,12 +337,38 @@ namespace configure {
 	{
 		if (!_this->exit_code)
 		{
+#ifdef BOOST_WINDOWS_API
+			int ret = ::WaitForSingleObject(_this->child.process_handle(), 0);
+			switch (ret)
+			{
+			case WAIT_FAILED:
+				throw std::runtime_error("WaitForSingleObject() failed");
+			case WAIT_ABANDONED:
+				log::warning(
+				  "Wait on child", _this->child, "has been abandoned");
+				break;
+			case WAIT_TIMEOUT:
+				log::debug("The child", _this->child, "is still alive");
+				break;
+			case WAIT_OBJECT_0:
+			{
+				DWORD exit_code;
+				if (!::GetExitCodeProcess(
+				      _this->child.process_handle(), &exit_code))
+					throw std::runtime_error("GetExitCodeProcess() failed");
+				log::debug("The child", _this->child,
+				           "exited with status code", exit_code);
+				_this->exit_code = exit_code;
+			}
+			}
+#else
 			pid_t ret;
 			int status;
 			do
 			{
 				log::debug("Checking exit status of child", _this->child);
-				ret = ::waitpid(_this->child, &status, WNOHANG);
+				ret =
+				  ::waitpid(_this->child.process_handle(), &status, WNOHANG);
 			} while (ret == -1 && errno == EINTR);
 			if (ret == -1)
 				throw std::runtime_error("Waitpid failed");
@@ -199,6 +380,7 @@ namespace configure {
 			}
 			else
 				log::debug("The child", _this->child, "is still alive");
+#endif
 		}
 		return _this->exit_code;
 	}
