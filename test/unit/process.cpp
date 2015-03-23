@@ -14,9 +14,8 @@ BOOST_AUTO_TEST_CASE(ls)
 {
 	for (int i = 0; i < 1000; i++)
 	{
-		auto out = Process::check_output({"cat", "configure.lua"});
+		auto out = Process::check_output({"ls"});
 		BOOST_CHECK(!out.empty());
-		BOOST_CHECK(out.size() == 4650);
 	}
 }
 
