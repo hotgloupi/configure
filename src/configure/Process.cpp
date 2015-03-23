@@ -421,7 +421,7 @@ namespace configure {
 		char buf[4096];
 		std::string res;
 #ifdef BOOST_WINDOWS_API
-		int size;
+		DWORD size;
 #else
 		ssize_t size;
 #endif
@@ -429,11 +429,15 @@ namespace configure {
 		while (true)
 		{
 #ifdef BOOST_WINDOWS_API
-			size = ::_read(src.handle(), buf, sizeof(buf));
+			bool success =
+			  ::ReadFile(src.handle(), buf, sizeof(buf), &size, NULL);
+			if (!success)
+			{
+				if (::GetLastError() != ERROR_MORE_DATA)
+					throw std::runtime_error("ReadFile() failed");
+			}
 #else
 			size = ::read(src.handle(), buf, sizeof(buf));
-#endif
-			log::debug("Read from", p._this->child, "returned", size);
 			if (size < 0)
 			{
 				if (errno == EINTR)
@@ -443,6 +447,8 @@ namespace configure {
 				}
 				throw std::runtime_error("read(): " + std::string(strerror(errno)));
 			}
+			log::debug("Read from", p._this->child, "returned", size);
+#endif
 			if (size > 0)
 			{
 				log::debug("read", size, "bytes from child", p._this->child, "stdout");
