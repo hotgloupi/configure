@@ -1,6 +1,7 @@
 #include "Process.hpp"
 #include "log.hpp"
 #include "Filesystem.hpp"
+#include "quote.hpp"
 
 #include <boost/config.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -97,11 +98,11 @@ namespace configure {
 
 			~Child()
 			{
-				::CloseHandle(proc_info.hProcess);
-				::CloseHandle(proc_info.hThread);
+				::CloseHandle(_proc_info.hProcess);
+				::CloseHandle(_proc_info.hThread);
 			}
 
-			HANDLE process_handle() const { return proc_info.hProcess; }
+			HANDLE process_handle() const { return _proc_info.hProcess; }
 		};
 #else
 		struct Child
@@ -228,10 +229,8 @@ namespace configure {
 			return child;
 		}
 #elif defined(BOOST_WINDOWS_API)
-		PROCESS_INFORMATION _create_child()
+		Child _create_child()
 		{
-			LPCTSTR exe = cmd[0].c_str();
-			LPTSTR cmd_line;
 			LPSECURITY_ATTRIBUTES proc_attrs = 0
 			LPSECURITY_ATTRIBUTES thread_attrs = 0;
 			BOOL inherit_handles = false;
@@ -306,7 +305,8 @@ namespace configure {
 
 			PROCESS_INFORMATION proc_info;
 			auto ret = ::CreateProcess(
-			  cmd[0].c_str(), quote<CommandParser::windows_shell>(cmd).c_str(),
+			  this->command.at(0).c_str(),
+			  quote<CommandParser::windows_shell>(this->command).c_str(),
 			  proc_attrs, thread_attrs, inherit_handles, creation_flags, env,
 			  work_dir, &startup_info, &proc_info);
 			if (!ret)
