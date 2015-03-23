@@ -11,6 +11,7 @@
 #include <cassert>
 #include <stdexcept>
 #include <inttypes.h>
+#include <string.h>
 
 #if defined(BOOST_POSIX_API)
 # include <sys/wait.h>
@@ -305,11 +306,22 @@ namespace configure {
 			}
 
 			PROCESS_INFORMATION proc_info;
-			auto ret = ::CreateProcess(
-			  this->command.at(0).c_str(),
-			  quote<CommandParser::windows_shell>(this->command).c_str(),
-			  proc_attrs, thread_attrs, inherit_handles, creation_flags, env,
-			  work_dir, &startup_info, &proc_info);
+			std::unique_ptr<char, void (*)(void*)> cmd_line(
+			  ::strdup(
+			    quote<CommandParser::windows_shell>(this->command).c_str()),
+			  &::free);
+			if (cmd_line == nullptr)
+				throw std::bad_alloc();
+			auto ret = ::CreateProcess(this->command.at(0).c_str(),
+			                           cmd_line.get(),
+			                           proc_attrs,
+			                           thread_attrs,
+			                           inherit_handles,
+			                           creation_flags,
+			                           env,
+			                           work_dir,
+			                           &startup_info,
+			                           &proc_info);
 			if (!ret)
 				throw std::runtime_error("CreateProcess() error");
 			return Child(proc_info);
@@ -415,7 +427,11 @@ namespace configure {
 		auto& src = p._this->stdout_source;
 		while (true)
 		{
+#ifdef BOOST_WINDOWS_API
+			size = ::_read(src.handle(), buf, sizeof(buf));
+#else
 			size = ::read(src.handle(), buf, sizeof(buf));
+#endif
 			log::debug("Read from", p._this->child, "returned", size);
 			if (size < 0)
 			{
