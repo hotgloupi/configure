@@ -6,6 +6,7 @@
 #include "quote.hpp"
 #include "commands.hpp"
 #include "Filesystem.hpp"
+#include "Process.hpp"
 
 #include "generators.hpp"
 
@@ -154,13 +155,7 @@ namespace configure {
 			{
 				log::status("Starting build in", build.directory());
 				auto cmd = generator->build_command(_this->build_target);
-				int res = ::system(
-#ifdef _WIN32
-				    quote<CommandParser::windows_shell>(cmd).c_str()
-#else
-				    quote<CommandParser::unix_shell>(cmd).c_str()
-#endif
-				);
+				int res = Process::call(cmd);
 				if (res != 0)
 					CONFIGURE_THROW(
 						error::BuildError("Build failed with exit code " + std::to_string(res))
