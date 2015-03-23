@@ -10,6 +10,7 @@
 
 #include <cassert>
 #include <stdexcept>
+#include <inttypes.h>
 
 #if defined(BOOST_POSIX_API)
 # include <sys/wait.h>
@@ -231,7 +232,7 @@ namespace configure {
 #elif defined(BOOST_WINDOWS_API)
 		Child _create_child()
 		{
-			LPSECURITY_ATTRIBUTES proc_attrs = 0
+			LPSECURITY_ATTRIBUTES proc_attrs = 0;
 			LPSECURITY_ATTRIBUTES thread_attrs = 0;
 			BOOL inherit_handles = false;
 			LPVOID env = nullptr;
@@ -406,7 +407,11 @@ namespace configure {
 
 		char buf[4096];
 		std::string res;
+#ifdef BOOST_WINDOWS_API
+		int size;
+#else
 		ssize_t size;
+#endif
 		auto& src = p._this->stdout_source;
 		while (true)
 		{
