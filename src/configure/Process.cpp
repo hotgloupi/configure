@@ -21,6 +21,7 @@
 # endif
 #elif defined(BOOST_WINDOWS_API)
 # include <Windows.h>
+# include <io.h>
 #else
 # error "Unsupported platform"
 #endif
