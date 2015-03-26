@@ -86,6 +86,8 @@ namespace configure {
 #ifdef BOOST_WINDOWS_API
 		struct Child
 		{
+		public:
+			typedef HANDLE process_handle_type;
 		private:
 			PROCESS_INFORMATION _proc_info;
 
@@ -107,17 +109,76 @@ namespace configure {
 				::CloseHandle(_proc_info.hThread);
 			}
 
-			HANDLE process_handle() const { return _proc_info.hProcess; }
+			process_handle_type process_handle() const { return _proc_info.hProcess; }
+			bool wait(int ms, int& exit_code)
+			{
+				int ret = ::WaitForSingleObject(
+					this->process_handle(),
+					(ms < 0 ? INFINITE : ms)
+				);
+				switch (ret)
+				{
+				case WAIT_FAILED:
+					CONFIGURE_THROW_SYSTEM_ERROR("WaitForSingleObject()");
+				case WAIT_ABANDONED:
+					log::warning(
+					  "Wait on child", *this, "has been abandoned");
+					break;
+				case WAIT_TIMEOUT:
+					log::debug("The child", *this, "is still alive");
+					break;
+				case WAIT_OBJECT_0:
+				{
+					DWORD exit_code_out;
+					if (!::GetExitCodeProcess(this->process_handle(), &exit_code_out))
+						CONFIGURE_THROW_SYSTEM_ERROR("GetExitCodeProcess()");
+					log::debug("The child", *this,
+							   "exited with status code", exit_code_out);
+					exit_code = exit_code_out;
+					return true;
+				}
+				}
+				return false;
+			}
 		};
 #else
 		struct Child
 		{
+		public:
+			typedef pid_t process_handle_type;
 		private:
-			pid_t _pid;
+			process_handle_type _pid;
 
 		public:
-			explicit Child(pid_t pid) : _pid(pid) {}
-			pid_t process_handle() const { return _pid; }
+			explicit Child(process_handle_type pid) : _pid(pid) {}
+			process_handle_type process_handle() const { return _pid; }
+			bool wait(int ms, int& exit_code)
+			{
+				pid_t ret;
+				int status;
+				int options = 0;
+				if (ms == 0)
+					options = WNOHANG;
+				else if (options > 0)
+					assert(false && "not implemented");
+				do
+				{
+					log::debug("Checking exit status of child", *this);
+					ret = ::waitpid(this->process_handle(), &status, options);
+				} while (ret == -1 && errno == EINTR);
+				if (ret == -1)
+					CONFIGURE_THROW_SYSTEM_ERROR("waitpid()");
+				if (ret != 0)
+				{
+					log::debug("The child", *this,
+							   "exited with status code", WEXITSTATUS(status));
+					exit_code = WEXITSTATUS(status);
+					return true;
+				}
+				else
+					log::debug("The child", _this->child, "is still alive");
+				return false;
+			}
 		};
 #endif
 
@@ -357,62 +418,29 @@ namespace configure {
 	Process::Options const& Process::options() const
 	{ return _this->options; }
 
+
 	boost::optional<Process::ExitCode> Process::exit_code()
 	{
 		if (!_this->exit_code)
 		{
-#ifdef BOOST_WINDOWS_API
-			int ret = ::WaitForSingleObject(_this->child.process_handle(), 0);
-			switch (ret)
-			{
-			case WAIT_FAILED:
-				CONFIGURE_THROW_SYSTEM_ERROR("WaitForSingleObject()");
-			case WAIT_ABANDONED:
-				log::warning(
-				  "Wait on child", _this->child, "has been abandoned");
-				break;
-			case WAIT_TIMEOUT:
-				log::debug("The child", _this->child, "is still alive");
-				break;
-			case WAIT_OBJECT_0:
-			{
-				DWORD exit_code;
-				if (!::GetExitCodeProcess(
-				      _this->child.process_handle(), &exit_code))
-					CONFIGURE_THROW_SYSTEM_ERROR("GetExitCodeProcess()");
-				log::debug("The child", _this->child,
-				           "exited with status code", exit_code);
+			int exit_code;
+			if (_this->child.wait(0, exit_code))
 				_this->exit_code = exit_code;
-			}
-			}
-#else
-			pid_t ret;
-			int status;
-			do
-			{
-				log::debug("Checking exit status of child", _this->child);
-				ret =
-				  ::waitpid(_this->child.process_handle(), &status, WNOHANG);
-			} while (ret == -1 && errno == EINTR);
-			if (ret == -1)
-				CONFIGURE_THROW_SYSTEM_ERROR("waitpid()");
-			if (ret != 0)
-			{
-				log::debug("The child", _this->child,
-				           "exited with status code", WEXITSTATUS(status));
-				_this->exit_code = WEXITSTATUS(status);
-			}
-			else
-				log::debug("The child", _this->child, "is still alive");
-#endif
 		}
 		return _this->exit_code;
 	}
 
 	Process::ExitCode Process::wait()
 	{
-		while (!this->exit_code())
+		if (!this->exit_code())
+		{
 			log::debug("Waiting for child", _this->child, "to terminate");
+			int exit_code;
+			bool ended = _this->child.wait(-1, exit_code);
+			if (!ended)
+				throw std::logic_error("Should be terminated");
+			_this->exit_code = exit_code;
+		}
 		return _this->exit_code.get();
 	}
 
