@@ -78,6 +78,7 @@ namespace configure { namespace lua {
 				break;
 			case 5:
 				lua_pushnil(state);
+				break;
 			default: std::abort();
 		}
 	}
@@ -131,6 +132,7 @@ namespace configure { namespace utils {
 			    state,
 			    self.get<std::vector<Environ::Value>>(key)
 			);
+			break;
 		}
 		case Environ::Kind::none:
 			lua_pushnil(state);
