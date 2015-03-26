@@ -5,7 +5,6 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/exception/diagnostic_information.hpp>
-#include <boost/lexical_cast.hpp>
 
 #ifdef BOOST_WINDOWS_API
 # include <Windows.h>
@@ -80,8 +79,8 @@ namespace configure {
 				res += padding + "  Command: " + boost::join(*ptr, " ");
 			if (auto ptr = get_error_info<error::error_code>(e))
 				res += padding + "  " + ptr->category().name() + " error: " +
-				       boost::lexical_cast<std::string>(ptr->value()) + " (" +
-				       ptr->message() + ")";
+				       std::to_string(ptr->value()) + " (" + ptr->message() +
+				       ")";
 			if (auto ptr = get_error_info<error::nested>(e))
 				res += padding + "  Initial error: " +
 				       boost::trim_left_copy(error_string(*ptr, indent + 2));
