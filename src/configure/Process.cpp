@@ -209,7 +209,7 @@ namespace configure {
 #ifdef BOOST_POSIX_API
 		pid_t _create_child()
 		{
-			char** env = nullptr;
+			char** env = {NULL};
 			// Working directory
 			if (this->options.working_directory)
 			{
