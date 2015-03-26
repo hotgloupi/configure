@@ -2,6 +2,7 @@
 #include "log.hpp"
 #include "Filesystem.hpp"
 #include "quote.hpp"
+#include "error.hpp"
 
 #include <boost/config.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -59,10 +60,11 @@ namespace configure {
 				file_descriptor_t fds[2];
 #ifdef BOOST_WINDOWS_API
 				if (!::CreatePipe(&fds[0], &fds[1], NULL, 0))
+					CONFIGURE_THROW_SYSTEM_ERROR("CreatePipe()");
 #else
 				if (::pipe(fds) == -1)
+					CONFIGURE_THROW_SYSTEM_ERROR("pipe()");
 #endif
-					throw std::runtime_error("pipe error");
 				_source = io::file_descriptor_source(
 				  fds[0], io::file_descriptor_flags::close_handle);
 				_sink = io::file_descriptor_sink(
@@ -184,7 +186,7 @@ namespace configure {
 			pid_t child = ::fork();
 			if (child < 0)
 			{
-				throw std::runtime_error("fork()");
+				CONFIGURE_THROW_SYSTEM_ERROR("fork()");
 			}
 			else if (child == 0) // Child
 			{
@@ -324,14 +326,22 @@ namespace configure {
 			                           &startup_info,
 			                           &proc_info);
 			if (!ret)
-				throw std::runtime_error("CreateProcess() error");
+				CONFIGURE_THROW_SYSTEM_ERROR("CreateProcess()");
 			return Child(proc_info);
 		}
 #endif // !BOOST_WINDOWS_API
 
 		Command _prepare_command(Command cmd)
 		{
-			cmd[0] = Filesystem::which(cmd[0]).get().string();
+			if (auto exe = Filesystem::which(cmd[0]))
+				cmd[0] = exe.get().string();
+			else
+				CONFIGURE_THROW(
+					error::FileNotFound(
+						"Cannot find the program '" + cmd[0] + "'"
+					)
+						<< error::command(cmd)
+				);
 			return std::move(cmd);
 		}
 
@@ -356,7 +366,7 @@ namespace configure {
 			switch (ret)
 			{
 			case WAIT_FAILED:
-				throw std::runtime_error("WaitForSingleObject() failed");
+				CONFIGURE_THROW_SYSTEM_ERROR("WaitForSingleObject()");
 			case WAIT_ABANDONED:
 				log::warning(
 				  "Wait on child", _this->child, "has been abandoned");
@@ -369,7 +379,7 @@ namespace configure {
 				DWORD exit_code;
 				if (!::GetExitCodeProcess(
 				      _this->child.process_handle(), &exit_code))
-					throw std::runtime_error("GetExitCodeProcess() failed");
+					CONFIGURE_THROW_SYSTEM_ERROR("GetExitCodeProcess()");
 				log::debug("The child", _this->child,
 				           "exited with status code", exit_code);
 				_this->exit_code = exit_code;
@@ -385,7 +395,7 @@ namespace configure {
 				  ::waitpid(_this->child.process_handle(), &status, WNOHANG);
 			} while (ret == -1 && errno == EINTR);
 			if (ret == -1)
-				throw std::runtime_error("Waitpid failed");
+				CONFIGURE_THROW_SYSTEM_ERROR("waitpid()");
 			if (ret != 0)
 			{
 				log::debug("The child", _this->child,
@@ -434,7 +444,7 @@ namespace configure {
 			if (!success)
 			{
 				if (::GetLastError() != ERROR_MORE_DATA)
-					throw std::runtime_error("ReadFile() failed");
+					CONFIGURE_THROW_SYSTEM_ERROR("ReadFile()");
 			}
 #else
 			size = ::read(src.handle(), buf, sizeof(buf));
@@ -445,13 +455,14 @@ namespace configure {
 					log::debug("Read interrupted by a signal, let's retry");
 					continue;
 				}
-				throw std::runtime_error("read(): " + std::string(strerror(errno)));
+				CONFIGURE_THROW_SYSTEM_ERROR("read()");
 			}
 			log::debug("Read from", p._this->child, "returned", size);
 #endif
 			if (size > 0)
 			{
-				log::debug("read", size, "bytes from child", p._this->child, "stdout");
+				log::debug(
+				  "read", size, "bytes from child", p._this->child, "stdout");
 				res.append(buf, size);
 			}
 			if (size == 0)
