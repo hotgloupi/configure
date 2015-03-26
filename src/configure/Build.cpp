@@ -474,7 +474,6 @@ namespace configure {
 
 			void operator ()(std::ostream& out, DependencyLink::index_type idx) const
 			{
-				return;
 				auto const& cmd = _g.link(idx).command();
 				out << "[label=\"";
 				bool first = true;
