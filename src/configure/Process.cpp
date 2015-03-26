@@ -176,7 +176,7 @@ namespace configure {
 					return true;
 				}
 				else
-					log::debug("The child", _this->child, "is still alive");
+					log::debug("The child", *this, "is still alive");
 				return false;
 			}
 		};
