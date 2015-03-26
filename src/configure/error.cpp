@@ -1,11 +1,28 @@
 #include "error.hpp"
 #include "Node.hpp"
 
+#include <boost/config.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/exception/diagnostic_information.hpp>
+#include <boost/lexical_cast.hpp>
+
+#ifdef BOOST_WINDOWS_API
+# include <Windows.h>
+#else
+# include <errno.h>
+#endif
 
 namespace configure {
+
+	int last_error()
+	{
+#ifdef BOOST_WINDOWS_API
+		return ::GetLastError();
+#else
+		return errno;
+#endif
+	}
 
 	std::string error_string()
 	{ return error_string(std::current_exception()); }
@@ -43,7 +60,7 @@ namespace configure {
 						res += "{builtin}: ";
 					else
 						res += frame.source.string() + ":" +
-							std::to_string(frame.current_line) + ": ";
+						       std::to_string(frame.current_line) + ": ";
 
 					res += "in ";
 					if (!frame.kind.empty())
@@ -53,16 +70,21 @@ namespace configure {
 					if (!frame.name.empty())
 						res += frame.name + "() ";
 					if (!frame.builtin)
-						res += "defined at " + frame.source.filename().string() + ":" +
-							std::to_string(frame.first_function_line);
+						res += "defined at " +
+						       frame.source.filename().string() + ":" +
+						       std::to_string(frame.first_function_line);
 					res += "\n";
 				}
 			}
 			if (auto ptr = get_error_info<error::command>(e))
 				res += padding + "  Command: " + boost::join(*ptr, " ");
+			if (auto ptr = get_error_info<error::error_code>(e))
+				res += padding + "  " + ptr->category().name() + " error: " +
+				       boost::lexical_cast<std::string>(ptr->value()) + " (" +
+				       ptr->message() + ")";
 			if (auto ptr = get_error_info<error::nested>(e))
 				res += padding + "  Initial error: " +
-					boost::trim_left_copy(error_string(*ptr, indent + 2));
+				       boost::trim_left_copy(error_string(*ptr, indent + 2));
 		}
 		catch (...) {}
 		return boost::trim_right_copy(res);

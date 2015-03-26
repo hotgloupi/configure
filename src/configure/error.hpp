@@ -12,12 +12,34 @@
 
 namespace configure {
 
+	/// Transform the current exception to string.
 	std::string error_string();
+
+	/// Transform the given exception to string.
 	std::string error_string(std::exception_ptr const& e,
 	                         unsigned int indent = 0);
 
 
-# define CONFIGURE_THROW BOOST_THROW_EXCEPTION
+	/// Returns errno on Unix platforms and GetLastError() on Windows.
+	int last_error();
+
+	/// Throw an exception
+#define CONFIGURE_THROW BOOST_THROW_EXCEPTION
+
+	/// Returns a SystemError instance filled with the last error code.
+#define CONFIGURE_SYSTEM_ERROR(msg)                                           \
+	::configure::error::SystemError(msg)                                      \
+		<< ::configure::error::error_code(                                    \
+			boost::system::error_code(                                        \
+				::configure::last_error(),                                    \
+				boost::system::system_category()                              \
+			)                                                                 \
+		)                                                                     \
+/**/
+
+    /// Throw a system error with the last error code.
+#define CONFIGURE_THROW_SYSTEM_ERROR(msg) \
+	CONFIGURE_THROW(CONFIGURE_SYSTEM_ERROR(msg))
 
 	namespace error {
 
@@ -26,15 +48,16 @@ namespace configure {
 			, virtual boost::exception
 		{};
 
-#define MAKE_EXCEPTION(name) \
-		struct name : virtual Base { \
-			std::string _what; \
-			explicit name(std::string what = "") \
-				: _what(std::string(#name) + (!what.empty() ? ": " + std::move(what) : std::string())) \
-			{} \
-			virtual char const* what() const throw() { return _what.c_str(); } \
-		} \
-/**/
+#define MAKE_EXCEPTION(name)                                                  \
+	struct name : virtual Base                                                \
+	{                                                                         \
+		std::string _what;                                                    \
+		explicit name(std::string what = "")                                  \
+		    : _what(std::string(#name) +                                      \
+		            (!what.empty() ? ": " + std::move(what) : std::string())) \
+		{}                                                                    \
+		virtual char const* what() const throw() { return _what.c_str(); }    \
+	} /**/
 
 		MAKE_EXCEPTION(BuildError);
 		MAKE_EXCEPTION(CommandAlreadySet);
@@ -52,6 +75,8 @@ namespace configure {
 		MAKE_EXCEPTION(LuaError);
 		MAKE_EXCEPTION(OptionAlreadySet);
 		MAKE_EXCEPTION(PlatformError);
+		MAKE_EXCEPTION(FileNotFound);
+		MAKE_EXCEPTION(SystemError);
 
 #undef MAKE_EXCEPTION
 	} // !error
@@ -76,6 +101,7 @@ namespace configure {
 		MAKE_ERROR_INFO(lua_function, std::string);
 		MAKE_ERROR_INFO(lua_traceback, std::vector<lua::Frame>);
 		MAKE_ERROR_INFO(node, NodePtr);
+		MAKE_ERROR_INFO(error_code, boost::system::error_code);
 
 #undef MAKE_ERROR_INFO
 
