@@ -443,8 +443,16 @@ namespace configure {
 			  ::ReadFile(src.handle(), buf, sizeof(buf), &size, NULL);
 			if (!success)
 			{
-				if (::GetLastError() != ERROR_MORE_DATA)
+				switch (::GetLastError())
+				{
+				case ERROR_MORE_DATA:
+					break;
+				case ERROR_BROKEN_PIPE:
+					log::debug("output pipe of", p._this->child, "ended");
+					break;
+				default:
 					CONFIGURE_THROW_SYSTEM_ERROR("ReadFile()");
+				}
 			}
 #else
 			size = ::read(src.handle(), buf, sizeof(buf));
