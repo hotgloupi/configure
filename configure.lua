@@ -84,10 +84,10 @@ function configure(build)
 	}
 	local libs = {lua,}
 	local library_directories = {}
-	local include_directories = {'src', 'boost-process'}
+	local include_directories = {'src'}
 
-	local boost_include_dir = build:string_option("BOOST_INCLUDE_DIR", "Boost include dir")
-	local boost_library_dir = build:string_option("BOOST_LIBRARY_DIR", "Boost library dir")
+	local boost_include_dir = build:path_option("BOOST_INCLUDE_DIR", "Boost include dir")
+	local boost_library_dir = build:path_option("BOOST_LIBRARY_DIR", "Boost library dir")
 	table.extend(include_directories, {boost_include_dir})
 	table.extend(library_directories, {boost_library_dir})
 
