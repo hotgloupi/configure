@@ -76,14 +76,16 @@ namespace configure {
 				}
 			}
 			if (auto ptr = get_error_info<error::command>(e))
-				res += padding + "  Command: " + boost::join(*ptr, " ");
+				res += padding + "  Command: " + boost::join(*ptr, " ") + "\n";
 			if (auto ptr = get_error_info<error::error_code>(e))
 				res += padding + "  " + ptr->category().name() + " error: " +
 				       std::to_string(ptr->value()) + " (" + ptr->message() +
-				       ")";
+				       ")\n";
 			if (auto ptr = get_error_info<error::nested>(e))
 				res += padding + "  Initial error: " +
-				       boost::trim_left_copy(error_string(*ptr, indent + 2));
+				       boost::trim_left_copy(error_string(*ptr, indent + 2)) + "\n";
+			if (auto ptr = get_error_info<error::help>(e))
+				res += padding + "  Help: " + (*ptr) + "\n";
 		}
 		catch (...) {}
 		return boost::trim_right_copy(res);

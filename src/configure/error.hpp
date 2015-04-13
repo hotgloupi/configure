@@ -77,6 +77,7 @@ namespace configure {
 		MAKE_EXCEPTION(PlatformError);
 		MAKE_EXCEPTION(FileNotFound);
 		MAKE_EXCEPTION(SystemError);
+		MAKE_EXCEPTION(RuntimeError);
 
 #undef MAKE_EXCEPTION
 	} // !error
@@ -102,6 +103,7 @@ namespace configure {
 		MAKE_ERROR_INFO(lua_traceback, std::vector<lua::Frame>);
 		MAKE_ERROR_INFO(node, NodePtr);
 		MAKE_ERROR_INFO(error_code, boost::system::error_code);
+		MAKE_ERROR_INFO(help, std::string);
 
 #undef MAKE_ERROR_INFO
 
