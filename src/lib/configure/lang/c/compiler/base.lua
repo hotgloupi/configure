@@ -12,6 +12,10 @@
 -- Accepted arguments:
 -- ---
 --
+--  `env_name`
+--  : The environment name used to store the compiler binary path (defaults
+--  to CC or CXX for C/C++ compilers)
+--
 --  `coverage`
 --  : Ask the compiler to generate coverage infomation (default `false`).
 --
@@ -87,6 +91,7 @@ local M = {
 	Library = require('configure.lang.c.Library'),
 
 	optional_args = {
+		env_name = nil,
 		coverage = false,
 		exception = nil,
 		threading = true,
