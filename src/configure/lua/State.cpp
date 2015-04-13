@@ -339,6 +339,71 @@ namespace configure { namespace lua {
 			return 1;
 		}
 
+		enum class StripAlgo
+		{
+			left,
+			right,
+			both,
+		};
+
+		template <StripAlgo algo>
+		int string_strip(lua_State* state)
+		{
+			char const* s = lua_tostring(state, 1);
+			char const* to_remove = lua_tostring(state, 2);
+			if (s == nullptr)
+			{
+				lua_pushstring(state, "string:strip() expect at least one argument");
+				lua_error(state);
+			}
+			if (to_remove == nullptr)
+				to_remove = "\n\t\r ";
+
+			auto pred = boost::algorithm::is_any_of(to_remove);
+
+			std::string res = s;
+
+			if (algo == StripAlgo::left)
+				boost::algorithm::trim_left_if(res, pred);
+			if (algo == StripAlgo::right)
+				boost::algorithm::trim_right_if(res, pred);
+			if (algo == StripAlgo::both)
+				boost::algorithm::trim_if(res, pred);
+
+			lua_pushstring(state, res.c_str());
+			return 1;
+		}
+
+		int string_split(lua_State* state)
+		{
+			char const* s = lua_tostring(state, 1);
+			char const* tokens = lua_tostring(state, 2);
+			if (s == nullptr)
+			{
+				lua_pushstring(state, "string:split() expect at least one argument");
+				lua_error(state);
+			}
+			if (tokens == nullptr)
+				tokens = "\n\t\r ";
+			auto it = boost::algorithm::make_split_iterator(
+				s,
+				boost::algorithm::token_finder(
+					boost::algorithm::is_any_of(tokens),
+					boost::algorithm::token_compress_on
+				)
+			);
+			lua_createtable(state, 0, 0);
+			int idx = 1;
+			while (!it.eof())
+			{
+				lua_pushlstring(state, it->begin(), it->size());
+				lua_rawseti(state, -2, idx);
+				++it;
+				++idx;
+			}
+			return 1;
+		}
+
 		int table_append(lua_State* state)
 		{
 			// table : value
@@ -447,6 +512,10 @@ namespace configure { namespace lua {
 		lua_getglobal(_state, "string");
 		SET_METHOD("starts_with", &string_starts_with);
 		SET_METHOD("ends_with", &string_ends_with);
+		SET_METHOD("strip", &string_strip<StripAlgo::both>);
+		SET_METHOD("rstrip", &string_strip<StripAlgo::right>);
+		SET_METHOD("lstrip", &string_strip<StripAlgo::left>);
+		SET_METHOD("split", &string_split);
 
 		lua_getglobal(_state, "table");
 		SET_METHOD("append", &table_append);
