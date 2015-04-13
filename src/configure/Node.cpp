@@ -59,19 +59,18 @@ namespace configure {
 		std::time_t modification_time =
 		  boost::filesystem::last_write_time(this->path());
 		if (!this->has_property(key) ||
-		    !this->has_property("last-write-time") ||
-		    this->property<int64_t>("last-write-time") != modification_time)
+		    (!this->properties().dirty("last-write-time") &&
+		     (!this->has_property("last-write-time") ||
+		      this->property<int64_t>("last-write-time") != modification_time)))
 		{
-			log::debug("Computing lazy property", key);
+			log::debug("Computing lazy property", key, this->properties().dirty("last-write-time"));
 			this->set_property(key, cb());
 			this->properties().deferred_set(
 			  "last-write-time", Environ::Value(static_cast<int64_t>(modification_time)));
 		}
 		else
 		{
-			log::debug("Keep", key, "lazy property value:",
-			           this->property<int64_t>("last-write-time"), "!=",
-			           modification_time);
+			log::debug(*this, "Keep", key, "lazy property value");
 		}
 		return this->properties().get(key);
 	}
