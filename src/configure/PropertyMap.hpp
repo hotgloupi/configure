@@ -21,11 +21,7 @@ namespace configure
 		bool dirty(std::string key) const;
 		void mark_clean();
 
-		void deferred_set(std::string key, Environ::Value value)
-		{
-			_deferred.push_back(
-			  std::make_pair(std::move(key), std::move(value)));
-		}
+		void deferred_set(std::string key, Environ::Value value);
 
 		template <typename Archive>
 		void serialize(Archive& ar, unsigned int const);

@@ -1,6 +1,7 @@
 #include "PropertyMap.hpp"
 
 #include "Environ.hpp"
+#include "log.hpp"
 
 #include <boost/serialization/base_object.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -42,6 +43,15 @@ namespace configure
 
 	void PropertyMap::mark_clean()
 	{ _dirty_keys.clear(); }
+
+	void PropertyMap::deferred_set(std::string key, Environ::Value value)
+	{
+		auto normalized = Environ::normalize(std::move(key));
+		_deferred.push_back(
+		  std::make_pair(std::move(normalized), std::move(value)));
+		_dirty_keys.push_back(_deferred.back().first);
+		log::debug("Deferred property", key);
+	}
 
 	template <typename Archive>
 	void PropertyMap::serialize(Archive& ar, unsigned int const version)
