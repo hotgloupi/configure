@@ -21,7 +21,7 @@ namespace configure {
 		auto descr = lua::Converter<std::string>::extract(state, 3);
 		if (lua_gettop(state) == 3)
 		{
-			auto res = self.option<T>(name, descr);
+			auto res = self.option<T>(std::move(name), std::move(descr));
 			if (res)
 				lua::Converter<T>::push(state, *res);
 			else
@@ -32,12 +32,31 @@ namespace configure {
 			lua::Converter<T>::push(
 			    state,
 				self.option<T>(
-					name,
-					descr,
+					std::move(name),
+					std::move(descr),
 					lua::Converter<T>::extract(state, 4)
 				)
 			);
 		}
+		return 1;
+	}
+
+	template<typename T>
+	static int Build_lazy_option(lua_State* state)
+	{
+		Build& self = lua::Converter<std::reference_wrapper<Build>>::extract(state, 1);
+		auto key = lua::Converter<std::string>::extract(state, 2);
+		auto descr = lua::Converter<std::string>::extract(state, 3);
+		if (!lua_isfunction(state, -1))
+			throw std::runtime_error("Expected a function as a second argument");
+		auto res = self.lazy_option<T>(
+			std::move(key),
+			std::move(descr),
+			[=]() -> T {
+				lua::State::check_status(state, lua_pcall(state, 0, 1, 0));
+				return lua::Converter<T>::extract(state, -1);
+			});
+		lua::Converter<T>::push(state, std::move(res));
 		return 1;
 	}
 
@@ -143,6 +162,38 @@ namespace configure {
 			// @treturn Path|nil Associated value
 			// @function Build:path_option
 			.def("path_option", &Build_option<fs::path>)
+
+			/// Declare a lazy option of type @{string} and return it's value.
+			// @string name
+			// @string description
+			// @tparam[opt] string default_value
+			// @treturn string|nil Associated value
+			// @function Build:string_option
+			.def("lazy_string_option", &Build_lazy_option<std::string>)
+
+			/// Declare a lazy option of type int and return it's value.
+			// @string name
+			// @string description
+			// @tparam[opt] int default_value
+			// @treturn int|nil Associated value
+			// @function Build:int_option
+			.def("lazy_int_option", &Build_lazy_option<int64_t>)
+
+			/// Declare a lazy option of type bool and return it's value.
+			// @string name
+			// @string description
+			// @tparam[opt] bool default_value
+			// @treturn bool|nil Associated value
+			// @function Build:bool_option
+			.def("lazy_bool_option", &Build_lazy_option<bool>)
+
+			/// Declare a lazy option of type @{Path} and return it's value.
+			// @string name
+			// @string description
+			// @tparam[opt] Path default_value
+			// @treturn Path|nil Associated value
+			// @function Build:path_option
+			.def("lazy_path_option", &Build_lazy_option<fs::path>)
 
 			/// The host platform.
 			// @treturn Platform
