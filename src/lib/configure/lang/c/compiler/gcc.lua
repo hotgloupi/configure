@@ -187,4 +187,35 @@ function Compiler:_link_library(args)
 	return args.target
 end
 
+function Compiler:_system_include_directories()
+	local out = Process:check_output(
+		{self.binary, '-E', '-x', 'c++', '-', '-v'},
+		{
+			stdin = Process.Stream.DEVNULL,
+			stderr = Process.Stream.PIPE,
+			stdout = Process.Stream.DEVNULL,
+			ignore_errors = true,
+		}
+	)
+	local res = {}
+	local include_started = false
+	for _, line in ipairs(out:split('\n')) do
+		if line:starts_with('#include') then
+			include_started = true
+		elseif line:starts_with("End of search list.") then
+			break
+		elseif include_started then
+			line = line:strip()
+			if line:starts_with('/') then
+				local path = Path:new(line)
+				if path:is_directory() then
+					self.build:debug("Found", self.binary_path, "system include dir:", path)
+					table.append(res, path)
+				end
+			end
+		end
+	end
+	return res
+end
+
 return Compiler

@@ -552,9 +552,17 @@ function M:find_tool(var_name, description, default_value)
 				" program (try to set explicitly " .. var_name .. ")"
 			)
 		end
+		self.build:debug("Found", var_name, "at", path)
 		self.build:env():set(var_name, path)
 	end
 	return self.build:file_node(path)
+end
+
+function M:system_include_directories()
+	return self.binary:set_cached_property(
+		self.env_name .. "-system-include-directories",
+		function () return self:_system_include_directories() end
+	)
 end
 
 --- Implementation API methods
@@ -596,6 +604,10 @@ end
 -- @param args.libraries List of libraries
 -- @param args.coverage Coverage state
 function M:_link_library(args)
+	error("Not implemented")
+end
+
+function M:_system_include_directories()
 	error("Not implemented")
 end
 
