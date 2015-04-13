@@ -4,6 +4,10 @@
 return {
 	--- Compilers
 	compiler = require "configure.lang.cxx.compiler",
+
 	--- @{configure.lang.cxx.Library}
 	Library = require("configure.lang.cxx.Library"),
+
+	--- Libraries
+	libraries = require("configure.lang.cxx.libraries"),
 }
