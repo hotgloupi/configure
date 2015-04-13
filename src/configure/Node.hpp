@@ -7,6 +7,7 @@
 #include <boost/filesystem/path.hpp>
 
 #include <functional>
+#include <iosfwd>
 
 namespace configure {
 
@@ -108,5 +109,8 @@ namespace configure {
 		boost::filesystem::path const& path() const override;
 		Kind kind() const final { return directory_node; }
 	};
+
+	std::ostream& operator <<(std::ostream& out, Node const& node);
+	std::ostream& operator <<(std::ostream& out, NodePtr const& node);
 
 }

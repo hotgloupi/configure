@@ -110,4 +110,14 @@ namespace configure {
 	boost::filesystem::path const& DirectoryNode::path() const
 	{ return _path; }
 
+	std::ostream& operator <<(std::ostream& out, Node const& node)
+	{
+		return out << node.string();
+	}
+
+	std::ostream& operator <<(std::ostream& out, NodePtr const& node)
+	{
+		return out << node->string();
+	}
+
 }
