@@ -519,7 +519,11 @@ end
 --
 -- @param[opt] ext Extension or nil
 function M:_executable_extension(ext)
-	return ext or ".exe"
+	if self.build:target():os() == Platform.OS.windows then
+		return ext or ".exe"
+	else
+		return ext or ''
+	end
 end
 
 function M:_library_extension(kind, ext)
