@@ -3,6 +3,8 @@
 #include <configure/Filesystem.hpp>
 #include <configure/lua/State.hpp>
 #include <configure/lua/Type.hpp>
+#include <configure/Node.hpp>
+#include <configure/bind/path_utils.hpp>
 
 #include <boost/filesystem/path.hpp>
 
@@ -69,6 +71,28 @@ namespace configure {
 			lua::Converter<NodePtr>::push(state, res[i]);
 			lua_rawseti(state, -2, i + 1);
 		}
+		return 1;
+	}
+
+	static int fs_find_file(lua_State* state)
+	{
+		Filesystem& self = lua::Converter<std::reference_wrapper<Filesystem>>::extract(state, 1);
+		if (!lua_istable(state, 2))
+			CONFIGURE_THROW(
+				error::LuaError(
+					"Expected a table, got '" + std::string(luaL_tolstring(state, 2, nullptr)) + "'"
+				)
+			);
+		std::vector<fs::path> directories;
+		for (int i = 1, len = lua_rawlen(state, 2); i <= len; ++i)
+		{
+			lua_rawgeti(state, 2, i);
+			directories.push_back(utils::extract_path(state, -1));
+		}
+		lua::Converter<NodePtr>::push(
+		    state,
+			self.find_file(directories, utils::extract_path(state, 3))
+		);
 		return 1;
 	}
 
@@ -150,6 +174,13 @@ namespace configure {
 			// @tparam string|Path dir Directory to list
 			// @return A list of @{Node}s
 			.def("list_directory", &fs_list_directory)
+
+			/// Find a file
+			// @function Filesystem:find_file
+			// @tparam table directories A list of directories to inspect
+			// @tparam string|Path file The file to search for
+			// @return A @{Node}
+			.def("find_file", &fs_find_file)
 
 			/// Find an executable path
 			// @function Filesystem:which

@@ -12,7 +12,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/scope_exit.hpp>
 #include <boost/system/system_error.hpp>
-#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <cstdlib>
 #ifdef _WIN32
@@ -180,6 +180,22 @@ namespace configure {
 		}
 
 		return res;
+	}
+
+	NodePtr& Filesystem::find_file(std::vector<path_t> const& directories,
+	                               path_t const& file)
+	{
+
+		for (auto& dir: directories)
+		{
+			auto path = dir / file;
+			if (fs::is_regular_file(path))
+				return _build.file_node(path);
+		}
+		CONFIGURE_THROW(
+		    error::FileNotFound("Cannot find the requested file")
+				<< error::path(file)
+		);
 	}
 
 #ifdef _WIN32
