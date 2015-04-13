@@ -65,13 +65,21 @@ namespace configure {
 
 	public:
 		template<typename T>
-		boost::optional<T> option(std::string name,
-		                          std::string const& description);
+		boost::optional<typename Environ::const_ref<T>::type>
+		option(std::string name,
+		       std::string description);
+
 		template<typename T>
 		typename Environ::const_ref<T>::type
 		option(std::string name,
-		       std::string const& description,
+		       std::string description,
 		       typename Environ::const_ref<T>::type default_value);
+
+		template<typename T>
+		typename Environ::const_ref<T>::type
+		lazy_option(std::string name,
+		            std::string description,
+		            std::function<T()> const& fn);
 
 		std::map<std::string, std::string> const& options() const;
 

@@ -235,11 +235,12 @@ namespace configure {
 	{ return _this->options; }
 
 	template<typename T>
-	boost::optional<T> Build::option(std::string name,
-	                                 std::string const& description)
+	boost::optional<typename Environ::const_ref<T>::type>
+	Build::option(std::string name,
+	              std::string description)
 	{
 		name = Environ::normalize(std::move(name));
-		_this->options[name] = description;
+		_this->options[name] = std::move(description);
 		auto it = _this->build_args.find(name);
 		if (it != _this->build_args.end())
 		{
@@ -265,35 +266,74 @@ namespace configure {
 				_this->env.set(name, value);
 			}
 			else
-				_this->env.set(name, boost::lexical_cast<T>(it->second));
+			{
+				try {
+					_this->env.set(name, boost::lexical_cast<T>(it->second));
+				} catch (boost::bad_lexical_cast&) {
+					CONFIGURE_THROW(
+						error::InvalidOption(
+							"Cannot create " + it->first +
+							" option from value '" + it->second + "'"
+						)
+					);
+				}
+			}
 			_this->build_args.erase(it);
 		}
 		if (_this->env.has(name))
-			return boost::optional<T>(_this->env.get<T>(name));
+		{
+			return boost::optional<typename Environ::const_ref<T>::type>(_this->env.get<T>(name));
+		}
 		return boost::none;
 	}
 
 	template<typename T>
 	typename Environ::const_ref<T>::type
 	Build::option(std::string name,
-	              std::string const& description,
+	              std::string description,
 	              typename Environ::const_ref<T>::type default_value)
 	{
-		this->option<T>(name, description);
-		if (!_this->env.has(name))
-			return _this->env.set<T>(name, default_value);
-		return _this->env.get<T>(name);
+		if (auto res = this->option<T>(name, std::move(description)))
+			return res.get();
+		return _this->env.set<T>(std::move(name), default_value);
+	}
+
+	template <typename T>
+	typename Environ::const_ref<T>::type
+	Build::lazy_option(std::string name,
+	                   std::string description,
+	                   std::function<T()> const& fn)
+	{
+		name = Environ::normalize(name);
+		if (auto res = this->option<T>(name, std::move(description)))
+			return res.get();
+		try {
+			return _this->env.set<T>(name, fn());
+		} catch (...) {
+			CONFIGURE_THROW(
+				error::RuntimeError("Couldn't compute lazy option '" + name + "'")
+					<< error::help("Try to define '" + name + "' directly")
+					<< error::nested(std::current_exception())
+			);
+		}
+
 	}
 
 #define INSTANCIATE(T) \
 	template \
-	boost::optional<T> Build::option<T>(std::string name, \
-	                                    std::string const& description); \
+	boost::optional<Environ::const_ref<T>::type> \
+	Build::option<T>(std::string name, \
+	                 std::string description); \
 	template \
 	Environ::const_ref<T>::type \
 	Build::option<T>(std::string name, \
-	                 std::string const& description, \
+	                 std::string description, \
 	                 Environ::const_ref<T>::type default_value); \
+	template \
+	typename Environ::const_ref<T>::type \
+	Build::lazy_option(std::string name, \
+	                   std::string description, \
+	                   std::function<T()> const& fn); \
 /**/
 
 	INSTANCIATE(std::string);
