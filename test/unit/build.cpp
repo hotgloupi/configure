@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(default_option)
 		"default value"
 	);
 	BOOST_CHECK_EQUAL(
-		build.option<std::string>("key", "description"),
+		build.option<std::string>("key", "description").get(),
 		std::string("default value")
 	);
 }

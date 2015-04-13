@@ -31,7 +31,7 @@ Feature: C library
 		end
 		"""
 		When I configure and build
-		Then I can launch bin/test.exe
+		Then I can launch bin/test
 
 	Scenario: Creating dynamic library
 		Given a source file my.c
@@ -69,4 +69,4 @@ Feature: C library
 		end
 		"""
 		When I configure and build
-		Then I can launch bin/test.exe
+		Then I can launch bin/test

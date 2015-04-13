@@ -30,7 +30,7 @@ Feature: Header dependencies are honored
 		#define ANSWER 42
 		"""
 		And I build everything
-		Then I can launch bin/test.exe
+		Then I can launch bin/test
 
 	Scenario: Indirect include
 		Given a source file test.c
@@ -65,4 +65,4 @@ Feature: Header dependencies are honored
 		#define ANSWER 42
 		"""
 		And I build everything
-		Then I can launch bin/test.exe
+		Then I can launch bin/test

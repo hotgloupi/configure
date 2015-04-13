@@ -21,7 +21,7 @@ Feature: C++ executable
 		int main() { std::cout << "Hello, world!\n"; return 0; }
 		"""
 		When I configure and build
-		Then I can launch bin/hello-world.exe
+		Then I can launch bin/hello-world
 
 		Examples: C++ compilers
 			| compiler |
