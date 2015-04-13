@@ -15,6 +15,7 @@ local M = {}
 -- @param args.build The build instance.
 function M.find(module, args)
 	local env_name = args.env_name or module.env_name
+	args.env_name = env_name
 	local binary_name = args.build:path_option(env_name, module.description)
 	local compiler = nil
 	if binary_name then
