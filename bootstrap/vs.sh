@@ -9,7 +9,6 @@ SCRIPT="$0"
 SCRIPT_DIR="$(cd "$(dirname ${SCRIPT})" && pwd)"
 LUA_SRC_DIR="${SCRIPT_DIR}/../lua/src"
 SRC_DIR="${SCRIPT_DIR}/../src"
-BOOST_PROCESS_DIR="${SCRIPT_DIR}/../boost-process"
 CXX="${CXX:-cl}"
 BIN="configure.exe"
 BOOST_ROOT=${BOOST_ROOT:-c:/Libraries/boost}
@@ -73,7 +72,7 @@ do
 		-c -Fo"temp/$var.obj" \
 		-EHsc -MD \
 		-I "${LUA_SRC_DIR}" -I "${SRC_DIR}" \
-		-I "${BOOST_ROOT}" -I "${BOOST_PROCESS_DIR}" \
+		-I "${BOOST_ROOT}" \
 		-DBOOST_LIB_DIAGNOSTIC \
 		-Tp "$src"
 done

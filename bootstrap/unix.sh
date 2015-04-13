@@ -56,7 +56,7 @@ SRCS=$(find "${SRC_DIR}" -name '*.cpp')
 
 "${CXX}" -x c++ -std=c++11 ${CXXFLAGS} \
 	-o "${BIN}" \
-	-I "${LUA_SRC_DIR}" -I "${SRC_DIR}" -I "${BOOST_PROCESS_DIR}" \
+	-I "${LUA_SRC_DIR}" -I "${SRC_DIR}" \
 	${LUA_SRCS} \
 	${SRCS} \
 	-lboost_filesystem -lboost_serialization -lboost_iostreams -lboost_system ${LDFLAGS}
