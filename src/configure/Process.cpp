@@ -450,10 +450,21 @@ namespace configure {
 		return p.wait();
 	}
 
-	std::string Process::check_output(Command cmd, Options options)
+	std::string Process::check_output(Command cmd)
 	{
+		Options options;
 		options.stdout_ = Stream::PIPE;
 		options.stderr_ = Stream::DEVNULL;
+		return Process::check_output(std::move(cmd), std::move(options), false);
+	}
+
+	std::string Process::check_output(Command cmd, Options options)
+	{
+		return Process::check_output(std::move(cmd), std::move(options), false);
+	}
+
+	std::string Process::check_output(Command cmd, Options options, bool ignore_errors)
+	{
 		Process p(std::move(cmd), std::move(options));
 
 		char buf[4096];
@@ -463,48 +474,61 @@ namespace configure {
 #else
 		ssize_t size;
 #endif
-		auto& src = p._this->stdout_source;
-		while (true)
+		std::vector<io::file_descriptor_source*> srcs;
+		if (p._this->options.stdout_ == Stream::PIPE)
+			srcs.push_back(&p._this->stdout_source);
+		if (p._this->options.stderr_ == Stream::PIPE)
+			srcs.push_back(&p._this->stderr_source);
+		size_t closed = 0;
+		while (closed < srcs.size())
 		{
-#ifdef BOOST_WINDOWS_API
-			bool success =
-			  ::ReadFile(src.handle(), buf, sizeof(buf), &size, NULL);
-			if (!success)
+			for (auto& src: srcs)
 			{
-				switch (::GetLastError())
-				{
-				case ERROR_MORE_DATA:
-					break;
-				case ERROR_BROKEN_PIPE:
-					log::debug("output pipe of", p._this->child, "ended");
-					break;
-				default:
-					CONFIGURE_THROW_SYSTEM_ERROR("ReadFile()");
-				}
-			}
-#else
-			size = ::read(src.handle(), buf, sizeof(buf));
-			if (size < 0)
-			{
-				if (errno == EINTR)
-				{
-					log::debug("Read interrupted by a signal, let's retry");
+				if (src == nullptr)
 					continue;
+#ifdef BOOST_WINDOWS_API
+				bool success =
+				  ::ReadFile(src->handle(), buf, sizeof(buf), &size, NULL);
+				if (!success)
+				{
+					switch (::GetLastError())
+					{
+					case ERROR_MORE_DATA:
+						break;
+					case ERROR_BROKEN_PIPE:
+						log::debug("output pipe of", p._this->child, "ended");
+						break;
+					default:
+						CONFIGURE_THROW_SYSTEM_ERROR("ReadFile()");
+					}
 				}
-				CONFIGURE_THROW_SYSTEM_ERROR("read()");
-			}
-			log::debug("Read from", p._this->child, "returned", size);
+#else
+				size = ::read(src->handle(), buf, sizeof(buf));
+				if (size < 0)
+				{
+					if (errno == EINTR)
+					{
+						log::debug("Read interrupted by a signal, let's retry");
+						continue;
+					}
+					CONFIGURE_THROW_SYSTEM_ERROR("read()");
+				}
+				log::debug("Read from", p._this->child, "returned", size);
 #endif
-			if (size > 0)
-			{
-				log::debug(
-				  "read", size, "bytes from child", p._this->child, "stdout");
-				res.append(buf, size);
+				if (size > 0)
+				{
+					log::debug(
+					  "read", size, "bytes from child", p._this->child, "stdout");
+					res.append(buf, size);
+				}
+				if (size == 0)
+				{
+					src = nullptr;
+					closed += 1;
+				}
 			}
-			if (size == 0)
-				break;
 		}
-		if (p.wait() != 0)
+		if (p.wait() != 0 && !ignore_errors)
 			throw std::runtime_error("Program failed");
 		return res;
 	}

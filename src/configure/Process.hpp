@@ -53,10 +53,13 @@ namespace configure {
 		ExitCode wait();
 
 	public:
-
 		static ExitCode call(Command cmd, Options options = Options());
 		static std::string
-		check_output(Command cmd, Options options = Options());
+		check_output(Command cmd);
+		static std::string
+		check_output(Command cmd, Options options);
+		static std::string
+		check_output(Command cmd, Options options, bool ignore_errors);
 	};
 
 }
