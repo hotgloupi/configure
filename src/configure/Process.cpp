@@ -241,7 +241,10 @@ namespace configure {
 
 			for (auto& channel: channels)
 				if (std::get<1>(channel) == Stream::PIPE)
+				{
+					log::debug("Creating pipe for", std::get<3>(channel));
 					std::get<2>(channel).reset(new Pipe);
+				}
 
 			log::debug("Spawning process:", boost::join(this->command, " "));
 			pid_t child = ::fork();
@@ -270,6 +273,7 @@ namespace configure {
 					}
 					else if (kind == Stream::DEVNULL)
 					{
+						log::debug("Closing", old_fd);
 						::close(old_fd);
 					}
 				}
