@@ -104,10 +104,18 @@ namespace configure {
 		if (lib != nullptr)
 			package = lib;
 		else
-			package = fs::canonical(
+			package = fs::absolute(
 				_this->program_name.parent_path().parent_path()
 				/ "share" / "configure" / "lib"
 			);
+		if (!fs::is_directory(package))
+		{
+			CONFIGURE_THROW(
+				error::BuildError("Cannot find configure library")
+					<< error::path(package)
+			);
+		}
+		package = fs::canonical(package);
 		package /= "?.lua";
 		lua::State lua;
 		bind(lua);
