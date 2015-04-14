@@ -330,7 +330,7 @@ namespace configure {
 	                 std::string description, \
 	                 Environ::const_ref<T>::type default_value); \
 	template \
-	typename Environ::const_ref<T>::type \
+	Environ::const_ref<T>::type \
 	Build::lazy_option(std::string name, \
 	                   std::string description, \
 	                   std::function<T()> const& fn); \
