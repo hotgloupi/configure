@@ -26,7 +26,7 @@ script:
     - cat cov-int/scm_log.txt || echo "No coverity log"
     - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then
         /tmp/configure build cxx=${CXX_COMPILER} coverage=${COVERALLS} --build;
-        export CONFIGURE_EXE=`pwd`/build/bin/configure.exe;
+        export CONFIGURE_EXE=`pwd`/build/bin/configure;
         ${CONFIGURE_EXE} build --build --target check;
         behave test/features  -q -m -k;
       else
