@@ -43,7 +43,6 @@ Feature: Cached properties
 		And I configure with build P=12
 		Then build variable P in build equals "12"
 
-	@wip
 	Scenario: Cached property are updated
 		Given a project configuration
 		"""
