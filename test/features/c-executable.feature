@@ -22,5 +22,26 @@ Feature: C executable
 		When I configure and build
 		Then I can launch bin/hello-world
 
+	@wip
+	Scenario: Static runtime
+		Given a project configuration
+		"""
+		local c = require('configure.lang.c')
 
-
+		function configure(build)
+			local compiler = c.compiler.find{build = build}
+			local exe = compiler:link_executable{
+				name = "hello-world",
+				sources = {'main.c', },
+				runtime = 'static',
+			}
+		end
+		"""
+		And a source file main.c
+		"""
+		#include <stdio.h>
+		int main() { printf("Hello, world!\n"); return 0; }
+		"""
+		When I configure and build
+		Then I can launch bin/hello-world
+		And build/bin/hello-world is a static executable

@@ -188,6 +188,7 @@ function M:link_executable(args)
 		exception = self:_exception(args),
 		warnings = self:_warnings(args),
 		optimization = self:_optimization(args),
+		runtime = self:_runtime(args),
 	}
 	self.build:add_rule(Rule:new():add_target(target))
 	return target
@@ -230,6 +231,8 @@ function M:link_library(args)
 		or self.static_library_directory
 	))
 	local prefix = self:_library_filename_prefix(args.filename_prefix)
+	local runtime = self:_runtime(args)
+
 	local target = self:_link_library{
 		objects = self:_build_objects(args),
 		target = self.build:target_node(
@@ -247,6 +250,7 @@ function M:link_library(args)
 		exception = self:_exception(args),
 		warnings = self:_warnings(args),
 		optimization = self:_optimization(args),
+		runtime = runtime,
 	}
 	self.build:add_rule(Rule:new():add_target(target))
 	return self.Library:new{
@@ -255,6 +259,7 @@ function M:link_library(args)
 		files = {target},
 		include_directories = self:_include_directories(args),
 		defines = self:_defines(args),
+		runtime = runtime,
 	}
 end
 
@@ -482,6 +487,15 @@ function M:_optimization(args)
 		lvl = self.optimization
 	end
 	return lvl
+end
+
+--- Runtime link mode
+--
+-- @param args
+-- @tparam[opt] string args.runtime
+-- @treturn string 'shared' or 'static'
+function M:_runtime(args)
+	return args.runtime or self.runtime
 end
 
 --- Convert directories to directory nodes if needed.

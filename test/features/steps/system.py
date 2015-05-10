@@ -29,3 +29,14 @@ def step_impl(context, exe):
             file = sys.stderr
         )
 
+@then('{exe} is a static executable')
+def step_impl(ctx, exe):
+    if sys.platform.startswith('win'):
+        lines = subprocess.check_output(["dumpbin.exe", exe]).decode('utf8').split('\r\n')
+        for line in lines:
+            if 'msvcrt' in line.lower():
+                assert False, 'Found MSVCRT: %s' % line
+    else:
+        out = subprocess.check_output(["file", exe]).decode('utf8')
+        assert 'statically linked' in out, "Not a static executable: %s" % out
+

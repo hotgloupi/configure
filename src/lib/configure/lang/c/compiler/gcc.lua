@@ -124,8 +124,17 @@ function Compiler:_add_linker_library_flags(cmd, args, sources)
 			end
 		end
 	end
-	if self.build:host():os() ~= Platform.OS.osx then
-		table.append(cmd, '-Wl,-Bdynamic')
+	if args.threading then
+		table.append(cmd, '-pthread')
+	end
+	if args.runtime == 'static' then
+		table.append(cmd, '-static')
+	elseif args.runtime == 'shared' then
+		if self.build:host():os() ~= Platform.OS.osx then
+			table.append(cmd, '-Wl,-Bdynamic')
+		end
+	else
+		self.build:error("Invalid value for the runtime argument: " .. tostring(args.runtime))
 	end
 end
 
