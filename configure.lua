@@ -125,6 +125,7 @@ function configure(build)
 		include_directories = include_directories,
 		library_directories = library_directories,
 		coverage = with_coverage,
+		runtime = 'static'
 	}
 
 	local test_libs = table.extend({libconfigure}, libs)
