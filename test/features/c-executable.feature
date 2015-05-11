@@ -22,7 +22,6 @@ Feature: C executable
 		When I configure and build
 		Then I can launch bin/hello-world
 
-	@wip
 	Scenario: Static runtime
 		Given a project configuration
 		"""

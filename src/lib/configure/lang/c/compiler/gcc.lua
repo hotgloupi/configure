@@ -124,17 +124,21 @@ function Compiler:_add_linker_library_flags(cmd, args, sources)
 			end
 		end
 	end
-	if args.threading then
-		table.append(cmd, '-pthread')
-	end
-	if args.runtime == 'static' then
-		table.append(cmd, '-static')
-	elseif args.runtime == 'shared' then
-		if self.build:host():os() ~= Platform.OS.osx then
+	if self.build:host():os() ~= Platform.OS.osx then
+		if args.threading then
+			table.append(cmd, '-pthread')
+		end
+		if args.runtime == 'static' then
+			table.append(cmd, '-static')
+		elseif args.runtime == 'shared' then
 			table.append(cmd, '-Wl,-Bdynamic')
+		else
+			self.build:error("Invalid value for the runtime argument: " .. tostring(args.runtime))
 		end
 	else
-		self.build:error("Invalid value for the runtime argument: " .. tostring(args.runtime))
+		if args.runtime == 'static' then
+			self.build:warning("Static runtime linking is not supported on OS X")
+		end
 	end
 end
 

@@ -1,6 +1,7 @@
 from __future__ import print_function
 import sys
 import subprocess
+import os
 
 @given('a system executable {exe}')
 def step_impl(context, exe):
@@ -31,6 +32,9 @@ def step_impl(context, exe):
 
 @then('{exe} is a static executable')
 def step_impl(ctx, exe):
+    if sys.platform.lower().startswith('darwin'):
+        context.scenario.skip("Static runtime linking is not supported on OS X")
+
     if sys.platform.startswith('win'):
         lines = subprocess.check_output(["dumpbin.exe", exe]).decode('utf8').split('\r\n')
         for line in lines:
