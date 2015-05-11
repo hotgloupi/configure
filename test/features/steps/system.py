@@ -36,7 +36,7 @@ def step_impl(ctx, exe):
         context.scenario.skip("Static runtime linking is not supported on OS X")
 
     if sys.platform.startswith('win'):
-        lines = subprocess.check_output(["dumpbin.exe", exe]).decode('utf8').split('\r\n')
+        lines = subprocess.check_output(["dumpbin.exe", "/DEPENDENTS", exe]).decode('utf8').split('\r\n')
         for line in lines:
             if 'msvcrt' in line.lower():
                 assert False, 'Found MSVCRT: %s' % line
