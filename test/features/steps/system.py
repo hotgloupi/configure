@@ -33,7 +33,8 @@ def step_impl(context, exe):
 @then('{exe} is a static executable')
 def step_impl(ctx, exe):
     if sys.platform.lower().startswith('darwin'):
-        context.scenario.skip("Static runtime linking is not supported on OS X")
+        ctx.scenario.skip("Static runtime linking is not supported on OS X")
+        return
 
     if sys.platform.startswith('win'):
         lines = subprocess.check_output(["dumpbin.exe", "/DEPENDENTS", exe]).decode('utf8').split('\r\n')
