@@ -33,6 +33,7 @@ Feature: C executable
 				name = "hello-world",
 				sources = {'main.c', },
 				runtime = 'static',
+				extension = '.exe'
 			}
 		end
 		"""
@@ -42,5 +43,5 @@ Feature: C executable
 		int main() { printf("Hello, world!\n"); return 0; }
 		"""
 		When I configure and build
-		Then I can launch bin/hello-world
-		And build/bin/hello-world is a static executable
+		Then I can launch bin/hello-world.exe
+		And build/bin/hello-world.exe is a static executable
