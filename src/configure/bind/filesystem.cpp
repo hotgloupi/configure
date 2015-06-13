@@ -1,4 +1,5 @@
 #include <configure/bind.hpp>
+#include <configure/bind/path_utils.hpp>
 
 #include <configure/Filesystem.hpp>
 #include <configure/lua/State.hpp>
@@ -17,10 +18,22 @@ namespace configure {
 	{
 		Filesystem& self = lua::Converter<std::reference_wrapper<Filesystem>>::extract(state, 1);
 		std::vector<NodePtr> res;
-		if (char const* arg = lua_tostring(state, 2))
+		if (lua_gettop(state) == 3)
+		{
+			res = self.glob(
+			    utils::extract_path(state, 2),
+			    lua::Converter<std::string>::extract(state, 3)
+			);
+		}
+		else if (char const* arg = lua_tostring(state, 2))
 		{
 			res = self.glob(arg);
 		}
+		else
+			CONFIGURE_THROW(
+				error::InvalidArgument("Expected a glob pattern")
+			);
+
 
 		lua_createtable(state, res.size(), 0);
 		for (int i = 0, len = res.size(); i < len; ++i)
