@@ -467,6 +467,29 @@ namespace configure { namespace lua {
 			return 1;
 		}
 
+		int table_tostring(lua_State* state)
+		{
+			if (!lua_istable(state, -1))
+			{
+				lua_pushstring(state, "table.tostring(): One argument of type table expected");
+				lua_error(state);
+			}
+			std::vector<std::string> strings;
+			lua_pushnil(state);
+			assert(lua_istable(state, -2));
+			while (lua_next(state, -2))
+			{
+				if (char const* s = luaL_tolstring(state, -1, nullptr))
+					strings.push_back(s);
+				else
+					strings.push_back("(nil)");
+				lua_pop(state, 2);
+				assert(lua_istable(state, -2));
+			}
+			lua_pushstring(state, ("{" + boost::join(strings, ", ") + "}").c_str());
+			return 1;
+		}
+
 		int error_handler(lua_State* state)
 		{
 			if (char const* str = lua_tostring(state, -1))
@@ -521,6 +544,7 @@ namespace configure { namespace lua {
 		SET_METHOD("append", &table_append);
 		SET_METHOD("extend", &table_extend);
 		SET_METHOD("update", &table_update);
+		SET_METHOD("tostring", &table_tostring);
 
 		lua_settop(_state, 0);
 		lua_pushcfunction(_state, &error_handler);
