@@ -78,7 +78,10 @@ function M.find(args)
 	local component_files = {}
 	for _, lib in ipairs(fs:glob(boost_library_dir, "libboost_*")) do
 		for _, component in ipairs(components) do
-			if tostring(lib:path():filename()):starts_with("libboost_" .. component) then
+			local filename = tostring(lib:path():filename())
+			if filename:starts_with("libboost_" .. component) or
+				(build:target():os() == Platform.OS.windows and
+				 filename:starts_with("boost_")) then
 				if component_files[component] == nil then
 					component_files[component] = {}
 				end
@@ -108,49 +111,77 @@ function M.find(args)
 			end
 		end
 
-		-- Find out if file names have the threading flag ('-mt')
-		local has_threading_flag = false
-		for _, f in ipairs(filtered) do
-			if string.find(tostring(f:path()), '-mt.') ~= nil then
-				has_threading_flag = true
-				build:debug("Selected files have the threading flag ('-mt')")
-				break
-			end
+		local function arg(name, default)
+			local res = args[component .. '_' .. name]
+			if res == nil then return default end
+			return res
 		end
 
-		if #filtered > 1 then
-			-- If more than one file is selected, let's try to filter them
-			if has_threading_flag then
-				files, filtered = filtered, {}
-				-- checking the threading model.
-				local threading = args[component .. '_threading']
-				if threading == nil then
-					threading = args.compiler.threading
-				end
-				build:debug("Boost component '" .. component .. "' threading mode:", threading)
-				for _, f in ipairs(files) do
-					if tostring(f:path()):find('-mt.') ~= nil then
-						if threading then
-							table.append(filtered, f)
-							build:debug("Select threading enabled file", f)
-						end
-					else
-						if not threading then
-							table.append(filtered, f)
-							build:debug("Select threading disabled file", f)
+		local abi_flags = {
+			threading = arg('threading', args.compiler.threading),
+			static_runtime = arg('static_runtime', args.compiler.runtime == 'static'),
+			debug_runtime = arg('debug_runtime', args.compiler.debug_runtime),
+			debug = arg('debug', args.compiler.debug),
+		}
+		local files, selected, unknown = filtered, {}, {}
+		for _, f in ipairs(files) do
+			-- Boost library files are as follow:
+			-- (lib)?boost_<COMPONENT>(-<FLAGS>)?.(lib|a|so)(.<VERSION>)?
+			local flags = tostring(f:path():filename()):match("-[^.]*")
+			local parts = {}
+			if flags ~= nil then
+				parts = flags:split('-')
+			end
+			local check = nil
+			for i, part in ipairs(parts) do
+				if check == false then break end
+				if part == "mt" then
+					check = abi_flags[threading]
+				elseif part:starts_with('vc') then
+					-- TODO: Check against toolset
+				elseif part:match("%d+_%d+_%d+") then
+					-- TODO: Check the version
+				elseif part:match("^s?g?d?p?n?$") then
+					local file_abi_flags = {
+						static_runtime = part:find('s') ~= nil,
+						debug_runtime = part:find('g') ~= nil,
+						debug = part:find('d') ~= nil,
+						stlport = part:find('p') ~= nil,
+						native_iostreams = part:find('n') ~= nil,
+					}
+					for k, v in pairs(abi_flags) do
+						if v ~= file_abi_flags[k] then
+							build:debug("Ignore", f, "(The", k, "abi flag",
+							            (v and "is not" or "is"), " present)")
+							check = false
+							break
+						else
+							check = true
 						end
 					end
+				else
+					build:error("Unknown boost library name part '" .. part .. "'")
 				end
+			end
+			if check == true then
+				table.append(selected, f)
+			elseif check == nil then
+				table.append(unknown, f)
 			end
 		end
 
-		build:debug("Found boost." .. component, "files:", table.tostring(filtered))
-		if #filtered == 0 then
-			build:error("Couldn't find any library file for Boost component '" .. component .. "'")
+		if #selected > 0 then
+			files = selected
+		elseif #unknown > 0 then
+			files = unknown
+		else
+			build:error("Couldn't find any library file for Boost component '"
+			            .. component .. "' in:", table.tostring(files))
 		end
 
-		if #filtered > 1 then
-			build:error("Too many file selected for Boost component '" .. component .. "':", table.tostring(files))
+		if #files > 1 then
+			build:error("Too many file selected for Boost component '"
+			            .. component .. "':", table.tostring(files))
 		end
 
 		local defines = default_component_defines(component, kind, threading)
@@ -160,7 +191,7 @@ function M.find(args)
 		table.append(res, Library:new{
 			name = "Boost." .. component,
 			include_directories = { boost_include_dir },
-			files = filtered,
+			files = files,
 			defines = defines,
 		})
 	end
