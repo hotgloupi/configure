@@ -242,7 +242,7 @@ function Compiler:_system_library_directories()
 		{
 			stdin = Process.Stream.DEVNULL,
 			stderr = Process.Stream.PIPE,
-			stdout = Process.Stream.DEVNULL,
+			stdout = Process.Stream.PIPE,
 			ignore_errors = true,
 		}
 	)
@@ -262,14 +262,27 @@ function Compiler:_system_library_directories()
 						local path = Path:new(line)
 						if path:is_directory() then
 							self.build:debug("Found", self.binary_path, "system library dir:", path)
-							table.append(res, path)
+							table.append(library_directories, path)
 						end
 					end
 				end
 			end
 		end
+	else
+		for _, line in ipairs(out:split('\n')) do
+			if line:find("SEARCH_DIR") ~= nil then
+				for p in line:gmatch('".-"') do
+					p = Path:new(p:strip('"='))
+					if p:is_directory() then
+						table.append(library_directories, p)
+					end
+				end
+			end
+		end
 	end
-	return res
+	self.build:debug("Found system library directories:",
+	                 table.tostring(library_directories))
+	return library_directories
 end
 
 return Compiler
