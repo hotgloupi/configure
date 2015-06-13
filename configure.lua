@@ -88,7 +88,6 @@ function configure(build)
 
 	table.extend(libs, cxx.libraries.boost.find{
 		compiler = compiler,
-		env_prefix = 'boost',
 		components = {
 			'filesystem',
 			'serialization',
@@ -130,7 +129,6 @@ function configure(build)
 	local test_libs = table.extend({libconfigure}, libs)
 	table.extend(test_libs, cxx.libraries.boost.find{
 		compiler = compiler,
-		env_prefix = 'boost2',
 		components = {'unit_test_framework'},
 		kind = 'shared',
 	})
