@@ -234,7 +234,7 @@ end
 
 
 function Compiler:_system_library_directories()
-	cmd = {self.binary,  '-Xlinker', '-v'}
+	cmd = {self.binary,  '-Xlinker', '--verbose'}
 	self:_add_language_flag(cmd)
 	table.append(cmd, '/dev/null')
 	local out = Process:check_output(
