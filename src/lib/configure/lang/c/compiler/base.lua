@@ -580,10 +580,23 @@ function M:find_tool(var_name, description, default_value)
 	return self.build:file_node(path)
 end
 
+--- System include directories used by the compiler implicitly
+--
+-- @return A list of directories
 function M:system_include_directories()
 	return self.binary:set_cached_property(
 		self.env_name .. "-system-include-directories",
 		function () return self:_system_include_directories() end
+	)
+end
+
+--- System library directories used by the compiler implicitly
+--
+-- @return A list of directories
+function M:system_library_directories()
+	return self.binary:set_cached_property(
+		self.env_name .. "-system-library-directories",
+		function () return self:_system_library_directories() end
 	)
 end
 
@@ -630,6 +643,10 @@ function M:_link_library(args)
 end
 
 function M:_system_include_directories()
+	error("Not implemented")
+end
+
+function M:_system_library_directories()
 	error("Not implemented")
 end
 

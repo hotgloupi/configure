@@ -231,4 +231,45 @@ function Compiler:_system_include_directories()
 	return res
 end
 
+
+
+function Compiler:_system_library_directories()
+	cmd = {self.binary,  '-Xlinker', '-v'}
+	self:_add_language_flag(cmd)
+	table.append(cmd, '/dev/null')
+	local out = Process:check_output(
+		cmd,
+		{
+			stdin = Process.Stream.DEVNULL,
+			stderr = Process.Stream.PIPE,
+			stdout = Process.Stream.DEVNULL,
+			ignore_errors = true,
+		}
+	)
+
+	library_directories = {}
+	if self.build:host():os() == Platform.OS.osx then
+		local current = 'none'
+		for _, line in ipairs(out:split('\n')) do
+			if line:starts_with("Library search paths:") then
+				current = 'libraries'
+			elseif line:starts_with("Framework search paths:") then
+				current = 'frameworks'
+			else
+				if current == 'libraries' then
+					line = line:strip()
+					if line:starts_with('/') then
+						local path = Path:new(line)
+						if path:is_directory() then
+							self.build:debug("Found", self.binary_path, "system library dir:", path)
+							table.append(res, path)
+						end
+					end
+				end
+			end
+		end
+	end
+	return res
+end
+
 return Compiler
