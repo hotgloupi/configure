@@ -542,7 +542,15 @@ end
 
 function M:_library_extension(kind, ext)
 	if ext then return ext end
-	if kind == 'shared' then return ".so" else return ".a" end
+	if kind == 'shared' then
+		if self.build:target():os() == Platform.OS.osx then
+			return ".dylib"
+		else
+			return ".so"
+		end
+	else
+		return ".a"
+	end
 end
 
 function M:_library_filename_prefix(kind, prefix)
