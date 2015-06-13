@@ -38,7 +38,6 @@ function M.find(args)
 			if boost_root ~= nil then
 				table.append(dirs, boost_root)
 				table.append(dirs, boost_root / 'include')
-				print(boost_root / "include")
 			end
 			table.extend(dirs, args.compiler:system_include_directories())
 			return fs:find_file(
@@ -51,6 +50,7 @@ function M.find(args)
 	if not boost_version_header:path():exists() then
 		build:error("Couldn't find 'boost/version.hpp' in", boost_include_dir)
 	end
+	build:debug("Found boost version header at", boost_version_header)
 	local boost_library_dir = build:lazy_path_option(
 		env_prefix .. '-library-dir',
 		"Boost library dir",
