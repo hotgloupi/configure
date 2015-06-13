@@ -20,10 +20,13 @@
 --  : Ask the compiler to generate coverage infomation (default `false`).
 --
 --  `exception`
---  : Enable or disable explicitly exception (default `nil`).
+--  : Enable or disable explicitly exception (default to `nil`).
 --
 --  `runtime`
 --  : Select the runtime kind ('static' or 'shared', defaults to 'shared').
+--
+--  `debug_runtime`
+--  : Select the debug version of the runtime (default to `false`).
 --
 --  `threading`
 --  : Enable or disable threading support (defaults to true).
@@ -96,6 +99,7 @@ local M = {
 		exception = nil,
 		threading = true,
 		runtime = 'shared',
+		debug_runtime = false,
 		debug = true,
 		defines = {},
 		executable_directory = 'bin',
@@ -133,7 +137,7 @@ function M:new(args)
 		args
 	)
 	for key, value in pairs(o) do
-		args.build:debug(self.name, key, '=', value)
+		args.build:debug(self.name, key, '=', tostring(value))
 	end
 	setmetatable(o, self)
 	self.__index = self
