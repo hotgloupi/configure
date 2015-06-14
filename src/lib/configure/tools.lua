@@ -3,6 +3,10 @@
 
 local M = {}
 
+--- Convert directories to directory nodes if needed.
+--
+-- @param dirs a list of string, path or nodes
+-- @return a list of directory `Node`s
 function M.normalize_directories(build, dirs)
 	res = {}
 	for _, dir in ipairs(dirs)
@@ -22,6 +26,20 @@ function M.normalize_directories(build, dirs)
 				error("Expected a directory node, got " .. tostring(dir))
 			end
 			table.append(res, dir)
+		end
+	end
+	return res
+end
+
+function M.unique(list)
+	local res = {}
+	for _, v in ipairs(list) do
+		local found = false
+		for _, o in ipairs(res) do
+			if o == v then found = true; break end
+		end
+		if not found then
+			table.append(res, v)
 		end
 	end
 	return res
