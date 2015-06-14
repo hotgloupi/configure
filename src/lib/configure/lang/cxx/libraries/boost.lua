@@ -150,8 +150,14 @@ function M.find(args)
 						stlport = part:find('p') ~= nil,
 						native_iostreams = part:find('n') ~= nil,
 					}
+					build:debug("Found abi flags of", f, (function()
+						local res = ""
+						for k, v in pairs(file_abi_flags) do
+							res = res .. ' ' .. k .. '=' .. tostring(v);
+						end
+					end)())
 					for k, v in pairs(abi_flags) do
-						if v ~= file_abi_flags[k] then
+						if k ~= 'threading' and v ~= file_abi_flags[k] then
 							build:debug("Ignore", f, "(The", k, "abi flag",
 							            (v and "is not" or "is"), " present)")
 							check = false
