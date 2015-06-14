@@ -88,6 +88,7 @@
 -- @classmod configure.lang.c.compiler.base
 
 local undefined = {}
+local tools = require('configure.tools')
 
 local M = {
 	--- Library type used by the compiler.
@@ -354,7 +355,7 @@ function M:_include_directories(args)
 	do
 		table.extend(dirs, lib.include_directories)
 	end
-	return self:_normalize_directories(dirs)
+	return tools.unique(tools.normalize_directories(self.build, dirs))
 end
 --
 --- Concat and normalize library directories from argument and compiler.
@@ -365,7 +366,7 @@ function M:_library_directories(args)
 	local dirs = {}
 	table.extend(dirs, args.library_directories or {})
 	table.extend(dirs, self.library_directories)
-	return self:_normalize_directories(dirs)
+	return tools.unique(tools.normalize_directories(self.build, dirs))
 end
 
 --- Concat arguments libraries and compiler libraries
@@ -500,30 +501,6 @@ end
 -- @treturn string 'shared' or 'static'
 function M:_runtime(args)
 	return args.runtime or self.runtime
-end
-
---- Convert directories to directory nodes if needed.
---
--- @param dirs a list of string, path or nodes
--- @return a list of directory `Node`s
-function M:_normalize_directories(dirs)
-	res = {}
-	for _, dir in ipairs(dirs)
-	do
-		if type(dir) == "string" then
-			dir = Path:new(dir)
-		end
-		if getmetatable(dir) == Path then
-			if not dir:is_absolute() then
-				dir = self.build:project_directory() / dir
-			end
-			dir = self.build:directory_node(dir)
-		elseif getmetatable(dir) ~= Node then
-			error("Expected string, Path or Node, got " .. tostring(dir))
-		end
-		table.append(res, dir)
-	end
-	return res
 end
 
 --- Built objects extension
