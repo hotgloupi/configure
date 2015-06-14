@@ -109,12 +109,12 @@ function M.find(args)
 	end
 
 	local component_files = {}
-	for _, lib in ipairs(fs:glob(boost_library_dir, "libboost_*")) do
+	for _, lib in ipairs(fs:glob(boost_library_dir, "*boost_*")) do
 		for _, component in ipairs(components) do
 			local filename = tostring(lib:path():filename())
 			if filename:starts_with("libboost_" .. component) or
 				(build:target():os() == Platform.OS.windows and
-				 filename:starts_with("boost_")) then
+				 filename:starts_with("boost_" .. component)) then
 				if component_files[component] == nil then
 					component_files[component] = {}
 				end
@@ -131,16 +131,30 @@ function M.find(args)
 			build:error("Couldn't find library files for boost component '" .. component .. "'")
 		end
 		local files = component_files[component]
+		local runtime_files = {}
 		local filtered = {}
 		local kind = args[component .. '_kind'] or args.kind or 'static'
 		-- Filter files based on the kind selected ('static' or 'shared')
 		local ext = args.compiler:_library_extension(kind)
 		for i, f in ipairs(files) do
-			if tostring(f:path()):ends_with(ext) then
+			local filename = tostring(f:path():filename())
+			if build:target():os() == Platform.OS.windows then
+				if filename:ends_with('.lib') then
+					if kind == 'shared' and filename:starts_with('boost_') then
+						table.append(filtered, f)
+					elseif kind == 'static' and filename:starts_with('libboost_') then
+						table.append(filtered, f)
+					else
+						build:debug("Ignore non boost lib", f)
+					end
+				elseif kind == 'shared' and filename:ends_with('.dll') then
+					table.append(runtime_files, f)
+				end
+			elseif tostring(f:path()):ends_with(ext) then
 				build:debug("Select", f, "(ends with '" .. ext .."')")
 				table.append(filtered, f)
 			else
-				build:debug("Ignore", f, "(do not end with '" .. ext .."')")
+				build:debug("Ignore", f)
 			end
 		end
 
@@ -194,6 +208,12 @@ function M.find(args)
 			            .. component .. "':", table.tostring(files))
 		end
 
+		local selected_runtime_files = {}
+		for _, f in ipairs(runtime_files) do
+			if f:stem() == files[0]:stem() then
+				table.append(selected_runtime_files, f)
+			end
+		end
 		local defines = default_component_defines(component, kind, threading)
 		table.extend(defines, args[component .. '_defines'] or args.defines or {})
 
@@ -203,6 +223,7 @@ function M.find(args)
 			include_directories = { boost_include_dir },
 			files = files,
 			defines = defines,
+			runtime_files = selected_runtime_files,
 		})
 	end
 	return res
