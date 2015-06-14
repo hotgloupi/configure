@@ -131,7 +131,7 @@ function M.find(args)
 			local flags = tostring(f:path():filename()):match("-[^.]*")
 			local parts = {}
 			if flags ~= nil then
-				parts = flags:split('-')
+				parts = flags:strip('-'):split('-')
 			end
 			local check = nil
 			for i, part in ipairs(parts) do
