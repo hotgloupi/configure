@@ -68,6 +68,7 @@ function M.find(args)
 					return dir
 				end
 			end
+			build:error("Couldn't find Boost library directory (checked " .. table.tostring(dirs) .. ")")
 		end
 	)
 	local components = args.components
