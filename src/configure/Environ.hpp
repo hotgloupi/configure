@@ -229,7 +229,7 @@ namespace configure {
 		typedef typename Environ::const_ref<T>::type return_type;
 		static
 		return_type apply(Value const& value)
-		{ return boost::get<return_type>(value); }
+		{ return boost::get<T>(value); }
 	};
 
 	template<> struct Environ::extract<Environ::Value>
@@ -242,20 +242,20 @@ namespace configure {
 	{
 		typedef std::vector<Environ::Value> const& return_type;
 		static return_type apply(Environ::Value const& value)
-		{ return boost::get<return_type>(value); }
+		{ return boost::get<std::vector<Environ::Value>>(value); }
 	};
 
 	template<typename T> struct Environ::extract<std::vector<T>>
 	{
-		typedef typename Environ::const_ref<std::vector<T>>::type return_type;
-		typedef typename Environ::const_ref<T>::type value_type;
+		typedef std::vector<T> return_type;
 		static
 		return_type apply(Value const& value)
 		{
-			auto const& vector = boost::get<std::vector<Value> const&>(value);
+			auto const& vector = boost::get<std::vector<Value>>(value);
 			return_type res;
+			res.reserve(vector.size());
 			for (auto& el: vector)
-				res.push_back(boost::get<value_type>(el));
+				res.push_back(boost::get<T>(el));
 			return res;
 		}
 	};

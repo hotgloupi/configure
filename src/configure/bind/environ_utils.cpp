@@ -49,13 +49,13 @@ namespace configure { namespace lua {
 			case 0:
 				Converter<std::string>::push(
 					state,
-					boost::get<std::string const&>(value)
+					boost::get<std::string>(value)
 				);
 				break;
 			case 1:
 				Converter<boost::filesystem::path>::push(
 					state,
-					boost::get<boost::filesystem::path const&>(value)
+					boost::get<boost::filesystem::path>(value)
 				);
 				break;
 			case 2:
