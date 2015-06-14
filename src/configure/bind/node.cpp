@@ -51,6 +51,14 @@ namespace configure {
 		return utils::env_set_default(state, env, 2);
 	}
 
+	static int Node_eq(lua_State* state)
+	{
+		auto& lhs = lua::Converter<NodePtr>::extract(state, 1);
+		auto& rhs = lua::Converter<NodePtr>::extract(state, 2);
+		lua_pushboolean(state, (lhs == rhs));
+		return 1;
+	}
+
 	void bind_node(lua::State& state)
 	{
 		/// Node represent a vertex in the build graph.
@@ -73,6 +81,8 @@ namespace configure {
 			.def("name", &Node::name)
 
 			.def("__tostring", &Node::string)
+
+			.def("__eq", &Node_eq)
 
 			/// Relative path to the node
 			// @tparam Path start Starting point of the relative path
