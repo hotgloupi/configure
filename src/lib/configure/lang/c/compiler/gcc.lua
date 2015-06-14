@@ -234,7 +234,10 @@ end
 
 
 function Compiler:_system_library_directories()
-	cmd = {self.binary,  '-Xlinker', '--verbose'}
+	local cmd = {self.binary,  '-Xlinker', '--verbose'}
+	if self.name == 'clang' then
+		cmd = { self.binary, '-Xlinker', '-v' }
+	end
 	self:_add_language_flag(cmd)
 	table.append(cmd, '/dev/null')
 	local out = Process:check_output(
