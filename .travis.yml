@@ -25,7 +25,7 @@ install:
 script:
     - cat cov-int/scm_log.txt || echo "No coverity log"
     - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then
-        /tmp/configure build cxx=${CXX_COMPILER} coverage=${COVERALLS} --build;
+        /tmp/configure build cxx=${CXX_COMPILER} coverage=${COVERALLS} --build -d;
         export CONFIGURE_EXE=`pwd`/build/bin/configure;
         ${CONFIGURE_EXE} build --build --target check -d;
         behave test/features -q -m -k;
