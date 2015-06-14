@@ -5,6 +5,7 @@ require "debug"
 local deps = require "configure.dependency"
 local cxx = require "configure.lang.cxx"
 local c = require "configure.lang.c"
+local modules = require "configure.modules"
 
 local version = '0.0.1'
 
@@ -86,7 +87,7 @@ function configure(build)
 	local library_directories = {}
 	local include_directories = {'src'}
 
-	table.extend(libs, cxx.libraries.boost.find{
+	table.extend(libs, modules.boost.find{
 		compiler = compiler,
 		components = {
 			'filesystem',
@@ -127,7 +128,7 @@ function configure(build)
 	}
 
 	local test_libs = table.extend({libconfigure}, libs)
-	table.extend(test_libs, cxx.libraries.boost.find{
+	table.extend(test_libs, modules.boost.find{
 		compiler = compiler,
 		components = {'unit_test_framework'},
 		kind = 'shared',
