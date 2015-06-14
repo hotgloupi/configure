@@ -131,7 +131,7 @@ function configure(build)
 	table.extend(test_libs, modules.boost.find{
 		compiler = compiler,
 		components = {'unit_test_framework'},
-		kind = 'shared',
+		kind = build:target():os() == Platform.OS.windows and 'static' or 'shared',
 	})
 	local defines = {}
 
