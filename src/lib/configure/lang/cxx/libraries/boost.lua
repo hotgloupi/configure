@@ -10,6 +10,38 @@ local function default_component_defines(component, kind, threading)
 	return {}
 end
 
+
+local function extract_flags(f)
+	-- Boost library files are as follow:
+	-- (lib)?boost_<COMPONENT>(-<FLAGS>)?.(lib|a|so)(.<VERSION>)?
+	local flags = tostring(f:filename()):match("-[^.]*")
+	local parts = {}
+	if flags ~= nil then
+		parts = flags:strip('-'):split('-')
+	end
+	res = {}
+	for i, part in ipairs(parts) do
+		if part == "mt" then
+			res['threading'] = true
+		elseif part:starts_with('vc') then
+			res['toolset'] = part
+		elseif part:match("%d+_%d+") then
+			res['version'] = part -- XXX should replace _ with .
+		elseif part:match("^s?g?d?p?n?$") then
+			table.update(res, {
+				static_runtime = part:find('s') ~= nil,
+				debug_runtime = part:find('g') ~= nil,
+				debug = part:find('d') ~= nil,
+				stlport = part:find('p') ~= nil,
+				native_iostreams = part:find('n') ~= nil,
+			})
+		else
+			error("Unknown boost library name part '" .. part .. "'")
+		end
+	end
+	return res
+end
+
 --- Find Boost libraries
 --
 -- @param args
@@ -118,7 +150,7 @@ function M.find(args)
 			return res
 		end
 
-		local abi_flags = {
+		local flags = {
 			threading = arg('threading', args.compiler.threading),
 			static_runtime = arg('static_runtime', args.compiler.runtime == 'static'),
 			debug_runtime = arg('debug_runtime', args.compiler.debug_runtime),
@@ -126,48 +158,19 @@ function M.find(args)
 		}
 		local files, selected, unknown = filtered, {}, {}
 		for _, f in ipairs(files) do
-			-- Boost library files are as follow:
-			-- (lib)?boost_<COMPONENT>(-<FLAGS>)?.(lib|a|so)(.<VERSION>)?
-			local flags = tostring(f:path():filename()):match("-[^.]*")
-			local parts = {}
-			if flags ~= nil then
-				parts = flags:strip('-'):split('-')
-			end
+			local file_flags = extract_flags(f:path())
+
+			-- TODO: Check against toolset
+			-- TODO: Check the version
 			local check = nil
-			for i, part in ipairs(parts) do
-				if check == false then break end
-				if part == "mt" then
-					check = abi_flags[threading]
-				elseif part:starts_with('vc') then
-					-- TODO: Check against toolset
-				elseif part:match("%d+_%d+_%d+") then
-					-- TODO: Check the version
-				elseif part:match("^s?g?d?p?n?$") then
-					local file_abi_flags = {
-						static_runtime = part:find('s') ~= nil,
-						debug_runtime = part:find('g') ~= nil,
-						debug = part:find('d') ~= nil,
-						stlport = part:find('p') ~= nil,
-						native_iostreams = part:find('n') ~= nil,
-					}
-					build:debug("Found abi flags of", f, (function()
-						local res = ""
-						for k, v in pairs(file_abi_flags) do
-							res = res .. ' ' .. k .. '=' .. tostring(v);
-						end
-					end)())
-					for k, v in pairs(abi_flags) do
-						if k ~= 'threading' and v ~= file_abi_flags[k] then
-							build:debug("Ignore", f, "(The", k, "abi flag",
-							            (v and "is not" or "is"), " present)")
-							check = false
-							break
-						else
-							check = true
-						end
-					end
-				else
-					build:error("Unknown boost library name part '" .. part .. "'")
+			for k, v in pairs(file_flags) do
+				if flags[k] ~= nil then
+					check = flags[k] == v
+				end
+				if check == false then
+					build:debug("Ignore", f, "(The", k, "flag",
+					            (v and "is not" or "is"), " present)")
+					break
 				end
 			end
 			if check == true then
