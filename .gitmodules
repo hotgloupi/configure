@@ -1,0 +1,3 @@
+[submodule "src/lib/configure/modules"]
+	path = src/lib/configure/modules
+	url = https://github.com/hotgloupi/configure-modules.git
