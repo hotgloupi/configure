@@ -62,12 +62,13 @@ ${SRC_DIR}/configure/utils/*.cpp
 ls "$BOOST_LIBRARY_DIR"
 ls "${BOOST_ROOT}"
 
-mkdir temp
+mkdir -p temp
 
 var=0
 for src in ${SRCS} ${LUA_SRCS}
 do
 	var=$((var+1))
+	[ -f "temp/$var.obj" ] || (
 	"${CXX}" -nologo \
 		-c -Fo"temp/$var.obj" \
 		-EHsc -MD \
@@ -75,6 +76,7 @@ do
 		-I "${BOOST_ROOT}" \
 		-DBOOST_LIB_DIAGNOSTIC \
 		-Tp "$src"
+	)
 done
 
 link -nologo \
