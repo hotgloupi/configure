@@ -50,11 +50,17 @@ namespace configure {
 		if (!lua_isfunction(state, -1))
 			throw std::runtime_error("Expected a function as a second argument");
 		auto res = self.lazy_option<T>(
-			std::move(key),
-			std::move(descr),
-			[=]() -> T {
+			key,
+			descr,
+			[&]() -> T {
 				lua::State::check_status(state, lua_pcall(state, 0, 1, 0));
-				return lua::Converter<T>::extract(state, -1);
+				try { return lua::Converter<T>::extract(state, -1); }
+				catch (...) {
+				    CONFIGURE_THROW(
+				      error::BuildError("The lua callback for option '" + key +
+				                        "' didn't return a valid value")
+				      << error::nested(std::current_exception()));
+			    }
 			});
 		lua::Converter<T>::push(state, std::move(res));
 		return 1;
