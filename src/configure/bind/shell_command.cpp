@@ -45,12 +45,28 @@ namespace configure {
 		return 1;
 	}
 
+	static int ShellCommand_working_directory(lua_State* state)
+	{
+		ShellCommand& cmd = lua::Converter<ShellCommand>::extract(state, 1);
+		int count = lua_gettop(state);
+		if (count == 2)
+			cmd.working_directory(lua::Converter<boost::filesystem::path>::extract(state, 2));
+
+		if (cmd.has_working_directory())
+			lua::Converter<boost::filesystem::path>::push(
+			  state, cmd.working_directory());
+		else
+			lua_pushnil(state);
+		return 1;
+	}
+
 	void bind_shell_command(lua::State& state)
 	{
 		/// @classmod ShellCommand
 		lua::Type<ShellCommand>(state, "ShellCommand")
 			.def("new", &ShellCommand_new)
 			.def("__tostring", &ShellCommand_tostring)
+			.def("working_directory", &ShellCommand_working_directory)
 		;
 	}
 

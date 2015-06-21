@@ -7,6 +7,7 @@
 
 #include <boost/filesystem/path.hpp>
 #include <boost/variant/variant.hpp>
+#include <boost/optional.hpp>
 
 namespace configure {
 
@@ -16,9 +17,15 @@ namespace configure {
 		virtual ~ShellFormatter();
 
 	public:
-		virtual std::string operator ()(std::string value) const;
-		virtual std::string operator ()(boost::filesystem::path const& value) const;
-		virtual std::string operator ()(Node const& value) const;
+		virtual std::string
+		operator()(ShellCommand const& command, std::string value) const;
+
+		virtual std::string
+		operator()(ShellCommand const& command,
+		           boost::filesystem::path const& value) const;
+
+		virtual std::string
+		operator()(ShellCommand const& command, Node const& value) const;
 	};
 
 	// Dynamic shell argument
@@ -45,6 +52,7 @@ namespace configure {
 		> Arg;
 	private:
 		std::vector<Arg> _args;
+		boost::optional<boost::filesystem::path> _working_directory;
 
 	public:
 		ShellCommand()
@@ -52,10 +60,12 @@ namespace configure {
 
 		ShellCommand(ShellCommand&& other)
 			: _args(std::move(other._args))
+			, _working_directory(std::move(other._working_directory))
 		{}
 
 		ShellCommand(ShellCommand const& other)
 			: _args(other._args)
+			, _working_directory(other._working_directory)
 		{}
 
 		ShellCommand& operator =(ShellCommand const& other)
@@ -77,6 +87,15 @@ namespace configure {
 		// Raw arguments
 		std::vector<Arg> const& args() const
 		{ return _args; }
+
+		bool has_working_directory() const
+		{ return _working_directory; }
+
+		boost::filesystem::path const& working_directory() const
+		{ return *_working_directory; }
+
+		void working_directory(boost::filesystem::path dir)
+		{ _working_directory = boost::in_place(std::move(dir)); }
 
 		// Add one or more arguments.
 		template<typename T, typename... Args>
@@ -106,6 +125,7 @@ namespace configure {
 
 		// Dump command without any build context (for debugging purposes).
 		std::vector<std::string> dump() const;
+
 
 	private:
 		void append() {} // End case

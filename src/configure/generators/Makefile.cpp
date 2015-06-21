@@ -185,8 +185,12 @@ namespace configure { namespace generators {
 			{}
 
 			std::string
-			operator ()(boost::filesystem::path const& value) const override
+			operator()(ShellCommand const& command,
+				       boost::filesystem::path const& value) const override
 			{
+				if (command.has_working_directory())
+					return utils::relative_path(
+					  value, command.working_directory()).string();
 				if (utils::starts_with(value, _project_dir))
 					return utils::relative_path(value, _build_dir).string();
 				return value.string();
@@ -288,8 +292,15 @@ namespace configure { namespace generators {
 					continue;
 				for (auto const& shell_command: cmd_ptr->shell_commands())
 				{
+					std::string wd;
+					if (shell_command.has_working_directory())
+					{
+						ShellCommand chdir;
+						chdir.append("cd", shell_command.working_directory());
+						wd = this->dump_command(chdir.string(_build, link, *formatter)) + ";";
+					}
 					command_strings.push_back(
-						this->dump_command(
+						wd + this->dump_command(
 							shell_command.string(_build, link, *formatter)
 						)
 					);
