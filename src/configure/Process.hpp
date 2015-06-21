@@ -54,6 +54,7 @@ namespace configure {
 
 	public:
 		static ExitCode call(Command cmd, Options options = Options());
+		static void check_call(Command cmd, Options options = Options());
 		static std::string
 		check_output(Command cmd);
 		static std::string

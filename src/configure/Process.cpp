@@ -462,6 +462,14 @@ namespace configure {
 		return p.wait();
 	}
 
+	void Process::check_call(Command cmd, Options options)
+	{
+		auto ret = Process::call(std::move(cmd), std::move(options));
+		if (ret != 0)
+			CONFIGURE_THROW(error::RuntimeError(
+			  "Program failed with exit code " + std::to_string(ret)));
+	}
+
 	std::string Process::check_output(Command cmd)
 	{
 		Options options;
