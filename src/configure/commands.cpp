@@ -1,5 +1,8 @@
 #include "commands.hpp"
 #include "commands/header_dependencies.hpp"
+#include "commands/fetch.hpp"
+#include "commands/extract.hpp"
+#include "commands/touch.hpp"
 
 #include <fstream>
 
@@ -22,6 +25,14 @@ namespace configure { namespace commands {
 				include_directories.push_back(args[i]);
 			header_dependencies(out, source, targets, include_directories);
 		}
+		else if (args[0] == "fetch")
+			fetch(args.at(1), args.at(2));
+		else if (args[0] == "extract")
+			extract(args.at(1), args.at(2));
+		else if (args[0] == "touch")
+			touch(args.at(1));
+		else
+			throw std::runtime_error("Unknown command '" + args[0] + "'");
 	}
 
 }}
