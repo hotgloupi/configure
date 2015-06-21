@@ -2,7 +2,6 @@
 require "package"
 require "debug"
 
-local deps = require "configure.dependency"
 local cxx = require "configure.lang.cxx"
 local c = require "configure.lang.c"
 local modules = require "configure.modules"
