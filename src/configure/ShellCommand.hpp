@@ -89,7 +89,7 @@ namespace configure {
 		{ return _args; }
 
 		bool has_working_directory() const
-		{ return _working_directory; }
+		{ return static_cast<bool>(_working_directory); }
 
 		boost::filesystem::path const& working_directory() const
 		{ return *_working_directory; }

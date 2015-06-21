@@ -313,7 +313,7 @@ namespace configure {
 			LPVOID env = nullptr;
 			LPCTSTR work_dir = nullptr;
 			if (this->options.working_directory)
-				work_dir = this->options.working_directory->c_str();
+				work_dir = this->options.working_directory.get().string().c_str();
 #if (_WIN32_WINNT >= 0x0600)
 			DWORD creation_flags = EXTENDED_STARTUPINFO_PRESENT;
 			STARTUPINFOEX startup_info_ex;
@@ -383,7 +383,7 @@ namespace configure {
 
 			PROCESS_INFORMATION proc_info;
 			std::unique_ptr<char, void (*)(void*)> cmd_line(
-			  ::strdup(
+			  ::_strdup(
 			    quote<CommandParser::windows_shell>(this->command).c_str()),
 			  &::free);
 			if (cmd_line == nullptr)
