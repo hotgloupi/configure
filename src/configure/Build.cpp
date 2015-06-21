@@ -364,6 +364,11 @@ namespace configure {
 			if (utils::starts_with(pair.first, this->root_directory()))
 				directories.insert(pair.first.parent_path());
 		}
+		for (auto const& pair: _this->directory_nodes)
+		{
+			if (utils::starts_with(pair.first, this->root_directory()))
+				directories.insert(pair.first);
+		}
 
 		for (auto&& d: directories)
 		{
