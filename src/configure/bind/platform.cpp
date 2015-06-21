@@ -6,31 +6,41 @@
 
 namespace configure {
 
-#define PLATFORM_PROPERTY(T, name) \
-	static int Platform_ ## name(lua_State* state) \
-	{ \
-		Platform& self = lua::Converter<std::reference_wrapper<Platform>>::extract(state, 1); \
-		if (lua_gettop(state) == 2) \
-		{ \
-			if (lua_isstring(state, 2)) \
-				self.name(lua_tostring(state, 2)); \
-			else if (lua_isnumber(state, 2)) \
+#define PLATFORM_PROPERTY(T, name)                                             \
+	static int Platform_##name(lua_State* state)                               \
+	{                                                                          \
+		Platform& self =                                                       \
+		  lua::Converter<std::reference_wrapper<Platform>>::extract(state, 1); \
+		if (lua_gettop(state) == 2) {                                          \
+			if (lua_isstring(state, 2))                                        \
+				self.name(lua_tostring(state, 2));                             \
+			else if (lua_isnumber(state, 2))                                   \
 				self.name(static_cast<Platform::T>(lua_tounsigned(state, 2))); \
-			else \
-				throw std::runtime_error("Expected number or string"); \
-			lua_pushvalue(state, 1); \
-		} \
-		else \
-		{ \
-			lua_pushunsigned(state, static_cast<int>(self.name())); \
-		} \
-		return 1; \
-	} \
-/**/
+			else                                                               \
+				throw std::runtime_error("Expected number or string");         \
+			lua_pushvalue(state, 1);                                           \
+		}                                                                      \
+		else                                                                   \
+		{                                                                      \
+			lua_pushunsigned(state, static_cast<int>(self.name()));            \
+		}                                                                      \
+		return 1;                                                              \
+	}                                                                          \
+	/**/
 	PLATFORM_PROPERTY(Vendor, vendor);
 	PLATFORM_PROPERTY(Arch, arch);
 	PLATFORM_PROPERTY(SubArch, sub_arch);
 	PLATFORM_PROPERTY(OS, os);
+
+	static int Platform_string(lua_State* state)
+	{
+		Platform& self =
+		  lua::Converter<std::reference_wrapper<Platform>>::extract(state, 1);
+		std::stringstream ss;
+		ss << self;
+		lua::Converter<std::string>::push(state, ss.str());
+		return 1;
+	}
 
 	void bind_platform(lua::State& state)
 	{
@@ -44,6 +54,8 @@ namespace configure {
 			.def("arch_string", &Platform::arch_string)
 			.def("sub_arch_string", &Platform::sub_arch_string)
 			.def("os_string", &Platform::os_string)
+			.def("__tostring", &Platform_string)
+
 		;
 #define ENUM_VALUE(T, key) \
 		lua_pushunsigned(\

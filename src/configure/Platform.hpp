@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iosfwd>
 #include <string>
 
 namespace configure {
@@ -72,4 +73,5 @@ namespace configure {
 		static EnumType from_string(std::string const& value);
 	};
 
+	std::ostream& operator <<(std::ostream& out, Platform const& p);
 }
