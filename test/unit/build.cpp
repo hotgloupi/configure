@@ -18,12 +18,12 @@ namespace {
 		return test_dir() / "lua" / (name + ".lua");
 	}
 }
-
+#define CONFIGURE_PATH "/path/to/configure"
 BOOST_AUTO_TEST_CASE(empty)
 {
 	TemporaryDirectory temp;
 	lua::State state;
-	Build build(state, temp.dir());
+	Build build(CONFIGURE_PATH, state, temp.dir());
 	BOOST_CHECK_THROW(build.project_directory(), std::exception);
 	BOOST_CHECK_EQUAL(build.directory(), temp.dir());
 }
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(simple)
 	TemporaryDirectory temp;
 	temp.create_file("configure.lua", empty_configure);
 	lua::State state;
-	Build build(state, temp.dir() / "build");
+	Build build(CONFIGURE_PATH, state, temp.dir() / "build");
 	build.configure(temp.dir());
 	BOOST_CHECK_EQUAL(build.directory(), temp.dir() / "build");
 	BOOST_CHECK_THROW(build.project_directory(), std::exception);
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(configure_invalid_project_dir)
 {
 	TemporaryDirectory temp;
 	lua::State state;
-	Build build(state, temp.dir());
+	Build build(CONFIGURE_PATH, state, temp.dir());
 
 	// Try to pass a file instead of a directory
 	temp.create_file("FILE");
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(empty_option)
 {
 	TemporaryDirectory temp;
 	lua::State state;
-	Build build(state, temp.dir() / "build");
+	Build build(CONFIGURE_PATH, state, temp.dir() / "build");
 	BOOST_CHECK_EQUAL(
 		build.option<std::string>("key", "description"),
 		boost::none
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(default_option)
 {
 	TemporaryDirectory temp;
 	lua::State state;
-	Build build(state, temp.dir() / "build");
+	Build build(CONFIGURE_PATH, state, temp.dir() / "build");
 	BOOST_CHECK_EQUAL(
 		build.option<std::string>("key", "description", "default value"),
 		"default value"
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(option_read_environ)
 {
 	TemporaryDirectory temp;
 	lua::State state;
-	Build build(state, temp.dir() / "build");
+	Build build(CONFIGURE_PATH, state, temp.dir() / "build");
 	build.env().set<std::string>("key", "some value");
 	BOOST_CHECK_EQUAL(
 		build.option<std::string>("key", "description", "default value"),

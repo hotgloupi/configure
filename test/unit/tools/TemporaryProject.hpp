@@ -15,7 +15,7 @@ struct TemporaryProject
 	TemporaryProject()
 		: directory()
 		, state()
-		, build(state, directory.dir() / "build")
+		, build("/path/to/configure", state, directory.dir() / "build")
 	{ configure::bind(state); }
 
 	TemporaryProject(std::string const& conf)

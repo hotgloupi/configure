@@ -87,151 +87,154 @@ namespace configure {
 		/// Represent a build.
 		// @classmod Build
 		lua::Type<Build, std::reference_wrapper<Build>>(state)
-			/// Current project directory @{Path}.
-			// @function Build:project_directory
-			.def("project_directory", &Build::project_directory)
+		  /// Current project directory @{Path}.
+		  // @function Build:project_directory
+		  .def("project_directory", &Build::project_directory)
 
-			/// Current build directory @{Path}.
-			// @function Build:directory
-			.def("directory", &Build::directory)
+		  /// Current build directory @{Path}.
+		  // @function Build:directory
+		  .def("directory", &Build::directory)
 
-			/// Build root node
-			// @function Build:root_node
-			.def("root_node", &Build::root_node)
+		  /// Build root node
+		  // @function Build:root_node
+		  .def("root_node", &Build::root_node)
 
-			/// Source @{Node} associated to a @{Path}.
-			// @tparam Path path relative path to a source file
-			// @function Build:source_node
-			.def("source_node", &Build::source_node)
+		  /// Source @{Node} associated to a @{Path}.
+		  // @tparam Path path relative path to a source file
+		  // @function Build:source_node
+		  .def("source_node", &Build::source_node)
 
-			/// Target @{Node} associated to a @{Path}.
-			// @tparam Path path relative path to a built file
-			// @function Build:target_node
-			.def("target_node", &Build::target_node)
+		  /// Target @{Node} associated to a @{Path}.
+		  // @tparam Path path relative path to a built file
+		  // @function Build:target_node
+		  .def("target_node", &Build::target_node)
 
-			/// Directory @{Node} associated to a @{Path}.
-			// @tparam Path path Absolute path to a directory
-			// @function Build:directory_node
-			.def("directory_node", &Build::directory_node)
+		  /// Directory @{Node} associated to a @{Path}.
+		  // @tparam Path path Absolute path to a directory
+		  // @function Build:directory_node
+		  .def("directory_node", &Build::directory_node)
 
-			/// File @{Node} associated to a @{Path}.
-			// @tparam Path path Absolute path to a file
-			// @function Build:file_node
-			.def("file_node", &Build::file_node)
+		  /// File @{Node} associated to a @{Path}.
+		  // @tparam Path path Absolute path to a file
+		  // @function Build:file_node
+		  .def("file_node", &Build::file_node)
 
-			/// Virtual @{Node}.
-			// @tparam string name A non-empty string
-			// @function Build:virtual_node
-			.def("virtual_node", &Build::virtual_node)
+		  /// Virtual @{Node}.
+		  // @tparam string name A non-empty string
+		  // @function Build:virtual_node
+		  .def("virtual_node", &Build::virtual_node)
 
-			/// Add a rule to the build.
-			// @tparam Rule rule Rule to add
-			// @function Build:add_rule
-			.def("add_rule", &Build::add_rule)
+		  /// Add a rule to the build.
+		  // @tparam Rule rule Rule to add
+		  // @function Build:add_rule
+		  .def("add_rule", &Build::add_rule)
 
-			/// Associated @{Filesystem} instance.
-			// @function Build:fs
-			.def<lua::return_policy::ref>("fs", &Build::fs)
+		  /// Associated @{Filesystem} instance.
+		  // @function Build:fs
+		  .def<lua::return_policy::ref>("fs", &Build::fs)
 
-			/// Associated @{Environ} instance.
-			// @function Build:env
-			.def<lua::return_policy::ref>("env", &Build::env)
+		  /// Associated @{Environ} instance.
+		  // @function Build:env
+		  .def<lua::return_policy::ref>("env", &Build::env)
 
-			/// Declare an option of type @{string} and return it's value.
-			// @string name
-			// @string description
-			// @tparam[opt] string default_value
-			// @treturn string|nil Associated value
-			// @function Build:string_option
-			.def("string_option", &Build_option<std::string>)
+		  /// Path to the configure executable
+		  // @function Build:configure_program
+		  .def<lua::return_policy::copy>(
+		     "configure_program", &Build::configure_program)
 
-			/// Declare an option of type int and return it's value.
-			// @string name
-			// @string description
-			// @tparam[opt] int default_value
-			// @treturn int|nil Associated value
-			// @function Build:int_option
-			.def("int_option", &Build_option<int64_t>)
+		  /// Declare an option of type @{string} and return it's value.
+		  // @string name
+		  // @string description
+		  // @tparam[opt] string default_value
+		  // @treturn string|nil Associated value
+		  // @function Build:string_option
+		  .def( "string_option", &Build_option<std::string> )
 
-			/// Declare an option of type bool and return it's value.
-			// @string name
-			// @string description
-			// @tparam[opt] bool default_value
-			// @treturn bool|nil Associated value
-			// @function Build:bool_option
-			.def("bool_option", &Build_option<bool>)
+		  /// Declare an option of type int and return it's value.
+		  // @string name
+		  // @string description
+		  // @tparam[opt] int default_value
+		  // @treturn int|nil Associated value
+		  // @function Build:int_option
+		  .def( "int_option", &Build_option<int64_t> )
 
-			/// Declare an option of type @{Path} and return it's value.
-			// @string name
-			// @string description
-			// @tparam[opt] Path default_value
-			// @treturn Path|nil Associated value
-			// @function Build:path_option
-			.def("path_option", &Build_option<fs::path>)
+		  /// Declare an option of type bool and return it's value.
+		  // @string name
+		  // @string description
+		  // @tparam[opt] bool default_value
+		  // @treturn bool|nil Associated value
+		  // @function Build:bool_option
+		  .def( "bool_option", &Build_option<bool> )
 
-			/// Declare a lazy option of type @{string} and return it's value.
-			// @string name
-			// @string description
-			// @tparam[opt] string default_value
-			// @treturn string|nil Associated value
-			// @function Build:string_option
-			.def("lazy_string_option", &Build_lazy_option<std::string>)
+		  /// Declare an option of type @{Path} and return it's value.
+		  // @string name
+		  // @string description
+		  // @tparam[opt] Path default_value
+		  // @treturn Path|nil Associated value
+		  // @function Build:path_option
+		  .def( "path_option", &Build_option<fs::path> )
 
-			/// Declare a lazy option of type int and return it's value.
-			// @string name
-			// @string description
-			// @tparam[opt] int default_value
-			// @treturn int|nil Associated value
-			// @function Build:int_option
-			.def("lazy_int_option", &Build_lazy_option<int64_t>)
+		  /// Declare a lazy option of type @{string} and return it's value.
+		  // @string name
+		  // @string description
+		  // @tparam[opt] string default_value
+		  // @treturn string|nil Associated value
+		  // @function Build:string_option
+		  .def( "lazy_string_option", &Build_lazy_option<std::string> )
 
-			/// Declare a lazy option of type bool and return it's value.
-			// @string name
-			// @string description
-			// @tparam[opt] bool default_value
-			// @treturn bool|nil Associated value
-			// @function Build:bool_option
-			.def("lazy_bool_option", &Build_lazy_option<bool>)
+		  /// Declare a lazy option of type int and return it's value.
+		  // @string name
+		  // @string description
+		  // @tparam[opt] int default_value
+		  // @treturn int|nil Associated value
+		  // @function Build:int_option
+		  .def( "lazy_int_option", &Build_lazy_option<int64_t> )
 
-			/// Declare a lazy option of type @{Path} and return it's value.
-			// @string name
-			// @string description
-			// @tparam[opt] Path default_value
-			// @treturn Path|nil Associated value
-			// @function Build:path_option
-			.def("lazy_path_option", &Build_lazy_option<fs::path>)
+		  /// Declare a lazy option of type bool and return it's value.
+		  // @string name
+		  // @string description
+		  // @tparam[opt] bool default_value
+		  // @treturn bool|nil Associated value
+		  // @function Build:bool_option
+		  .def( "lazy_bool_option", &Build_lazy_option<bool> )
 
-			/// The host platform.
-			// @treturn Platform
-			// @function Build:host_platform
-			.def<lua::return_policy::ref>("host", &Build::host)
+		  /// Declare a lazy option of type @{Path} and return it's value.
+		  // @string name
+		  // @string description
+		  // @tparam[opt] Path default_value
+		  // @treturn Path|nil Associated value
+		  // @function Build:path_option
+		  .def( "lazy_path_option", &Build_lazy_option<fs::path> )
 
-			/// The target platform.
-			// @treturn Platform
-			// @function Build:target_platform
-			.def<lua::return_policy::ref>("target", &Build::target)
+		  /// The host platform.
+		  // @treturn Platform
+		  // @function Build:host_platform
+		  .def<lua::return_policy::ref>("host", &Build::host)
 
-			/// Log a debug message.
-			// @param args...
-			// @function Build:debug
-			.def("debug", &Build_log<log::Level::verbose>)
+		  /// The target platform.
+		  // @treturn Platform
+		  // @function Build:target_platform
+		  .def<lua::return_policy::ref>("target", &Build::target)
 
-			/// Log an informational message.
-			// @param args...
-			// @function Build:status
-			.def("status", &Build_log<log::Level::status>)
+		  /// Log a debug message.
+		  // @param args...
+		  // @function Build:debug
+		  .def( "debug", &Build_log<log::Level::verbose> )
 
-			/// Log a warning message.
-			// @param args...
-			// @function Build:warning
-			.def("warning", &Build_log<log::Level::warning>)
+		  /// Log an informational message.
+		  // @param args...
+		  // @function Build:status
+		  .def( "status", &Build_log<log::Level::status> )
 
-			/// Stop the configuration with an error message.
-			// @param args...
-			// @function Build:error
-			.def("error", &Build_log<log::Level::error>)
-		;
+		  /// Log a warning message.
+		  // @param args...
+		  // @function Build:warning
+		  .def( "warning", &Build_log<log::Level::warning> )
 
+		  /// Stop the configuration with an error message.
+		  // @param args...
+		  // @function Build:error
+		  .def("error", &Build_log<log::Level::error>);
 	}
 
 }

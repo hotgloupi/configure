@@ -25,8 +25,8 @@ namespace configure {
 		std::unique_ptr<Impl> _this;
 
 	public:
-		Build(lua::State& lua, path_t root_directory);
-		Build(lua::State& lua, path_t root_directory,
+		Build(path_t configure_program, lua::State& lua, path_t root_directory);
+		Build(path_t configure_program, lua::State& lua, path_t root_directory,
 		      std::map<std::string, std::string> build_args);
 		~Build();
 
@@ -62,6 +62,8 @@ namespace configure {
 
 		// Environ
 		Environ& env();
+
+		path_t const& configure_program() const;
 
 	public:
 		template<typename T>

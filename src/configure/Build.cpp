@@ -37,6 +37,7 @@ namespace configure {
 
 	struct Build::Impl
 	{
+		fs::path                                 configure_program;
 		fs::path                                 root_directory;
 		lua::State&                              lua;
 		std::vector<fs::path>                    project_stack;
@@ -57,31 +58,34 @@ namespace configure {
 		Platform                                 host_platform;
 		Platform                                 target_platform;
 
-		Impl(Build& build, lua::State& lua, fs::path directory)
-			: root_directory(std::move(directory))
-			, lua(lua)
-			, project_stack()
-			, current_project_index(-1)
-			, build_stack()
-			, virtual_nodes()
-			, file_nodes()
-			, directory_nodes()
-			, properties()
-			, build_graph(properties)
-			, root_node(this->build_graph.add_node<VirtualNode>(""))
-			, fs(build)
-			, env()
-			, env_path(root_directory / ".build" / "env")
-			, properties_path(root_directory / ".build" / "properties")
-			, options()
-			, build_args()
-			, host_platform(Platform::current())
-			, target_platform(Platform::current())
+		Impl(Build& build, fs::path configure_program, lua::State& lua,
+		     fs::path directory)
+		    : configure_program(std::move(configure_program))
+		    , root_directory(std::move(directory))
+		    , lua(lua)
+		    , project_stack()
+		    , current_project_index(-1)
+		    , build_stack()
+		    , virtual_nodes()
+		    , file_nodes()
+		    , directory_nodes()
+		    , properties()
+		    , build_graph(properties)
+		    , root_node(this->build_graph.add_node<VirtualNode>(""))
+		    , fs(build)
+		    , env()
+		    , env_path(root_directory / ".build" / "env")
+		    , properties_path(root_directory / ".build" / "properties")
+		    , options()
+		    , build_args()
+		    , host_platform(Platform::current())
+		    , target_platform(Platform::current())
 		{}
 	};
 
-	Build::Build(lua::State& lua, fs::path directory)
-		: _this(new Impl(*this, lua, std::move(directory)))
+	Build::Build(path_t configure_program, lua::State& lua, fs::path directory)
+	    : _this(new Impl(
+	        *this, std::move(configure_program), lua, std::move(directory)))
 	{
 		_this->build_stack.push_back(_this->root_directory);
 		if (fs::is_regular_file(_this->env_path))
@@ -121,9 +125,10 @@ namespace configure {
 		}
 	}
 
-	Build::Build(lua::State& lua, fs::path root_directory,
-	      std::map<std::string, std::string> build_args)
-		: Build(lua, std::move(root_directory))
+	Build::Build(path_t configure_program, lua::State& lua,
+	             fs::path root_directory,
+	             std::map<std::string, std::string> build_args)
+	    : Build(std::move(configure_program), lua, std::move(root_directory))
 	{
 		for (auto& pair: build_args)
 			_this->build_args[Environ::normalize(pair.first)] = pair.second;
@@ -230,6 +235,9 @@ namespace configure {
 
 	Environ& Build::env()
 	{ return _this->env; }
+
+	fs::path const& Build::configure_program() const
+	{ return _this->configure_program; }
 
 	std::map<std::string, std::string> const& Build::options() const
 	{ return _this->options; }

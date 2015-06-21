@@ -124,9 +124,11 @@ namespace configure {
 			"require 'package'\n"
 			"package.path = configure_library_dir\n"
 		);
+
+		auto configure_path = *Filesystem::which(_this->program_name.string());
 		for (auto const& directory: _this->build_directories)
 		{
-			Build build(lua, directory, _this->build_variables);
+			Build build(configure_path, lua, directory, _this->build_variables);
 			build.configure(_this->project_directory);
 			if (_this->dump_graph_mode)
 				build.dump_graphviz(std::cout);
