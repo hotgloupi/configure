@@ -210,11 +210,6 @@ namespace configure {
 		pid_t _create_child()
 		{
 			char** env = {NULL};
-			// Working directory
-			if (this->options.working_directory)
-			{
-				throw "not there";
-			}
 
 			if (this->options.inherit_env)
 			{
@@ -254,6 +249,17 @@ namespace configure {
 			}
 			else if (child == 0) // Child
 			{
+				if (this->options.working_directory)
+				{
+					auto const& dir = this->options.working_directory.get();
+					if (::chdir(dir.c_str()) < 0)
+					{
+						log::error("Cannot set working directory to '" +
+						             dir.string() + "':",
+						           ::strerror(errno));
+						::exit(EXIT_FAILURE);
+					}
+				}
 				for (auto& channel: channels)
 				{
 					Stream kind = std::get<1>(channel);
@@ -306,6 +312,8 @@ namespace configure {
 			BOOL inherit_handles = false;
 			LPVOID env = nullptr;
 			LPCTSTR work_dir = nullptr;
+			if (this->options.working_directory)
+				work_dir = this->options.working_directory->c_str();
 #if (_WIN32_WINNT >= 0x0600)
 			DWORD creation_flags = EXTENDED_STARTUPINFO_PRESENT;
 			STARTUPINFOEX startup_info_ex;
