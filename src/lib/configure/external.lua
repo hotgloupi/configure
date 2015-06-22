@@ -28,8 +28,8 @@ function M.Project:_init()
 	if self.stamps_directory == nil then
 		self.stamps_directory = self.root_directory / 'stamps'
 	end
-	self.root_node = self._build:virtual_node(self.name)
 	self.steps = {}
+	self.files = {}
 	self._build:debug("Add project", self.name, "in", self.root_directory)
 end
 
@@ -40,7 +40,7 @@ end
 -- @param args.url
 -- @param args.tag
 function M.Project:git_checkout(args)
-	self:add_step{
+	return self:add_step{
 		name = 'download',
 	}
 end
@@ -61,10 +61,8 @@ function M.Project:download_tarball(args)
 	return self:add_step{
 		name = 'download',
 		targets = {
-			[tarball] = {
-				{self._build:configure_program(), '-E', 'fetch', args.url, tarball}
-			},
 			[0] = {
+				{self._build:configure_program(), '-E', 'fetch', args.url, tarball},
 				{self._build:configure_program(), '-E', 'extract', tarball, self:step_directory('source')}
 			}
 		}
@@ -78,6 +76,7 @@ function M.Project:configure(args)
 			[0] = {args.command},
 		},
 		working_directory = args.working_directory,
+		env = args.env,
 	}
 end
 
@@ -99,10 +98,14 @@ function M.Project:install(args)
 	}
 end
 
+function M.Project:_stamp(name)
+	return self._build:target_node(self.root_directory / 'stamps' / name)
+end
+
 function M.Project:add_step(args)
 	local name = args.name
 	local directory = self:step_directory(name)
-	local stamp = self._build:target_node(self.root_directory / 'stamps' / name)
+	local stamp = self:_stamp(name)
 
 	local stamped_rule = Rule:new():add_target(stamp)
 
@@ -120,6 +123,9 @@ function M.Project:add_step(args)
 			local cmd = ShellCommand:new(table.unpack(command))
 			if args.working_directory ~= nil then
 				cmd:working_directory(args.working_directory)
+			end
+			if args.env ~= nil then
+				cmd:env(args.env)
 			end
 			rule:add_shell_command(cmd)
 		end
@@ -141,6 +147,7 @@ function M.Project:add_step(args)
 	end
 	table.append(self.steps, stamp)
 	self._build:add_rule(stamped_rule)
+	return self
 end
 
 function M.Project:step_directory(name)
@@ -165,6 +172,35 @@ function M.Project:step_directory(name)
 		self._build:directory_node(dir) -- Add the directory node to the build
 	end
 	return self[attr]
+end
+
+--- Node file created in a step.
+--
+-- @param args
+-- @param args.path The relative path to the built file
+-- @param[opt] args.step The step where the file should be located (defaults to 'install')
+-- @param[opt] args.is_directory True when the node is a directory node (defaults to `false`)
+function M.Project:node(args)
+	local step = args.step or 'install'
+	local path = self:step_directory(step) / args.path
+	local node = self.files[tostring(path)]
+	if node == nil then
+		if args.is_directory == true then
+			node = self._build:directory_node(path)
+		else
+			node = self._build:target_node(path)
+			self._build:add_rule(
+				Rule:new():add_source(self:_stamp(step)):add_target(node)
+			)
+		end
+		self.files[tostring(path)] = node
+	end
+	return node
+end
+
+
+function M.Project:directory_node(args)
+	return self:node(table.update({is_directory = true}, args))
 end
 
 return M
