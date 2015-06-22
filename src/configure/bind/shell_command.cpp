@@ -60,6 +60,43 @@ namespace configure {
 		return 1;
 	}
 
+	static int ShellCommand_env(lua_State* state)
+	{
+		ShellCommand& cmd = lua::Converter<ShellCommand>::extract(state, 1);
+		int count = lua_gettop(state);
+		if (count == 2)
+		{
+			if (!lua_istable(state, -1))
+				CONFIGURE_THROW(error::InvalidArgument("Expect a table argument"));
+			ShellCommand::Environ env;
+			std::string key, val;
+			lua_pushnil(state);
+			// -3  : -2  : -1
+			// cmd : env : nil
+			while (lua_next(state, -2))
+			{
+				// -4  : -3  : -2  :   -1
+				// cmd : env : key : value
+				if (auto ptr = luaL_tolstring(state, -2, nullptr))
+					key = ptr;
+				else
+					CONFIGURE_THROW(error::RuntimeError("Cannot convert table key to string"));
+				lua_pop(state, 1);
+				if (auto ptr = luaL_tolstring(state, -1, nullptr))
+					val = ptr;
+				else
+					CONFIGURE_THROW(error::RuntimeError("Cannot convert table value to string"));
+				lua_pop(state, 1);
+				env[key] = val;
+				lua_pop(state, 1);
+			}
+			cmd.env(std::move(env));
+		}
+		else
+			CONFIGURE_THROW(error::RuntimeError("not implemented"));
+		return 0;
+	}
+
 	void bind_shell_command(lua::State& state)
 	{
 		/// @classmod ShellCommand
@@ -67,6 +104,7 @@ namespace configure {
 			.def("new", &ShellCommand_new)
 			.def("__tostring", &ShellCommand_tostring)
 			.def("working_directory", &ShellCommand_working_directory)
+			.def("env", &ShellCommand_env)
 		;
 	}
 

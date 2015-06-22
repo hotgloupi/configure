@@ -299,8 +299,14 @@ namespace configure { namespace generators {
 						chdir.append("cd", shell_command.working_directory());
 						wd = this->dump_command(chdir.string(_build, link, *formatter)) + ";";
 					}
+					std::string env;
+					if (shell_command.has_env())
+					{
+						for (auto&& pair: shell_command.env())
+							env += pair.first + "=" + pair.second + " ";
+					}
 					command_strings.push_back(
-						wd + this->dump_command(
+						wd + env + this->dump_command(
 							shell_command.string(_build, link, *formatter)
 						)
 					);

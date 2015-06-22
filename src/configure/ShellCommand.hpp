@@ -4,6 +4,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include <boost/filesystem/path.hpp>
 #include <boost/variant/variant.hpp>
@@ -50,9 +51,11 @@ namespace configure {
 			ShellArgPtr,
 			NodePtr
 		> Arg;
+		typedef std::map<std::string, std::string> Environ;
 	private:
 		std::vector<Arg> _args;
 		boost::optional<boost::filesystem::path> _working_directory;
+		boost::optional<Environ> _env;
 
 	public:
 		ShellCommand()
@@ -61,11 +64,13 @@ namespace configure {
 		ShellCommand(ShellCommand&& other)
 			: _args(std::move(other._args))
 			, _working_directory(std::move(other._working_directory))
+			, _env(std::move(other._env))
 		{}
 
 		ShellCommand(ShellCommand const& other)
 			: _args(other._args)
 			, _working_directory(other._working_directory)
+			, _env(other._env)
 		{}
 
 		ShellCommand& operator =(ShellCommand const& other)
@@ -96,6 +101,15 @@ namespace configure {
 
 		void working_directory(boost::filesystem::path dir)
 		{ _working_directory = boost::in_place(std::move(dir)); }
+
+		bool has_env() const
+		{ return static_cast<bool>(_env); }
+
+		Environ const& env() const
+		{ return *_env; }
+
+		void env(Environ value)
+		{ _env = boost::in_place(std::move(value)); }
 
 		// Add one or more arguments.
 		template<typename T, typename... Args>
