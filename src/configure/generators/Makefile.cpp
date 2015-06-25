@@ -155,7 +155,10 @@ namespace configure { namespace generators {
 					cmd.append(bg.node(boost::target(*out_edge_range.first, g)));
 				cmd.append("--");
 				for (auto& dir: include_directories)
-					cmd.append(_build.directory_node(dir));
+				{
+					if (utils::starts_with(dir, _project_directory))
+						cmd.append(_build.directory_node(dir));
+				}
 				_build.add_rule(
 					Rule()
 						.add_source(node)
