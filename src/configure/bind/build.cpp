@@ -82,6 +82,14 @@ namespace configure {
 		return 0;
 	}
 
+	static int Build_configure(lua_State* state)
+	{
+		auto& self = lua::Converter<std::reference_wrapper<Build>>::extract(state, 1);
+		fs::path dir = lua::Converter<fs::path>::extract(state, 2);
+		self.get().configure(self.get().project_directory(), dir);
+		return 0;
+	}
+
 	void bind_build(lua::State& state)
 	{
 		/// Represent a build.
@@ -90,6 +98,11 @@ namespace configure {
 		  /// Current project directory @{Path}.
 		  // @function Build:project_directory
 		  .def("project_directory", &Build::project_directory)
+
+		  /// Configure a sub-project
+		  // @function Build:configure
+		  // @param Path relative path to the sub-project directory
+		  .def("configure", &Build_configure)
 
 		  /// Current build directory @{Path}.
 		  // @function Build:directory
