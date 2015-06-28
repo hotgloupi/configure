@@ -133,7 +133,7 @@ local M = {
 function M:new(args)
 	assert(args.binary_path ~= nil)
 	assert(args.build ~= nil)
-	o = table.update(
+	local o = table.update(
 		table.update({}, self.optional_args),
 		args
 	)

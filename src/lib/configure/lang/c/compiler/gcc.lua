@@ -55,7 +55,7 @@ function Compiler:_add_warnings_flag(cmd, args)
 end
 
 function Compiler:_build_object(args)
-	command = {self.binary}
+	local command = {self.binary}
 
 	self:_add_language_flag(command, args)
 	self:_add_optimization_flag(command, args)

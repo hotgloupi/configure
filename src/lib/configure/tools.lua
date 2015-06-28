@@ -8,7 +8,7 @@ local M = {}
 -- @param dirs a list of string, path or nodes
 -- @return a list of directory `Node`s
 function M.normalize_directories(build, dirs)
-	res = {}
+	local res = {}
 	for _, dir in ipairs(dirs)
 	do
 		if dir ~= nil then

@@ -13,7 +13,7 @@ return {
 	-- @param[opt] args.defines List of defines
 	new = function(self, args)
 		assert(args.name)
-		o = {}
+		local o = {}
 		o.name = args.name
 		o.system = args.system or false
 		o.include_directories = args.include_directories or {}
