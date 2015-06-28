@@ -32,7 +32,8 @@ namespace configure {
 
 	public:
 		void configure(path_t const& project_directory,
-		               path_t const& sub_directory = ".");
+		               path_t const& sub_directory = ".",
+		               bool has_args = false);
 
 	public:
 		// Current project directory
@@ -65,6 +66,7 @@ namespace configure {
 
 		path_t const& configure_program() const;
 
+		lua::State& lua_state() const;
 	public:
 		template<typename T>
 		boost::optional<typename Environ::const_ref<T>::type>
