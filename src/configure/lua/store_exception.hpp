@@ -27,7 +27,7 @@ namespace configure { namespace lua {
 					e << error::lua_traceback(traceback(state));
 				throw;
 			}
-			catch (...) {
+			catch (std::exception const&) {
 				std::string name = function_name();
 				if (!name.empty())
 					CONFIGURE_THROW(
@@ -43,8 +43,18 @@ namespace configure { namespace lua {
 							<< error::nested(std::current_exception())
 					);
 			}
+			catch (...)
+			{
+				// This is a raw lua error (aka a pointer is thrown)
+				// We let the exception bubble up, so that the enclosing error
+				// handler will be triggered. However, we lost the function
+				// name information.
+				// This is fixable by extracting the real error message here.
+				// (The error message is not yet on the stack).
+				throw;
+			}
 		}
-		catch (...) {
+		catch (std::exception const&) {
 			Converter<std::exception_ptr>::push(state, std::current_exception());
 			lua_error(state);
 		}
