@@ -1,4 +1,5 @@
 #include <configure/bind.hpp>
+#include <configure/bind/path_utils.hpp>
 
 #include <configure/Build.hpp>
 #include <configure/Rule.hpp>
@@ -69,7 +70,7 @@ namespace configure {
 	template<log::Level level>
 	static int Build_log(lua_State* state)
 	{
-		lua::Converter<std::reference_wrapper<Build>>::extract(state, 1);
+		Build& self = lua::Converter<std::reference_wrapper<Build>>::extract(state, 1);
 		std::string msg;
 		for (int i = 2, len = lua_gettop(state); i <= len; ++i)
 		{
@@ -84,10 +85,45 @@ namespace configure {
 
 	static int Build_configure(lua_State* state)
 	{
-		auto& self = lua::Converter<std::reference_wrapper<Build>>::extract(state, 1);
-		fs::path dir = lua::Converter<fs::path>::extract(state, 2);
-		self.get().configure(self.get().project_directory(), dir);
-		return 0;
+		Build& self = lua::Converter<std::reference_wrapper<Build>>::extract(state, 1);
+		luaL_checktype(state, 2, LUA_TTABLE);
+
+
+		fs::path dir;
+		fs::path build_dir = ".";
+		bool has_args = false;
+		lua_pushnil(state);
+		while (lua_next(state, 2))
+		{
+			std::string key = lua::Converter<std::string>::extract(state, -2);
+			if (key == "directory")
+				dir = utils::extract_path(state, -1);
+			else if (key == "build_directory")
+				build_dir = utils::extract_path(state, -1);
+			else if (key == "args")
+				has_args = true;
+			else
+				CONFIGURE_THROW(
+					error::InvalidArgument("Invalid key '" + key + "'")
+				);
+			lua_pop(state, 1);
+		}
+		if (dir.empty())
+			CONFIGURE_THROW(
+				error::InvalidArgument("The 'directory' argument is mandatory'")
+			);
+
+		if (!dir.is_absolute())
+			dir = self.project_directory() / dir;
+		if (has_args)
+		{
+			luaL_checktype(state, 2, LUA_TTABLE);
+			lua_pushstring(state, "args");
+			lua_gettable(state, 2);
+			luaL_checktype(state, 3, LUA_TTABLE);
+		}
+		self.configure(dir, build_dir, has_args);
+		return 1;
 	}
 
 	void bind_build(lua::State& state)
