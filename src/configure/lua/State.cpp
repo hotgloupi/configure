@@ -4,6 +4,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/pool/pool.hpp>
 #include <boost/assert.hpp>
+#include <boost/scope_exit.hpp>
 
 #include <iostream>
 #include <map>
@@ -33,8 +34,8 @@ namespace configure { namespace lua {
 
 	namespace {
 
-		static void *lua_naive_allocator(void *payload,
-		                                 void *ptr,
+		static void *lua_naive_allocator(void*,
+		                                 void* ptr,
 		                                 size_t original_size,
 		                                 size_t new_size)
 		{
@@ -235,7 +236,6 @@ namespace configure { namespace lua {
 	State::State(bool with_libs)
 		: _state(nullptr)
 		, _owner(true)
-		, _error_handler(0)
 		, _pool(new Pool(64, 1024))
 	{
 		if (getenv("CONFIGURE_USE_NAIVE_ALLOCATOR") != nullptr)
@@ -257,8 +257,7 @@ namespace configure { namespace lua {
 	{
 		if (_owner)
 		{
-			//if (_error_handler != 0)
-			//	luaL_unref(_state, LUA_REGISTRYINDEX, _error_handler_ref);
+			luaL_unref(_state, LUA_REGISTRYINDEX, _error_handler_ref);
 			lua_close(_state);
 		}
 	}
@@ -471,8 +470,8 @@ namespace configure { namespace lua {
 		{
 			if (!lua_istable(state, -1))
 			{
-				lua_pushstring(state, "table.tostring(): One argument of type table expected");
-				lua_error(state);
+				luaL_error(state,
+				           "table.tostring(): One argument of type table expected");
 			}
 			std::vector<std::string> strings;
 			lua_pushnil(state);
@@ -519,6 +518,8 @@ namespace configure { namespace lua {
 					);
 				}
 			}
+			else
+				std::abort();
 			return 1;
 		}
 
@@ -548,10 +549,7 @@ namespace configure { namespace lua {
 
 		lua_settop(_state, 0);
 		lua_pushcfunction(_state, &error_handler);
-		_error_handler = lua_gettop(_state); // save error handler index
-
-		//_error_handler_ref = luaL_ref(_state, LUA_REGISTRYINDEX); // add ref to avoid gc
-		//lua_rawgeti(_state, LUA_REGISTRYINDEX, _error_handler_ref); // push it again on top
+		_error_handler_ref = luaL_ref(_state, LUA_REGISTRYINDEX); // add ref to avoid gc
 #undef SET_METHOD
 
 	}
@@ -571,16 +569,36 @@ namespace configure { namespace lua {
 	void State::load(boost::filesystem::path const& p, int ret)
 	{
 		check_status(_state, luaL_loadfile(_state, p.string().c_str()));
-		check_status(_state, lua_pcall(_state, 0, 0, _error_handler));
+		this->call(0, ret);
 	}
 
-	void State::load(std::string const& buffer)
-	{ this->load(buffer.c_str()); }
+	void State::load(std::string const& buffer, int ret)
+	{ this->load(buffer.c_str(), ret); }
 
-	void State::load(char const* buffer)
+	void State::load(char const* buffer, int ret)
 	{
 		check_status(_state, luaL_loadstring(_state, buffer));
-		check_status(_state, lua_pcall(_state, 0, 0, _error_handler));
+		this->call(0, ret);
+	}
+
+	void State::call(int nargs, int nresults)
+	{
+		if (nresults == -1)
+			nresults = LUA_MULTRET;
+
+		// We insert the error handler before the function on the stack.
+		// When the function stack is cleaned up, the handler is still there.
+		// This is not efficient, but we do not call lua function very often.
+		int error_handler = _error_handler(-1 - nargs - 1);
+		BOOST_SCOPE_EXIT_ALL(&){ lua_remove(_state, error_handler); };
+
+		int res = lua_pcall(
+			_state,
+			nargs,
+			nresults,
+			error_handler
+		);
+		this->check_status(_state, res);
 	}
 
 	int State::_print_override(lua_State* L)
@@ -594,4 +612,11 @@ namespace configure { namespace lua {
 		return LUA_OK;
 	}
 
+	int State::_error_handler(int insert_at)
+	{
+		lua_rawgeti(_state, LUA_REGISTRYINDEX, _error_handler_ref);
+		int idx = lua_absindex(_state, insert_at);
+		lua_insert(_state, idx);
+		return idx;
+	}
 }}

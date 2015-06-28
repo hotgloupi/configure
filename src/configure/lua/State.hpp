@@ -22,9 +22,8 @@ namespace configure { namespace lua {
 	private:
 		lua_State* _state;
 		bool       _owner;
-		int        _error_handler;
 		std::unique_ptr<Pool> _pool;
-		//int        _error_handler_ref;
+		int        _error_handler_ref;
 
 	public:
 		inline lua_State* ptr() const { return _state; }
@@ -37,12 +36,15 @@ namespace configure { namespace lua {
 		void _register_extensions();
 
 	public:
+		void forbid_globals();
+
+	public:
 		// Load and run a lua file.
-		void load(boost::filesystem::path const& p);
+		void load(boost::filesystem::path const& p, int ret = 0);
 
 		// Load and run lua code.
-		void load(std::string const& buffer);
-		void load(char const* buffer);
+		void load(std::string const& buffer, int ret = 0);
+		void load(char const* buffer, int ret = 0);
 
 	public:
 		// Convert a value on the stack.
@@ -98,12 +100,7 @@ namespace configure { namespace lua {
 		int gettop() { return lua_gettop(_state); }
 		void getglobal(char const* name) { lua_getglobal(_state, name); }
 		void setglobal(char const* name) { lua_setglobal(_state, name); }
-		void call(int nargs, int nresults = -1)
-		{
-			if (nresults == -1)
-				nresults = LUA_MULTRET;
-			this->check_status(_state, lua_pcall(_state, nargs, nresults, _error_handler));
-		}
+		void call(int nargs, int nresults = -1);
 		void pop(int count = 1) { lua_pop(_state, count); }
 		void settable(int index) { lua_settable(_state, index); }
 		void pushvalue(int index) { lua_pushvalue(_state, index); }
@@ -131,6 +128,11 @@ namespace configure { namespace lua {
 
 	public:
 		static void check_status(lua_State* L, int status);
+
+	private:
+		// Insert the error handler callback at the given pseudo index
+		// and returns the absolute index.
+		int _error_handler(int insert_at);
 	};
 
 }}
