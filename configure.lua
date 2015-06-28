@@ -8,7 +8,7 @@ local modules = require "configure.modules"
 
 local version = '0.0.1'
 
-function configure(build)
+return function(build)
 	build:status("Building on", build:host():os_string())
 
 	local with_coverage = build:bool_option(
@@ -35,53 +35,17 @@ function configure(build)
 				p:relative_path(build:project_directory() / "src/lib/configure")
 		)
 	end
+
 	local compiler = cxx.compiler.find{
 		build = build,
 		standard = 'c++11',
 	}
 
-	lua_srcs = {
-		"lua/src/lapi.c",
-		"lua/src/lcode.c",
-		"lua/src/lctype.c",
-		"lua/src/ldebug.c",
-		"lua/src/ldo.c",
-		"lua/src/ldump.c",
-		"lua/src/lfunc.c",
-		"lua/src/lgc.c",
-		"lua/src/llex.c",
-		"lua/src/lmem.c",
-		"lua/src/lobject.c",
-		"lua/src/lopcodes.c",
-		"lua/src/lparser.c",
-		"lua/src/lstate.c",
-		"lua/src/lstring.c",
-		"lua/src/ltable.c",
-		"lua/src/ltm.c",
-		"lua/src/lundump.c",
-		"lua/src/lvm.c",
-		"lua/src/lzio.c",
-		"lua/src/lauxlib.c",
-		"lua/src/lbaselib.c",
-		"lua/src/lbitlib.c",
-		"lua/src/lcorolib.c",
-		"lua/src/ldblib.c",
-		"lua/src/liolib.c",
-		"lua/src/lmathlib.c",
-		"lua/src/loslib.c",
-		"lua/src/lstrlib.c",
-		"lua/src/ltablib.c",
-		"lua/src/loadlib.c",
-		"lua/src/linit.c",
-	}
+	local lua = build:configure({
+		directory = 'lua',
+		args = {compiler = compiler}
+	})
 
-	local lua = compiler:link_static_library{
-		name = "lua",
-		directory = "lib",
-		sources = lua_srcs,
-		include_directories = {"lua/src"},
-		object_directory = 'objects',
-	}
 	local libs = {lua,}
 	local library_directories = {}
 	local include_directories = {'src'}
@@ -98,7 +62,6 @@ function configure(build)
 	})
 
 	if build:host():os() == Platform.OS.windows then
-		build:status("XXX Using boost auto link feature")
 		table.extend(libs, {
 			cxx.Library:new{name = 'Shlwapi', system = true, kind = 'static'},
 		})
