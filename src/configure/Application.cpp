@@ -124,6 +124,7 @@ namespace configure {
 			"require 'package'\n"
 			"package.path = configure_library_dir\n"
 		);
+		lua.forbid_globals();
 
 		auto configure_path = *Filesystem::which(_this->program_name.string());
 		for (auto const& directory: _this->build_directories)
