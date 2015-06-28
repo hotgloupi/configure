@@ -166,7 +166,8 @@ namespace configure {
 	}
 
 	void Build::configure(fs::path const& project_directory,
-	                      fs::path const& sub_directory)
+	                      fs::path const& sub_directory,
+	                      bool has_args)
 	{
 		try {
 			if (!project_directory.is_absolute())
@@ -189,11 +190,11 @@ namespace configure {
 		} BOOST_SCOPE_EXIT_END
 
 		try {
-			_this->lua.load(find_project_file(project_directory));
-			_this->lua.getglobal("configure");
-			// XXX check if not nil
+			_this->lua.load(find_project_file(project_directory), 1);
 			_this->lua.construct<std::reference_wrapper<Build>>(*this);
-			_this->lua.call(1);
+			if (has_args)
+				_this->lua.pushvalue(-3);
+			_this->lua.call(has_args ? 2 : 1);
 		} catch (error::Base&) { //XXX insert project stack here
 			//e << error::message(
 			//	"While configuring project " + project_directory.string()
@@ -579,5 +580,8 @@ namespace configure {
 				    << std::endl;
 		}
 	}
+
+	lua::State& Build::lua_state() const
+	{ return _this->lua; }
 
 }
