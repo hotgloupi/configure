@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(empty)
 }
 
 static char const* empty_configure =
-  "function configure(build)\nend"
+  " return function(build)\nend"
 ;
 
 BOOST_AUTO_TEST_CASE(simple)
