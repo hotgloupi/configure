@@ -1,7 +1,7 @@
 
 return function(build, args)
 	local compiler = args.compiler
-	assert compiler ~= nil
+	assert (compiler ~= nil)
 
 	local lua_srcs = {
 		"src/lapi.c",
