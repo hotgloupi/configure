@@ -17,7 +17,7 @@ Compiler.optional_args = table.update(
 )
 
 function Compiler:new(args)
-	o = Super.new(self, args)
+	local o = Super.new(self, args)
 	o.link_path = o:find_tool("LINK", "Link program", "link.exe")
 	o.lib_path = o:find_tool("LIB", "Lib program", "lib.exe")
 	return o
@@ -36,7 +36,7 @@ function Compiler:_add_optimization_flag(cmd, args)
 end
 
 function Compiler:_build_object(args)
-	command = { self.binary_path, '-nologo', self._language_flag }
+	local command = { self.binary_path, '-nologo', self._language_flag }
 	self:_add_optimization_flag(command, args)
 	if args.exception == true then
 		table.append(command, '-EHsc')
@@ -89,7 +89,7 @@ function Compiler:_build_object(args)
 end
 
 function Compiler:_link_executable(args)
-	command = {self.link_path, '-nologo',}
+	local command = {self.link_path, '-nologo',}
 
 	if args.debug then
 		table.append(command, '-DEBUG')
@@ -102,7 +102,7 @@ function Compiler:_link_executable(args)
 	do
 		table.append(command, '-LIBPATH:' .. tostring(dir:path()))
 	end
-	library_sources = {}
+	local library_sources = {}
 	for _, lib in ipairs(args.libraries)
 	do
 		if lib.system then
