@@ -30,7 +30,7 @@ namespace configure {
 	{
 		try { std::rethrow_exception(e); }
 		catch (std::exception const& err) { return err.what(); }
-		catch (...) { return "Error:"; }
+		catch (...) { return "Unknown error type"; }
 		std::abort();
 	}
 
