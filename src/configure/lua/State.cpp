@@ -556,7 +556,19 @@ namespace configure { namespace lua {
 
 	}
 
-	void State::load(boost::filesystem::path const& p)
+	void State::forbid_globals()
+	{
+		std::string code =
+			"local mt = {}\n"
+			"setmetatable(_G, mt)\n"
+			"mt.__newindex = function(g, k, v)\n"
+			"	error('Trying to create a global variable \"' .. tostring(k) ..'\"')\n"
+			"end\n"
+		;
+		this->load(code);
+	}
+
+	void State::load(boost::filesystem::path const& p, int ret)
 	{
 		check_status(_state, luaL_loadfile(_state, p.string().c_str()));
 		check_status(_state, lua_pcall(_state, 0, 0, _error_handler));
