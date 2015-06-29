@@ -250,7 +250,7 @@ function Compiler:_system_library_directories()
 		}
 	)
 
-	library_directories = {}
+	local library_directories = {}
 	if self.build:host():os() == Platform.OS.osx then
 		local current = 'none'
 		for _, line in ipairs(out:split('\n')) do
