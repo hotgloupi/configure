@@ -7,7 +7,7 @@ Feature: C++ executable
 		"""
 		local cxx = require('configure.lang.cxx')
 
-		function configure(build)
+		return function(build)
 			local compiler = cxx.compiler.find{build = build}
 			local exe = compiler:link_executable{
 				name = "hello-world",

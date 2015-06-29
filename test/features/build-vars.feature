@@ -3,7 +3,7 @@ Feature: Configure build variables
 	Scenario: Build variable
 		Given a project configuration
 		"""
-		function configure(build)
+		return function(build)
 			assert(
 				build:string_option("test-var", "testing") == "LOL"
 			)
@@ -15,7 +15,7 @@ Feature: Configure build variables
 	Scenario: Set variable to multiple builds
 		Given a project configuration
 		"""
-		function configure(build)
+		return function(build)
 			assert(
 				build:string_option("test-var", "testing") == "LOL"
 			)
@@ -28,7 +28,7 @@ Feature: Configure build variables
 	Scenario: Command line variable after the build
 		Given a project configuration
 		"""
-		function configure(build)
+		return function(build)
 			assert(
 				build:string_option("test-var", "testing") == "LOL"
 			)
@@ -40,7 +40,7 @@ Feature: Configure build variables
 	Scenario Outline: Boolean variable
 		Given a project configuration
 		"""
-		function configure(build)
+		return function(build)
 			assert(
 				build:bool_option("test-var", "testing") == <lua_value>
 			)

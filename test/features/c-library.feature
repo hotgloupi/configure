@@ -16,14 +16,14 @@ Feature: C library
 		"""
 		And a project configuration
 		"""
-		c = require('configure.lang.c')
-		function configure(build)
+		local c = require('configure.lang.c')
+		return function(build)
 			local compiler = c.compiler.find{build = build}
-			libtest = compiler:link_static_library{
+			local libtest = compiler:link_static_library{
 				name = 'test',
 				sources = {'my.c'}
 			}
-			exe = compiler:link_executable{
+			local exe = compiler:link_executable{
 				name = 'test',
 				sources = {'test.c'},
 				libraries = {libtest,}
@@ -54,14 +54,14 @@ Feature: C library
 		"""
 		And a project configuration
 		"""
-		c = require('configure.lang.c')
-		function configure(build)
+		local c = require('configure.lang.c')
+		return function(build)
 			local compiler = c.compiler.find{build = build}
-			libtest = compiler:link_shared_library{
+			local libtest = compiler:link_shared_library{
 				name = 'test',
 				sources = {'my.c'}
 			}
-			exe = compiler:link_executable{
+			local exe = compiler:link_executable{
 				name = 'test',
 				sources = {'test.c'},
 				libraries = {libtest,}

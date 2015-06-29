@@ -16,7 +16,7 @@ Feature: Header dependencies are honored
 		"""
 		local c = require('configure.lang.c')
 
-		function configure(build)
+		return function(build)
 			local compiler = c.compiler.find{build = build}
 			local exe = compiler:link_executable{
 				name = "test",
@@ -51,7 +51,7 @@ Feature: Header dependencies are honored
 		"""
 		local c = require('configure.lang.c')
 
-		function configure(build)
+		return function(build)
 			local compiler = c.compiler.find{build = build}
 			local exe = compiler:link_executable{
 				name = "test",

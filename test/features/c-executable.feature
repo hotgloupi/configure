@@ -6,7 +6,7 @@ Feature: C executable
 		"""
 		local c = require('configure.lang.c')
 
-		function configure(build)
+		return function(build)
 			local compiler = c.compiler.find{build = build}
 			local exe = compiler:link_executable{
 				name = "hello-world",
@@ -27,7 +27,7 @@ Feature: C executable
 		"""
 		local c = require('configure.lang.c')
 
-		function configure(build)
+		return function(build)
 			local compiler = c.compiler.find{build = build}
 			local exe = compiler:link_executable{
 				name = "hello-world",

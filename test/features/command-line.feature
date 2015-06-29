@@ -3,7 +3,7 @@ Feature: Exercise configure command line
 	Scenario: Select one build out of multiple
 		Given a project configuration
 		"""
-		function configure(build)
+		return function(build)
 			build:string_option("TEST", "Testing vars")
 		end
 		"""

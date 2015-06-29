@@ -3,7 +3,7 @@ Feature: Cached properties
 	Scenario Outline: Can set property to <value>
 		Given a project configuration
 		"""
-		function configure(build)
+		return function(build)
 			local node = build:source_node(Path:new('test.txt'))
 			local prop = node:set_cached_property('my-prop', function() return <value> end)
 			assert(prop == <value>)
@@ -28,7 +28,7 @@ Feature: Cached properties
 	Scenario: Cached property is cached
 		Given a project configuration
 		"""
-		function configure(build)
+		return function(build)
 			local node = build:source_node(Path:new('test.txt'))
 			local opt = build:int_option("P", "")
 			local prop = node:set_cached_property('my-prop', function() return opt end)
@@ -46,7 +46,7 @@ Feature: Cached properties
 	Scenario: Cached property are updated
 		Given a project configuration
 		"""
-		function configure(build)
+		return function(build)
 			local node = build:source_node(Path:new('test.txt'))
 			local opt = build:int_option("P", "")
 			local prop = node:set_cached_property('my-prop', function() return opt end)
