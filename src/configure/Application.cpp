@@ -1,14 +1,16 @@
 #include "Application.hpp"
+
+#include "Build.hpp"
+#include "Filesystem.hpp"
+#include "Plugin.hpp"
+#include "Process.hpp"
+#include "bind.hpp"
+#include "commands.hpp"
+#include "generators.hpp"
 #include "log.hpp"
 #include "lua/State.hpp"
-#include "Build.hpp"
-#include "bind.hpp"
 #include "quote.hpp"
-#include "commands.hpp"
-#include "Filesystem.hpp"
-#include "Process.hpp"
-
-#include "generators.hpp"
+#include "utils/path.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -49,13 +51,16 @@ namespace configure {
 
 	struct Application::Impl
 	{
+		std::unique_ptr<lua::State>        _lua;
 		fs::path                           program_name;
 		std::vector<std::string>           args;
 		path_t                             current_directory;
 		std::vector<path_t>                build_directories;
 		path_t                             project_directory;
 		std::map<std::string, std::string> build_variables;
-		bool                               dump_graph_mode;
+		std::vector<Plugin>                plugins;
+		bool                               dump_graph;
+		bool                               dump_plugins;
 		bool                               dump_options;
 		bool                               dump_env;
 		bool                               dump_targets;
@@ -70,7 +75,9 @@ namespace configure {
 			, build_directories()
 			, project_directory()
 			, build_variables()
-			, dump_graph_mode(false)
+			, plugins()
+			, dump_graph(false)
+			, dump_plugins(false)
 			, dump_options(false)
 			, dump_env(false)
 			, dump_targets(false)
@@ -78,6 +85,92 @@ namespace configure {
 			, build_target()
 			, builtin_command_args()
 		{ this->args.erase(this->args.begin()); }
+
+		void add_plugin(std::string const& arg)
+		{
+			boost::filesystem::path path;
+			if (boost::ends_with(arg, ".lua"))
+			{
+				path = arg;
+			}
+			else
+			{
+				path = this->plugins_directory() /
+					   (boost::replace_all_copy(arg, ".", "/") + ".lua");
+			}
+			if (!fs::is_regular(path))
+				CONFIGURE_THROW(
+					error::FileNotFound("Cannot find the plugin '" + arg + "'")
+					<< error::path(fs::absolute(path))
+					<< error::help("Try '--plugins' to see the list of available plugins")
+				);
+			this->plugins.emplace_back(Plugin(this->lua(), path, arg));
+		}
+
+	public:
+		lua::State& lua()
+		{
+			if (_lua == nullptr)
+			{
+				fs::path package = this->library_directory() / "?.lua";
+				_lua.reset(new lua::State);
+				bind(*_lua);
+				_lua->global("configure_library_dir", package.string());
+				_lua->load(
+					"require 'package'\n"
+					"package.path = configure_library_dir\n"
+				);
+				_lua->forbid_globals();
+			}
+			return *_lua;
+		}
+
+	private:
+		boost::filesystem::path mutable _library_directory;
+
+	public:
+		boost::filesystem::path const& library_directory() const
+		{
+			if (_library_directory.empty())
+			{
+				boost::filesystem::path temp;
+				char const* lib = ::getenv("CONFIGURE_LIBRARY_DIR");
+				if (lib != nullptr)
+					temp = lib;
+				else
+					temp = fs::absolute(
+						this->program_name.parent_path().parent_path()
+						/ "share" / "configure" / "lib"
+					);
+				if (!fs::is_directory(temp))
+				{
+					CONFIGURE_THROW(
+						error::BuildError("Cannot find configure library")
+							<< error::path(temp)
+							<< error::help(
+							    lib != nullptr ?
+							    "Fix or unset CONFIGURE_LIBRARY_DIR env var" :
+							    "Fix your install"
+							)
+					);
+				}
+				_library_directory = fs::canonical(temp);
+			}
+			return _library_directory;
+		}
+
+	private:
+		Path mutable _plugins_directory;
+
+	public:
+		Path const& plugins_directory() const
+		{
+			if (_plugins_directory.empty())
+				_plugins_directory = this->library_directory() /
+				                     "configure" /
+				                     "plugins";
+			return _plugins_directory;
+		}
 	};
 
 	Application::Application(int ac, char** av)
@@ -94,44 +187,34 @@ namespace configure {
 	{
 		if (!_this->builtin_command_args.empty())
 			return commands::execute(_this->builtin_command_args);
+		else if (_this->dump_plugins)
+		{
+			std::cout << "plugins in " << _this->plugins_directory() << "\n";
+			for (auto& path: rglob(_this->plugins_directory(), "*.lua"))
+			{
+				std::string module = utils::relative_path(path, _this->plugins_directory()).string();
+				boost::replace_all(module, "/", ".");
+				boost::replace_all(module, "\\", ".");
+				module.resize(module.size() - 4);
+				Plugin p(_this->lua(), path, module);
+				std::cout << " - " << p.name()
+					<< " " << p.description()
+					<< std::endl;
+			}
+			return;
+		}
 		log::debug("Current directory:", _this->current_directory);
 		log::debug("Program name:", _this->program_name);
 		if (_this->build_directories.empty())
 			throw std::runtime_error("No build directory specified");
-		fs::path project_file = Build::find_project_file(_this->project_directory);
-		fs::path package;
-		char const* lib = ::getenv("CONFIGURE_LIBRARY_DIR");
-		if (lib != nullptr)
-			package = lib;
-		else
-			package = fs::absolute(
-				_this->program_name.parent_path().parent_path()
-				/ "share" / "configure" / "lib"
-			);
-		if (!fs::is_directory(package))
-		{
-			CONFIGURE_THROW(
-				error::BuildError("Cannot find configure library")
-					<< error::path(package)
-			);
-		}
-		package = fs::canonical(package);
-		package /= "?.lua";
-		lua::State lua;
-		bind(lua);
-		lua.global("configure_library_dir", package.string());
-		lua.load(
-			"require 'package'\n"
-			"package.path = configure_library_dir\n"
-		);
-		lua.forbid_globals();
 
+		fs::path project_file = Build::find_project_file(_this->project_directory);
 		auto configure_path = *Filesystem::which(_this->program_name.string());
 		for (auto const& directory: _this->build_directories)
 		{
-			Build build(configure_path, lua, directory, _this->build_variables);
+			Build build(configure_path, _this->lua(), directory, _this->build_variables);
 			build.configure(_this->project_directory);
-			if (_this->dump_graph_mode)
+			if (_this->dump_graph)
 				build.dump_graphviz(std::cout);
 			if (!_this->print_var.empty())
 			{
@@ -139,6 +222,11 @@ namespace configure {
 					CONFIGURE_THROW(error::InvalidKey(_this->print_var));
 				std::cout << build.env().as_string(_this->print_var) << std::endl;
 				continue;
+			}
+			for (auto& plugin: _this->plugins)
+			{
+				log::debug("Finalize plugin", plugin.name());
+				plugin.finalize(build);
 			}
 			log::debug("Generating the build files in", build.directory());
 			auto generator = this->_generator(build);
@@ -176,6 +264,7 @@ namespace configure {
 			}
 		}
 
+
 	}
 
 	fs::path const& Application::program_name() const
@@ -212,57 +301,64 @@ namespace configure {
 			<< "\n"
 			<< "Positional arguments:\n"
 
-			<< "  BUILD_DIR" << "             "
+			<< "  BUILD_DIR" << "                 "
 			<< "Build directory to configure\n"
 
-			<< "  KEY=VALUE" << "             "
+			<< "  KEY=VALUE" << "                 "
 			<< "Set a variable for selected build directories\n"
 
 			<< "\n"
 
 			<< "Optional arguments:\n"
 
-			<< "  -G, --generator NAME" << "  "
-			<< "Specify the generator to use (alternative to variable GENERATOR)\n"
-
-			<< "  -p, --project PATH" << "    "
-			<< "Specify the project to configure instead of detecting it\n"
-
-			<< "  --dump-graph" << "          "
-			<< "Dump the build graph\n"
-
-			<< "  --dump-options" << "        "
-			<< "Dump all options\n"
-
-			<< "  --dump-env" << "            "
-			<< "Dump all environment variables\n"
-
-			<< "  -P, --print-var" << "       "
-			<< "Print a variable and exit\n"
-
-			<< "  --dump-targets" << "        "
-			<< "Dump all targets\n"
-
-			<< "  -d, --debug" << "           "
-			<< "Enable debug output\n"
-
-			<< "  -v, --verbose" << "         "
-			<< "Enable verbose output\n"
-
-			<< "  --version" << "             "
-			<< "Print version\n"
-
-			<< "  -h, --help" << "            "
-			<< "Show this help and exit\n"
-
-			<< "  -b,--build" << "            "
+			<< "  -b, --build" << "               "
 			<< "Start a build in specified directories\n"
 
-			<< "  -t,--target" << "           "
+			<< "  -d, --debug" << "               "
+			<< "Enable debug output\n"
+
+			<< "  -E, --execute" << "             "
+			<< "Execute a builtin command\n"
+
+			<< "  --env" << "                     "
+			<< "Dump all environment variables\n"
+
+			<< "  -G, --generator NAME" << "      "
+			<< "Specify the generator to use (alternative to variable GENERATOR)\n"
+
+			<< "  --graph" << "                   "
+			<< "Dump the build graph\n"
+
+			<< "  -h, --help" << "                "
+			<< "Show this help and exit\n"
+
+			<< "  -o, --options" << "             "
+			<< "List available build options\n"
+
+			<< "  -p, --project PATH" << "        "
+			<< "Specify the project to configure instead of detecting it\n"
+
+			<< "  -P, --print-var" << "           "
+			<< "Print a variable and exit\n"
+
+			<< "  --plugin NAME-OR-PATH" << "     "
+			<< "Run a plugin by name or by path\n"
+
+			<< "  --plugins" << "                 "
+			<< "List available plugins\n"
+
+			<< "  --targets" << "                 "
+			<< "List all targets\n"
+
+			<< "  -t, --target" << "              "
 			<< "Specify the target to build\n"
 
-			<< "  -E,--execute" << "          "
-			<< "Execute a builtin command\n"
+			<< "  -v, --verbose" << "             "
+			<< "Enable verbose output\n"
+
+			<< "  --version" << "                 "
+			<< "Print version\n"
+
 		;
 	}
 
@@ -294,7 +390,13 @@ namespace configure {
 
 		bool has_project = false;
 		enum class NextArg {
-			project, generator, target, builtin_command, print_var, other
+			project,
+			generator,
+			target,
+			builtin_command,
+			print_var,
+			plugin,
+			other
 		};
 		NextArg next_arg = NextArg::other;
 		for (auto const& arg: _this->args)
@@ -318,6 +420,11 @@ namespace configure {
 				}
 				next_arg = NextArg::other;
 			}
+			if (next_arg == NextArg::plugin)
+			{
+				_this->add_plugin(arg);
+				next_arg = NextArg::other;
+			}
 			else if (next_arg == NextArg::generator)
 			{
 				_this->build_variables["GENERATOR"] = arg;
@@ -338,15 +445,19 @@ namespace configure {
 				_this->builtin_command_args.push_back(arg);
 			else if (arg == "-p" || arg == "--project")
 				next_arg = NextArg::project;
-			else if (arg == "--dump-graph")
-				_this->dump_graph_mode = true;
-			else if (arg == "--dump-options")
+			else if (arg == "--plugin")
+				next_arg = NextArg::plugin;
+			else if (arg == "--plugins")
+				_this->dump_plugins = true;
+			else if (arg == "--graph")
+				_this->dump_graph = true;
+			else if (arg == "-o" || arg == "--options")
 				_this->dump_options = true;
-			else if (arg == "--dump-env")
+			else if (arg == "--env")
 				_this->dump_env = true;
 			else if (arg == "-P" || arg == "--print-var")
 				next_arg = NextArg::print_var;
-			else if (arg == "--dump-targets")
+			else if (arg == "--targets")
 				_this->dump_targets = true;
 			else if (arg == "-G" || arg == "--generator")
 				next_arg = NextArg::generator;
