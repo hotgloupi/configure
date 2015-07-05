@@ -32,13 +32,9 @@ namespace configure {
 
 	Filesystem::~Filesystem() {}
 
-
-	std::vector<NodePtr> Filesystem::glob(path_t const& dir,
-	                                      std::string const& pattern)
+	std::vector<Path> glob(Path const& base_dir, std::string const& pattern)
 	{
-		std::vector<NodePtr> res;
-		fs::path base_dir =
-		    dir.is_absolute() ? dir : _build.project_directory() / dir;
+		std::vector<Path> res;
 		std::string full_pattern = (base_dir / pattern).string();
 #ifdef _WIN32
 		WIN32_FIND_DATA find_data;
@@ -89,9 +85,7 @@ namespace configure {
 					NULL,
 					NULL
 				);
-				res.push_back(
-					_build.source_node(base_dir / std::string(&buffer[0], size))
-				);
+				res.push_back(std::string(&buffer[0], size));
 			}
 			else
 				throw std::runtime_error("Couldn't encode a filename to UTF8");
@@ -99,9 +93,8 @@ namespace configure {
 			if (!PathMatchSpec(find_data.cFileName, pattern.c_str()))
 				log::debug("Discarding", &find_data.cFileName[0]);
 			else
-				res.push_back(
-					_build.source_node(base_dir / &find_data.cFileName[0])
-				);
+				res.push_back(base_dir / &find_data.cFileName[0]);
+
 # endif
 			log::debug("Found", res.back()->path(), "that matches", pattern);
 
@@ -131,10 +124,38 @@ namespace configure {
 		int idx = 0;
 		while (char const* path = glob_state.gl_pathv[idx])
 		{
-			res.push_back(_build.source_node(path));
+			res.push_back(path);
 			idx += 1;
 		}
 #endif
+		return res;
+	}
+
+	std::vector<Path> rglob(Path const& dir, std::string const& pattern)
+	{
+		std::vector<Path> res = glob(dir, pattern);
+		fs::recursive_directory_iterator it(dir), end;
+		for (; it != end; ++it)
+		{
+			if (fs::is_directory(it->status()))
+			{
+				auto dir_res = glob(*it, pattern);
+				res.insert(res.end(), dir_res.begin(), dir_res.end());
+			}
+		}
+		return res;
+	}
+
+	std::vector<NodePtr> Filesystem::glob(Path const& dir,
+	                                      std::string const& pattern)
+	{
+		fs::path base_dir =
+		    dir.is_absolute() ? dir : _build.project_directory() / dir;
+		auto paths = configure::glob(base_dir, pattern);
+		std::vector<NodePtr> res;
+		res.reserve(paths.size());
+		for (auto&& p: paths)
+			res.emplace_back(_build.source_node(std::move(p)));
 		return res;
 	}
 
@@ -143,28 +164,31 @@ namespace configure {
 		return this->glob(_build.project_directory(), pattern);
 	}
 
-	std::vector<NodePtr> Filesystem::rglob(path_t const& dir_,
+	std::vector<NodePtr> Filesystem::rglob(Path const& dir,
 	                                       std::string const& pattern)
 	{
-		fs::path dir;
-		if (dir_.is_absolute())
-			dir = dir_;
-		else
-			dir = _build.project_directory() / dir_;
-		std::vector<NodePtr> res = this->glob(dir, pattern);
-		fs::recursive_directory_iterator it(dir), end;
-		for (; it != end; ++it)
-		{
-			if (fs::is_directory(it->status()))
-			{
-				auto dir_res = this->glob(*it, pattern);
-				res.insert(res.end(), dir_res.begin(), dir_res.end());
-			}
-		}
+		fs::path base_dir =
+		    dir.is_absolute() ? dir : _build.project_directory() / dir;
+		auto paths = configure::rglob(base_dir, pattern);
+		std::vector<NodePtr> res;
+		res.reserve(paths.size());
+		for (auto&& p: paths)
+			res.emplace_back(_build.source_node(std::move(p)));
 		return res;
 	}
 
-	std::vector<NodePtr> Filesystem::list_directory(path_t const& dir)
+	std::vector<Path> list_directory(Path const& dir)
+	{
+		std::vector<Path> res;
+
+		fs::directory_iterator it(dir), end;
+		for (; it != end; ++it)
+			res.push_back(*it);
+
+		return res;
+	}
+
+	std::vector<NodePtr> Filesystem::list_directory(Path const& dir)
 	{
 		if (!dir.is_absolute())
 			return this->list_directory(_build.project_directory() / dir);
@@ -182,8 +206,8 @@ namespace configure {
 		return res;
 	}
 
-	NodePtr& Filesystem::find_file(std::vector<path_t> const& directories,
-	                               path_t const& file)
+	NodePtr& Filesystem::find_file(std::vector<Path> const& directories,
+	                               Path const& file)
 	{
 
 		for (auto& dir: directories)
@@ -236,10 +260,10 @@ namespace configure {
 		return boost::none;
 	}
 
-	NodePtr& Filesystem::copy(path_t src, path_t dst)
+	NodePtr& Filesystem::copy(Path src, Path dst)
 	{ return this->copy(_build.source_node(std::move(src)), std::move(dst)); }
 
-	NodePtr& Filesystem::copy(NodePtr& src_node, path_t dst)
+	NodePtr& Filesystem::copy(NodePtr& src_node, Path dst)
 	{
 		auto& dst_node = _build.target_node(std::move(dst));
 		ShellCommand cmd;
