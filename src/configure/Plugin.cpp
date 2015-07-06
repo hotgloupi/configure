@@ -49,6 +49,19 @@ namespace configure {
 				);
 			this->state.pop();
 		}
+
+		void call(Build& build, char const* method)
+		{
+			this->push_value(method);
+			if (!lua_isnil(this->state.ptr(), -1))
+			{
+				this->push_table();
+				this->state.construct<std::reference_wrapper<Build>>(build);
+				this->state.call(2);
+				this->state.pop();
+			}
+			this->state.pop();
+		}
 	};
 
 	Plugin::Plugin(lua::State& s, boost::filesystem::path p, std::string name)
@@ -78,16 +91,9 @@ namespace configure {
 		return res;
 	}
 
+	void Plugin::initialize(Build& build)
+	{ _this->call(build, "initialize"); }
+
 	void Plugin::finalize(Build& build)
-	{
-		_this->push_value("finalize");
-		if (!lua_isnil(_this->state.ptr(), -1))
-		{
-			_this->push_table();
-			_this->state.construct<std::reference_wrapper<Build>>(build);
-			_this->state.call(2);
-			_this->state.pop();
-		}
-		_this->state.pop();
-	}
+	{ _this->call(build, "finalize"); }
 }

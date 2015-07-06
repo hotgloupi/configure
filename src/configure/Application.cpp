@@ -213,6 +213,11 @@ namespace configure {
 		for (auto const& directory: _this->build_directories)
 		{
 			Build build(configure_path, _this->lua(), directory, _this->build_variables);
+			for (auto& plugin: _this->plugins)
+			{
+				log::debug("Initialize plugin", plugin.name());
+				plugin.initialize(build);
+			}
 			build.configure(_this->project_directory);
 			if (_this->dump_graph)
 				build.dump_graphviz(std::cout);

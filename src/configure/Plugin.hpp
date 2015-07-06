@@ -22,6 +22,7 @@ namespace configure {
 
 		std::string const& name() const;
 		std::string description() const;
+		void initialize(Build& build);
 		void finalize(Build& build);
 	};
 
