@@ -107,6 +107,7 @@ local M = {
 		include_directories = {},
 		library_directories = {},
 		include_files = {},
+		install = true,
 		libraries = {},
 		object_directory = nil,
 		shared_library_directory = 'lib',
@@ -195,6 +196,7 @@ function M:link_executable(args)
 		optimization = self:_optimization(args),
 		runtime = self:_runtime(args),
 	}
+	target:set_property("install", self:_install(args))
 	self.build:add_rule(Rule:new():add_target(target))
 	return target
 end
@@ -479,6 +481,14 @@ function M:_warnings(args)
 	end
 end
 
+--- Install state
+function M:_install(args)
+	if args.install == nil then
+		return self.install
+	else
+		return args.install
+	end
+end
 --- Optiomization level.
 --
 -- @param args
