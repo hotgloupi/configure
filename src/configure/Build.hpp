@@ -64,27 +64,34 @@ namespace configure {
 		// Environ
 		Environ& env();
 
+		// Path to the configure executable.
 		path_t const& configure_program() const;
 
+		// Lua state in use for the configuration.
 		lua::State& lua_state() const;
+
 	public:
+		// Declare a new option.
 		template<typename T>
 		boost::optional<typename Environ::const_ref<T>::type>
 		option(std::string name,
 		       std::string description);
 
+		// Declare a new option with a default value.
 		template<typename T>
 		typename Environ::const_ref<T>::type
 		option(std::string name,
 		       std::string description,
 		       typename Environ::const_ref<T>::type default_value);
 
+		// Declare a lazy option.
 		template<typename T>
 		typename Environ::const_ref<T>::type
 		lazy_option(std::string name,
 		            std::string description,
 		            std::function<T()> const& fn);
 
+		// Retreive the options map
 		std::map<std::string, std::string> const& options() const;
 
 	public:
@@ -105,10 +112,16 @@ namespace configure {
 		// Return a directory node with the given absolute `path`.
 		NodePtr& directory_node(path_t path);
 
+		// Add a new rule.
 		void add_rule(Rule const& rule);
 
+		void visit_targets(std::function<void(NodePtr&)> const& fn);
+
 	public:
+		// The host platform
 		Platform& host();
+
+		// The target platform
 		Platform& target();
 
 	private:

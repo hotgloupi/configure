@@ -67,10 +67,25 @@ namespace configure {
 		return 1;
 	}
 
+	static int Build_visit_targets(lua_State* state)
+	{
+		Build& self = lua::Converter<std::reference_wrapper<Build>>::extract(state, 1);
+		if (!lua_isfunction(state, -1))
+			throw std::runtime_error("Expected a function as a second argument");
+		self.visit_targets(
+			[&](NodePtr& node) {
+				lua_pushvalue(state, -1); // Save the callback
+				lua::Converter<NodePtr>::push(state, node);
+				self.lua_state().call(1, 0);
+			}
+		);
+		return 0;
+	}
+
 	template<log::Level level>
 	static int Build_log(lua_State* state)
 	{
-		Build& self = lua::Converter<std::reference_wrapper<Build>>::extract(state, 1);
+		//Build& self = lua::Converter<std::reference_wrapper<Build>>::extract(state, 1);
 		std::string msg;
 		for (int i = 2, len = lua_gettop(state); i <= len; ++i)
 		{
@@ -172,6 +187,11 @@ namespace configure {
 		  // @tparam string name A non-empty string
 		  // @function Build:virtual_node
 		  .def("virtual_node", &Build::virtual_node)
+
+		  /// Visit all generated nodes.
+		  // @param callback a function that accept a node
+		  // @function Build:visit_targets
+		  .def("visit_targets", &Build_visit_targets)
 
 		  /// Add a rule to the build.
 		  // @tparam Rule rule Rule to add
