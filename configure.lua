@@ -29,11 +29,12 @@ return function(build)
 	local fs = build:fs()
 	for i, p in pairs(fs:rglob("src/lib/configure", "*.lua"))
 	do
-		fs:copy(
+		local target = fs:copy(
 			p,
 			"share/configure/lib/configure" /
 				p:relative_path(build:project_directory() / "src/lib/configure")
 		)
+		target:set_property("install", true)
 	end
 
 	local compiler = cxx.compiler.find{
@@ -123,6 +124,7 @@ return function(build)
 			},
 			coverage = with_coverage,
 			library_directories = library_directories,
+			install = false,
 		}
 		unit_tests:add_source(bin)
 		unit_tests:add_shell_command(ShellCommand:new(bin))
