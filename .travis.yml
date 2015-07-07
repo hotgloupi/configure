@@ -44,11 +44,12 @@ addons:
     build_command_prepend: /tmp/configure build cxx=$CXX_COMPILER
     build_command: make -C build
     branch_pattern: coverity
-before_deploy: ./build/bin/configure build --plugin package.archive package-name=configure-${TRAVIS_BRANCH} --build --target package
+before_deploy: ./build/bin/configure build --plugin package.archive package-name=configure-${TRAVIS_TAG} --build --target package
 deploy:
   provider: releases
   api_key:
     secure: bTYL6YF9l9DMVuIqE2Cujt2meWxn2+l+Svac/NTCsC/KGUfhdXb8oBAFmmYeDLOOddR8oOnBPadpvnHrRtA45ksHlqDqV2HvpqlxMwe4OhJYYoDmCdNWy+Hgf2axkSzKZWXKIiHusY5VnKdGjEQFOuylH/tzE3Bam6kP6evp6g4=
-  file: build/configure-${TRAVIS_BRANCH}.tgz
+  file: build/configure-${TRAVIS_TAG}.tgz
+  skip_cleanup: true
   on:
     repo: hotgloupi/configure
