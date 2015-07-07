@@ -1,77 +1,54 @@
 language: cpp
 cache: apt
 before_install:
-    - if [ "$TRAVIS_OS_NAME" = linux ]; then
-        sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test;
-        sudo apt-add-repository -y ppa:boost-latest/ppa;
-        sudo apt-get update -qq;
-      fi
-    - if [ "${COVERALLS}" = "true" ]; then
-        sudo pip install cpp-coveralls ;
-      fi
+- if [ "$TRAVIS_OS_NAME" = linux ]; then sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test;
+  sudo apt-add-repository -y ppa:boost-latest/ppa; sudo apt-get update -qq; fi
+- if [ "${COVERALLS}" = "true" ]; then sudo pip install cpp-coveralls ; fi
 install:
-    - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-        if [ "$CXX_COMPILER" = clang++ ]; then sudo apt-get install -qq clang-3.4; fi;
-        if [ "$CXX_COMPILER" = g++-4.8 ]; then sudo apt-get install -qq g++-4.8; fi;
-        sudo apt-get install libboost1.55-all-dev;
-      fi
-    - sudo pip install behave
-    - $CXX_COMPILER --version
-    - if [ "$TRAVIS_OS_NAME" = "linux" ]; then
-        CXX=$CXX_COMPILER ./bootstrap/unix.sh;
-      else
-        CXX=$CXX_COMPILER ./bootstrap/osx.sh;
-      fi
+- if [ "$TRAVIS_OS_NAME" = "linux" ]; then if [ "$CXX_COMPILER" = clang++ ]; then
+  sudo apt-get install -qq clang-3.4; fi; if [ "$CXX_COMPILER" = g++-4.8 ]; then sudo
+  apt-get install -qq g++-4.8; fi; sudo apt-get install libboost1.55-all-dev; fi
+- sudo pip install behave
+- $CXX_COMPILER --version
+- if [ "$TRAVIS_OS_NAME" = "linux" ]; then CXX=$CXX_COMPILER ./bootstrap/unix.sh;
+  else CXX=$CXX_COMPILER ./bootstrap/osx.sh; fi
 script:
-    - cat cov-int/scm_log.txt || echo "No coverity log"
-    - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then
-        /tmp/configure build cxx=${CXX_COMPILER} coverage=${COVERALLS} --build -d;
-        export CONFIGURE_EXE=`pwd`/build/bin/configure;
-        ${CONFIGURE_EXE} build --build --target check -d;
-        behave test/features -q -m -k;
-      else
-        cat cov-int/scm_log.txt ;
-      fi
+- cat cov-int/scm_log.txt || echo "No coverity log"
+- if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then /tmp/configure build cxx=${CXX_COMPILER}
+  coverage=${COVERALLS} --build -d; export CONFIGURE_EXE=`pwd`/build/bin/configure;
+  ${CONFIGURE_EXE} build --build --target check -d; behave test/features -q -m -k;
+  else cat cov-int/scm_log.txt ; fi
 after_success:
-    - if [ "${COVERALLS}" = "true" ]; then
-        ${GCOV} --version ;
-        coveralls --build-root build --gcov ${GCOV} --exclude lua --exclude test --gcov-options '\-lp' ;
-      fi
+- if [ "${COVERALLS}" = "true" ]; then ${GCOV} --version ; coveralls --build-root
+  build --gcov ${GCOV} --exclude lua --exclude test --gcov-options '\-lp' ; fi
 git:
-    submodules: true
+  submodules: true
 env:
-    global:
-        - secure: "IrxBokk6LuQHHGb2Ykyi9AYJnoFwQ9ua4iBQe+nPvjZfKyxoVWyHVI8rn5hbV7PupM6PIMn0hmMXVHsRVH9eWfCTMXr+Qo8zO6B0DNsNRtAnig7ZS3RpO93C/N8rUjrlE3GV6ZyeXHGNj6naSIJtwH//IEMpJNTGrqt9cB9UZbw="
-        - CONFIGURE_LIBRARY_DIR=${TRAVIS_BUILD_DIR}/src/lib
-
+  global:
+  - secure: IrxBokk6LuQHHGb2Ykyi9AYJnoFwQ9ua4iBQe+nPvjZfKyxoVWyHVI8rn5hbV7PupM6PIMn0hmMXVHsRVH9eWfCTMXr+Qo8zO6B0DNsNRtAnig7ZS3RpO93C/N8rUjrlE3GV6ZyeXHGNj6naSIJtwH//IEMpJNTGrqt9cB9UZbw=
+  - CONFIGURE_LIBRARY_DIR=${TRAVIS_BUILD_DIR}/src/lib
 matrix:
-    include:
-        - os: osx
-          env: CXX_COMPILER=clang++ COVERALLS=false
-        - os: linux
-          env: CXX_COMPILER=g++-4.8 COVERALLS=false
-        - os: linux
-          env: CXX_COMPILER=g++-4.8 GCOV=gcov-4.8 COVERALLS=true
-
+  include:
+  - os: osx
+    env: CXX_COMPILER=clang++ COVERALLS=false
+  - os: linux
+    env: CXX_COMPILER=g++-4.8 COVERALLS=false
+  - os: linux
+    env: CXX_COMPILER=g++-4.8 GCOV=gcov-4.8 COVERALLS=true
 addons:
   coverity_scan:
     project:
-      name: "hotgloupi/configure"
-      description: "Configure your projects' builds"
+      name: hotgloupi/configure
+      description: Configure your projects' builds
     notification_email: raphael.londeix+github@gmail.com
-    build_command_prepend: "/tmp/configure build cxx=$CXX_COMPILER"
-    build_command: "make -C build"
+    build_command_prepend: /tmp/configure build cxx=$CXX_COMPILER
+    build_command: make -C build
     branch_pattern: coverity
-
 before_deploy: ./build/bin/configure build --plugin package.archive package-name=configure-${TRAVIS_TAG} --build --target package
-
 deploy:
-    provider: releases
-    api-key:
-        - secure: "kDu3J+WFQYHtMOVPwPb3eluuBtQLGqykYYhDC2S0Iw7mAMdpOOQ/52M5W+3AIZArSIIANyUg+OZRLM+E2CHhFXwdAV/kGatS/poYyDDDM2YJsvgUK/f1/H9ro5kbn/fVeD7n56DhjnTWbIf0j2MYUd1Kucotkj9+zTp18vKJD08="
-    file: build/configure-${TRAVIS_TAG}.tgz
-    skip_cleanup: true
-    on:
-        tags: true
-        all_branches: true
-        repo: hotgloupi/configure
+  provider: releases
+  api_key:
+    secure: bTYL6YF9l9DMVuIqE2Cujt2meWxn2+l+Svac/NTCsC/KGUfhdXb8oBAFmmYeDLOOddR8oOnBPadpvnHrRtA45ksHlqDqV2HvpqlxMwe4OhJYYoDmCdNWy+Hgf2axkSzKZWXKIiHusY5VnKdGjEQFOuylH/tzE3Bam6kP6evp6g4=
+  file: build/configure-${TRAVIS_TAG}.tgz
+  on:
+    repo: hotgloupi/configure
