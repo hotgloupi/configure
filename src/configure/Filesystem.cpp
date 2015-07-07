@@ -96,7 +96,7 @@ namespace configure {
 				res.push_back(base_dir / &find_data.cFileName[0]);
 
 # endif
-			log::debug("Found", res.back()->path(), "that matches", pattern);
+			log::debug("Found", res.back(), "that matches", pattern);
 
 		} while (::FindNextFile(handle, &find_data));
 #else // !_WIN32
