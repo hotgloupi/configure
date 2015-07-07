@@ -62,3 +62,14 @@ addons:
     build_command_prepend: "/tmp/configure build cxx=$CXX_COMPILER"
     build_command: "make -C build"
     branch_pattern: coverity
+
+before_deploy: ./build/bin/configure --plugin package.archive package-name=configure-${TRAVIS_TAG} --build --target package
+
+deploy:
+    provider: releases
+    api-key:
+        - secure: "kDu3J+WFQYHtMOVPwPb3eluuBtQLGqykYYhDC2S0Iw7mAMdpOOQ/52M5W+3AIZArSIIANyUg+OZRLM+E2CHhFXwdAV/kGatS/poYyDDDM2YJsvgUK/f1/H9ro5kbn/fVeD7n56DhjnTWbIf0j2MYUd1Kucotkj9+zTp18vKJD08="
+    file: build/configure-${TRAVIS_TAG}.tgz
+    skip_cleanup: true
+    on:
+        tags: true
