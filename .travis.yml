@@ -52,3 +52,4 @@ deploy:
   file: build/configure-${TRAVIS_TAG}.tgz
   on:
     repo: hotgloupi/configure
+    all_branches: true
