@@ -74,3 +74,4 @@ deploy:
     on:
         tags: true
         all_branches: true
+        repo: hotgloupi/configure
