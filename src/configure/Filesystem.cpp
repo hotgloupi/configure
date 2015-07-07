@@ -149,7 +149,7 @@ namespace configure {
 	std::vector<NodePtr> Filesystem::glob(Path const& dir,
 	                                      std::string const& pattern)
 	{
-		fs::path base_dir =
+		Path base_dir =
 		    dir.is_absolute() ? dir : _build.project_directory() / dir;
 		auto paths = configure::glob(base_dir, pattern);
 		std::vector<NodePtr> res;
@@ -167,7 +167,7 @@ namespace configure {
 	std::vector<NodePtr> Filesystem::rglob(Path const& dir,
 	                                       std::string const& pattern)
 	{
-		fs::path base_dir =
+		Path base_dir =
 		    dir.is_absolute() ? dir : _build.project_directory() / dir;
 		auto paths = configure::rglob(base_dir, pattern);
 		std::vector<NodePtr> res;
@@ -228,9 +228,9 @@ namespace configure {
 # define PATH_SEP ":"
 #endif
 
-	boost::optional<fs::path> Filesystem::which(std::string const& program_name)
+	boost::optional<Path> Filesystem::which(std::string const& program_name)
 	{
-		fs::path program(program_name);
+		Path program(program_name);
 		if ((program.is_absolute() || program.is_relative()) && fs::is_regular_file(program))
 			return fs::absolute(program);
 		char const* PATH = ::getenv("PATH");
@@ -242,12 +242,12 @@ namespace configure {
 		boost::tokenizer<boost::char_separator<char>> tokenizer(path, sep);
 		for (auto&& el: tokenizer)
 		{
-			fs::path full = fs::path(el) / program;
+			Path full = Path(el) / program;
 			//while (fs::is_symlink(full))
 			//{
 			//	full = fs::read_symlink(full);
 			//	if (!full.is_absolute())
-			//		full = fs::path(el) / full;
+			//		full = Path(el) / full;
 			//}
 
 			if (fs::is_regular_file(full))
@@ -268,7 +268,7 @@ namespace configure {
 		auto& dst_node = _build.target_node(std::move(dst));
 		ShellCommand cmd;
 		cmd.append(
-			_build.option<fs::path>("CP", "Copy program", "cp"),
+			_build.option<Path>("CP", "Copy program", "cp"),
 			src_node,
 			dst_node
 		);
