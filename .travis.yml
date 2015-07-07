@@ -63,7 +63,7 @@ addons:
     build_command: "make -C build"
     branch_pattern: coverity
 
-before_deploy: ./build/bin/configure --plugin package.archive package-name=configure-${TRAVIS_TAG} --build --target package
+before_deploy: ./build/bin/configure build --plugin package.archive package-name=configure-${TRAVIS_TAG} --build --target package
 
 deploy:
     provider: releases
