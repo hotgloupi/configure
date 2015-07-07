@@ -20,15 +20,7 @@ namespace configure {
 		Build& self = lua::Converter<std::reference_wrapper<Build>>::extract(state, 1);
 		auto name = lua::Converter<std::string>::extract(state, 2);
 		auto descr = lua::Converter<std::string>::extract(state, 3);
-		if (lua_gettop(state) == 3)
-		{
-			auto res = self.option<T>(std::move(name), std::move(descr));
-			if (res)
-				lua::Converter<T>::push(state, *res);
-			else
-				lua_pushnil(state);
-		}
-		else
+		if (lua_gettop(state) == 4 && !lua_isnil(state, 4))
 		{
 			lua::Converter<T>::push(
 			    state,
@@ -38,6 +30,14 @@ namespace configure {
 					lua::Converter<T>::extract(state, 4)
 				)
 			);
+		}
+		else
+		{
+			auto res = self.option<T>(std::move(name), std::move(descr));
+			if (res)
+				lua::Converter<T>::push(state, *res);
+			else
+				lua_pushnil(state);
 		}
 		return 1;
 	}
