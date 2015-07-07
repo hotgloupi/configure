@@ -57,10 +57,9 @@ namespace configure {
 			{
 				this->push_table();
 				this->state.construct<std::reference_wrapper<Build>>(build);
-				this->state.call(2);
+				this->state.call(2, 0);
 				this->state.pop();
 			}
-			this->state.pop();
 		}
 	};
 
