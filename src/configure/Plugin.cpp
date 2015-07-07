@@ -1,5 +1,6 @@
 #include "Plugin.hpp"
 
+#include "Build.hpp"
 #include "lua/State.hpp"
 
 namespace configure {
