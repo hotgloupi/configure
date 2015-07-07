@@ -511,7 +511,7 @@ namespace configure { namespace lua {
 					Converter<std::exception_ptr>::push(
 						state,
 						std::make_exception_ptr(
-							error::LuaError("Runtime error")
+							error::LuaError()
 								<< error::lua_traceback(traceback(state))
 								<< error::nested(*ptr)
 						)
@@ -519,7 +519,15 @@ namespace configure { namespace lua {
 				}
 			}
 			else
-				std::abort();
+			{
+				Converter<std::exception_ptr>::push(
+					state,
+					std::make_exception_ptr(
+						error::LuaError()
+							<< error::lua_traceback(traceback(state))
+					)
+				);
+			}
 			return 1;
 		}
 
