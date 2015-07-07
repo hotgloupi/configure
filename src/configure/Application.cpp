@@ -340,14 +340,14 @@ namespace configure {
 			<< "  -o, --options" << "             "
 			<< "List available build options\n"
 
-			<< "  -p, --project PATH" << "        "
+			<< "  -p, --plugin NAME-OR-PATH" << "     "
+			<< "Run a plugin by name or by path\n"
+
+			<< "  --project PATH" << "        "
 			<< "Specify the project to configure instead of detecting it\n"
 
 			<< "  -P, --print-var" << "           "
 			<< "Print a variable and exit\n"
-
-			<< "  --plugin NAME-OR-PATH" << "     "
-			<< "Run a plugin by name or by path\n"
 
 			<< "  --plugins" << "                 "
 			<< "List available plugins\n"
@@ -425,7 +425,7 @@ namespace configure {
 				}
 				next_arg = NextArg::other;
 			}
-			if (next_arg == NextArg::plugin)
+			else if (next_arg == NextArg::plugin)
 			{
 				_this->add_plugin(arg);
 				next_arg = NextArg::other;
@@ -448,9 +448,9 @@ namespace configure {
 			}
 			else if (next_arg == NextArg::builtin_command)
 				_this->builtin_command_args.push_back(arg);
-			else if (arg == "-p" || arg == "--project")
+			else if (arg == "--project")
 				next_arg = NextArg::project;
-			else if (arg == "--plugin")
+			else if (arg == "-p" || arg == "--plugin")
 				next_arg = NextArg::plugin;
 			else if (arg == "--plugins")
 				_this->dump_plugins = true;
