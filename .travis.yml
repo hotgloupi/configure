@@ -27,6 +27,7 @@ env:
   global:
   - secure: IrxBokk6LuQHHGb2Ykyi9AYJnoFwQ9ua4iBQe+nPvjZfKyxoVWyHVI8rn5hbV7PupM6PIMn0hmMXVHsRVH9eWfCTMXr+Qo8zO6B0DNsNRtAnig7ZS3RpO93C/N8rUjrlE3GV6ZyeXHGNj6naSIJtwH//IEMpJNTGrqt9cB9UZbw=
   - CONFIGURE_LIBRARY_DIR=${TRAVIS_BUILD_DIR}/src/lib
+  - PACKAGE_NAME=configure-${TRAVIS_TAG}-${TRAVIS_OS_NAME}
 matrix:
   include:
   - os: osx
@@ -44,12 +45,17 @@ addons:
     build_command_prepend: /tmp/configure build cxx=$CXX_COMPILER
     build_command: make -C build
     branch_pattern: coverity
-before_deploy: ./build/bin/configure build --plugin package.archive package-name=configure-${TRAVIS_TAG} --build --target package
+
+before_deploy:
+  - echo "Preparing package ${PACKAGE_NAME}"
+  - ./build/bin/configure build --plugin package.archive package-name=${PACKAGE_NAME} --build --target package
+
 deploy:
   provider: releases
   api_key:
     secure: bTYL6YF9l9DMVuIqE2Cujt2meWxn2+l+Svac/NTCsC/KGUfhdXb8oBAFmmYeDLOOddR8oOnBPadpvnHrRtA45ksHlqDqV2HvpqlxMwe4OhJYYoDmCdNWy+Hgf2axkSzKZWXKIiHusY5VnKdGjEQFOuylH/tzE3Bam6kP6evp6g4=
-  file: build/configure-${TRAVIS_TAG}.tgz
+  file: build/${PACKAGE_NAME}.tgz
   skip_cleanup: true
   on:
     repo: hotgloupi/configure
+    condition: $COVERALLS = false
