@@ -24,15 +24,27 @@ install:
     - CALL "C:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/vcvarsall.bat" x86
     - SET CONFIGURE_LIBRARY_DIR=%APPVEYOR_BUILD_FOLDER%/src/lib
     - git submodule update --init --recursive
+    - SET PACKAGE_NAME=configure-win32-%APPVEYOR_REPO_TAG_NAME%
 
 before_build:
     - cmd: SET
     - bash bootstrap/vs.sh
 
 build_script:
-    - configure.exe build BOOST_INCLUDE_DIR="c:/Libraries/boost" BOOST_LIBRARY_DIR="c:/Libraries/boost/stage/lib" -d -b
+    - configure.exe build BOOST_INCLUDE_DIR="c:/Libraries/boost" BOOST_LIBRARY_DIR="c:/Libraries/boost/stage/lib" -d --build --target package --plugin package.archive package-name=%PACKAGE_NAME%
 
 test_script:
     - configure.exe build --build --target check
     - SET CONFIGURE_EXE=%APPVEYOR_BUILD_FOLDER%/build/bin/configure.exe
     - "%BEHAVE% test/features -q -m -k"
+
+deploy:
+  provider: GitHub
+  auth_token:
+    secure: aNNADwq2sOOL4wtFqX8qdutn+moJCs84o2LYyiQJtxvcpuD9sNMT0r3YQ/JdsQeR
+  artifact: build/%PACKAGE_NAME%.zip
+  draft: false
+  prerelease: false
+  on:
+    branch: master
+    appveyor_repo_tag: true
