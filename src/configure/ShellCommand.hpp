@@ -14,7 +14,11 @@ namespace configure {
 
 	class ShellFormatter
 	{
+	protected:
+		Build const& _build;
+
 	public:
+		ShellFormatter(Build const& b);
 		virtual ~ShellFormatter();
 
 	public:

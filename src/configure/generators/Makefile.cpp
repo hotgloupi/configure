@@ -183,7 +183,8 @@ namespace configure { namespace generators {
 
 			RelativePathShellFormatter(Build& build,
 			                           boost::filesystem::path const& project_dir)
-				: _build_dir(build.directory())
+				: ShellFormatter(build)
+				, _build_dir(build.directory())
 				, _project_dir(project_dir)
 			{}
 
@@ -191,14 +192,14 @@ namespace configure { namespace generators {
 			operator()(ShellCommand const& command,
 				       boost::filesystem::path const& value) const override
 			{
-				if (command.has_working_directory())
+				if (command.has_working_directory() &&
+				    utils::starts_with(value, _project_dir))
 					return utils::relative_path(
 					  value, command.working_directory()).string();
 				if (utils::starts_with(value, _project_dir))
 					return utils::relative_path(value, _build_dir).string();
 				return value.string();
 			}
-
 		};
 
 	}
@@ -216,7 +217,7 @@ namespace configure { namespace generators {
 				new RelativePathShellFormatter(_build, _project_directory)
 			);
 		else
-			formatter = std::unique_ptr<ShellFormatter>(new ShellFormatter);
+			formatter = std::unique_ptr<ShellFormatter>(new ShellFormatter(_build));
 
 		std::string (*node_path)(Build&, Node&);
 		if (use_relpath)
@@ -300,7 +301,7 @@ namespace configure { namespace generators {
 					{
 						ShellCommand chdir;
 						chdir.append("cd", shell_command.working_directory());
-						wd = this->dump_command(chdir.string(_build, link, *formatter)) + ";";
+						wd = this->dump_command(chdir.string(_build, link, *formatter)) + " && ";
 					}
 					std::string env;
 					if (shell_command.has_env())

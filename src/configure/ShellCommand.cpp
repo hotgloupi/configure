@@ -1,10 +1,16 @@
 #include "ShellCommand.hpp"
 #include "Node.hpp"
+#include <configure/utils/path.hpp>
+#include <configure/Build.hpp>
 
 #include <boost/variant/get.hpp>
 #include <boost/variant/apply_visitor.hpp>
 
 namespace configure {
+
+	ShellFormatter::ShellFormatter(Build const& b)
+		: _build(b)
+	{}
 
 	ShellFormatter::~ShellFormatter()
 	{}
@@ -14,9 +20,15 @@ namespace configure {
 	{ return std::move(value); }
 
 	std::string ShellFormatter::
-	operator()(ShellCommand const&,
+	operator()(ShellCommand const& cmd,
 	           boost::filesystem::path const& value) const
-	{ return value.string(); }
+	{
+		if (cmd.has_working_directory() &&
+			utils::starts_with(value, _build.directory()))
+			return utils::relative_path(
+				value, cmd.working_directory()).string();
+		return value.string();
+	}
 
 	std::string ShellFormatter::
 	operator()(ShellCommand const& command, Node const& value) const
@@ -80,7 +92,7 @@ namespace configure {
 	std::vector<std::string>
 	ShellCommand::string(Build const& build,
 	                     DependencyLink const& link) const
-	{ return this->string(build, link, ShellFormatter()); }
+	{ return this->string(build, link, ShellFormatter(build)); }
 
 	namespace {
 
