@@ -59,3 +59,5 @@ deploy:
   on:
     repo: hotgloupi/configure
     condition: $COVERALLS = false
+    tags: true
+    all_branches: true
