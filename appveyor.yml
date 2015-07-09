@@ -33,9 +33,9 @@ before_build:
 build_script:
     - configure.exe build BOOST_INCLUDE_DIR="c:/Libraries/boost" BOOST_LIBRARY_DIR="c:/Libraries/boost/stage/lib" -d --build --target package --plugin package.archive package-name=%PACKAGE_NAME%
 
-artifact:
-    path: build/%PACKAGE_NAME%.zip
-    name: package
+artifacts:
+    - path: build/%PACKAGE_NAME%.zip
+      name: package
 
 test_script:
     - configure.exe build --build --target check
@@ -46,7 +46,7 @@ deploy:
   provider: GitHub
   auth_token:
     secure: aNNADwq2sOOL4wtFqX8qdutn+moJCs84o2LYyiQJtxvcpuD9sNMT0r3YQ/JdsQeR
-  artifact: package
+  artifact: build/%PACKAGE_NAME%.zip
   draft: false
   prerelease: false
   on:
