@@ -3,8 +3,6 @@ language: cpp
 install:
 - pip install cpp-coveralls --user
 - pip install behave --user
-- export COVERALLS_BIN=~/.local/bin/coveralls
-- export BEHAVE_BIN=~/.local/bin/behave
 - $CXX_COMPILER --version
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then CXX=$CXX_COMPILER ./bootstrap/unix.sh;
   else CXX=$CXX_COMPILER ./bootstrap/osx.sh; fi
@@ -23,6 +21,10 @@ env:
   global:
   - secure: IrxBokk6LuQHHGb2Ykyi9AYJnoFwQ9ua4iBQe+nPvjZfKyxoVWyHVI8rn5hbV7PupM6PIMn0hmMXVHsRVH9eWfCTMXr+Qo8zO6B0DNsNRtAnig7ZS3RpO93C/N8rUjrlE3GV6ZyeXHGNj6naSIJtwH//IEMpJNTGrqt9cB9UZbw=
   - CONFIGURE_LIBRARY_DIR=${TRAVIS_BUILD_DIR}/src/lib
+  - PYTHONUSERBASE=${HOME}/.local
+  - COVERALLS_BIN=${PYTHONUSERBASE}/bin/coveralls
+  - BEHAVE_BIN=${PYTHONUSERBASE}/bin/behave
+
 matrix:
   include:
   - os: osx
