@@ -1,8 +1,10 @@
 sudo: false
 language: cpp
 install:
-- if [ "${COVERALLS}" = "true" ]; then pip install cpp-coveralls --user; fi
+- pip install cpp-coveralls --user
 - pip install behave --user
+- export COVERALLS_BIN=~/.local/bin/coveralls
+- export BEHAVE_BIN=~/.local/bin/behave
 - $CXX_COMPILER --version
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then CXX=$CXX_COMPILER ./bootstrap/unix.sh;
   else CXX=$CXX_COMPILER ./bootstrap/osx.sh; fi
@@ -10,10 +12,10 @@ script:
 - cat cov-int/scm_log.txt || echo "No coverity log"
 - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then /tmp/configure build cxx=${CXX_COMPILER}
   coverage=${COVERALLS} --build -d; export CONFIGURE_EXE=`pwd`/build/bin/configure;
-  ${CONFIGURE_EXE} build --build --target check -d; behave test/features -q -m -k;
+  ${CONFIGURE_EXE} build --build --target check -d; ${BEHAVE_BIN} test/features -q -m -k;
   else cat cov-int/scm_log.txt ; fi
 after_success:
-- if [ "${COVERALLS}" = "true" ]; then ${GCOV} --version ; coveralls --build-root
+- if [ "${COVERALLS}" = "true" ]; then ${GCOV} --version ; ${COVERALLS_BIN} --build-root
   build --gcov ${GCOV} --exclude lua --exclude test --gcov-options '\-lp' ; fi
 git:
   submodules: true
