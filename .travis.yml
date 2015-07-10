@@ -1,7 +1,7 @@
-language: cpp
 sudo: false
+language: cpp
 install:
-  - if [ "${COVERALLS}" = "true" ]; then pip install cpp-coveralls --user; fi
+- if [ "${COVERALLS}" = "true" ]; then pip install cpp-coveralls --user; fi
 - pip install behave --user
 - $CXX_COMPILER --version
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then CXX=$CXX_COMPILER ./bootstrap/unix.sh;
