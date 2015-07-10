@@ -46,7 +46,7 @@ addons:
     branch_pattern: coverity
 
 before_deploy:
-  - export PACKAGE_NAME=configure-`git describe --tag`-${TRAVIS_OS_NAME}
+  - export PACKAGE_NAME=configure-${TRAVIS_OS_NAME}
   - echo "Preparing package ${PACKAGE_NAME}"
   - ./build/bin/configure build --plugin package.archive package-name=${PACKAGE_NAME} --build --target package
 
