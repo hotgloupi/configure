@@ -1,6 +1,11 @@
 --- All modules
 -- @module configure.modules
-return {
-	boost = require('configure.modules.boost'),
-	curl = require('configure.modules.curl'),
-}
+local M = {}
+
+setmetatable(M, {
+	__index = function (self, module)
+		return require('configure.modules.' .. module)
+	end
+})
+
+return M
