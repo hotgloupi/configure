@@ -40,6 +40,7 @@ return function(build)
 	local compiler = cxx.compiler.find{
 		build = build,
 		standard = 'c++11',
+		optimization = (build_type == 'debug') and 'no' or 'fastest',
 	}
 
 	local lua = build:configure({
