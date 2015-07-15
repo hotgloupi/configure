@@ -8,13 +8,17 @@ install:
   else CXX=$CXX_COMPILER ./bootstrap/osx.sh; fi
 script:
 - cat cov-int/scm_log.txt || echo "No coverity log"
-- if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then /tmp/configure build cxx=${CXX_COMPILER}
-  coverage=${COVERALLS} --build -d; export CONFIGURE_EXE=`pwd`/build/bin/configure;
-  ${CONFIGURE_EXE} build --build --target check -d; ${BEHAVE_BIN} test/features -q -m -k;
-  else cat cov-int/scm_log.txt ; fi
+- if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then
+      /tmp/configure build cxx=${CXX_COMPILER} coverage=${COVERALLS} build-type=${BUILD_TYPE} --build -d;
+      export CONFIGURE_EXE=`pwd`/build/bin/configure;
+      ${CONFIGURE_EXE} build --build --target check -d; ${BEHAVE_BIN} test/features -q -m -k;
+      else cat cov-int/scm_log.txt ;
+  fi
 after_success:
-- if [ "${COVERALLS}" = "true" ]; then ${GCOV} --version ; ${COVERALLS_BIN} --build-root
-  build --gcov ${GCOV} --exclude lua --exclude test --gcov-options '\-lp' ; fi
+- if [ "${COVERALLS}" = "true" ]; then
+      ${GCOV} --version ;
+      ${COVERALLS_BIN} --build-root build --gcov ${GCOV} --exclude lua --exclude test --gcov-options '\-lp' ;
+  fi
 git:
   submodules: true
 env:
@@ -28,11 +32,15 @@ env:
 matrix:
   include:
   - os: osx
-    env: CXX_COMPILER=clang++ COVERALLS=false
+    env: CXX_COMPILER=clang++ COVERALLS=false BUILD_TYPE=Debug
+  - os: osx
+    env: CXX_COMPILER=clang++ COVERALLS=false BUILD_TYPE=Release
   - os: linux
-    env: CXX_COMPILER=g++-4.8 COVERALLS=false
+    env: CXX_COMPILER=g++-4.8 COVERALLS=false BUILD_TYPE=Debug
   - os: linux
-    env: CXX_COMPILER=g++-4.8 GCOV=gcov-4.8 COVERALLS=true
+    env: CXX_COMPILER=g++-4.8 COVERALLS=false BUILD_TYPE=Release
+  - os: linux
+    env: CXX_COMPILER=g++-4.8 GCOV=gcov-4.8 COVERALLS=true BUILD_TYPE=Debug
 
 addons:
   coverity_scan:
@@ -67,6 +75,8 @@ deploy:
   skip_cleanup: true
   on:
     repo: hotgloupi/configure
-    condition: $COVERALLS = false
+    condition:
+        - $COVERALLS = false
+        - $BUILD_TYPE = Release
     tags: true
     all_branches: true
