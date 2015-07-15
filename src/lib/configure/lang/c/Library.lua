@@ -11,6 +11,7 @@ return {
 	-- @param[opt] args.files list of Node or path to files to link against
 	-- @param[opt] args.runtime_files list of Node or path to files that are needed at runtime
 	-- @param[opt] args.defines List of defines
+	-- @param[opt] args.bundle A table of extra information (version, executable, ...)
 	new = function(self, args)
 		assert(args.name)
 		local o = {}
@@ -19,8 +20,13 @@ return {
 		o.include_directories = args.include_directories or {}
 		o.files = args.files or {}
 		o.runtime_files = args.runtime_files or {}
+		o.directories = {}
+		for _, f in ipairs(o.files) do
+			table.append(o.directories, f:path():parent_path())
+		end
 		o.defines = args.defines or {}
 		o.kind = args.kind
+		o.bundle = args.bundle or {}
 		assert(o.kind == nil or o.kind == 'static' or o.kind == 'shared')
 		setmetatable(o, self)
 		self.__index = self
