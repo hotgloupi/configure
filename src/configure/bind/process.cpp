@@ -71,6 +71,8 @@ namespace configure {
 
 	void bind_process(lua::State& state)
 	{
+		/// Process instance.
+		// @classmod Process
 		lua::Type<Process> type(state, "Process");
 		type
 			/// Retreive a command output
