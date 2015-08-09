@@ -12,21 +12,21 @@
 
 namespace configure {
 
-	/// Transform the current exception to string.
+	// Transform the current exception to string.
 	std::string error_string();
 
-	/// Transform the given exception to string.
+	// Transform the given exception to string.
 	std::string error_string(std::exception_ptr const& e,
 	                         unsigned int indent = 0);
 
 
-	/// Returns errno on Unix platforms and GetLastError() on Windows.
+	// Returns errno on Unix platforms and GetLastError() on Windows.
 	int last_error();
 
-	/// Throw an exception
+	// Throw an exception
 #define CONFIGURE_THROW BOOST_THROW_EXCEPTION
 
-	/// Returns a SystemError instance filled with the last error code.
+	// Returns a SystemError instance filled with the last error code.
 #define CONFIGURE_SYSTEM_ERROR(msg)                                           \
 	::configure::error::SystemError(msg)                                      \
 		<< ::configure::error::error_code(                                    \
@@ -37,7 +37,7 @@ namespace configure {
 		)                                                                     \
 /**/
 
-    /// Throw a system error with the last error code.
+    // Throw a system error with the last error code.
 #define CONFIGURE_THROW_SYSTEM_ERROR(msg) \
 	CONFIGURE_THROW(CONFIGURE_SYSTEM_ERROR(msg))
 
