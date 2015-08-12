@@ -19,6 +19,13 @@ namespace configure { namespace commands {
 			                     dest_dir.string(), "--strip-components=1"},
 			                    options);
 		}
+		else if (ext == ".zip")
+		{
+			Process::Options options;
+			Process::check_call({"unzip", tarball.string(), "-d",
+			                     dest_dir.string()},
+			                    options);
+		}
 		else
 			throw std::runtime_error("Unknown tarball extension '" + ext + "'");
 	}
