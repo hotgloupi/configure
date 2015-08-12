@@ -36,7 +36,7 @@ namespace configure { namespace lua {
 			for (size_t i = 0; i < value.size(); ++i)
 			{
 				Converter<Environ::Value>::push(state, value[i]);
-				lua_rawseti(state, -2, i);
+				lua_rawseti(state, -2, i + 1);
 			}
 		}
 	};
