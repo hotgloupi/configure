@@ -22,6 +22,9 @@ function Project:_init()
 	if self.root_directory == nil then
 		self.root_directory = self._build:directory() / self.name
 	end
+	if self.extract_directory == nil then
+		self.extract_directory = self:step_directory('source')
+	end
 	if self.stamps_directory == nil then
 		self.stamps_directory = self.root_directory / 'stamps'
 	end
@@ -60,7 +63,7 @@ function Project:download_tarball(args)
 		targets = {
 			[0] = {
 				{self._build:configure_program(), '-E', 'fetch', args.url, tarball},
-				{self._build:configure_program(), '-E', 'extract', tarball, self:step_directory('source')}
+				{self._build:configure_program(), '-E', 'extract', tarball, self:step_directory('extract')}
 			}
 		}
 	}
