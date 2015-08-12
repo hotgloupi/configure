@@ -59,12 +59,19 @@ namespace configure {
 		return 1;
 	}
 
+	static int Node_kind(lua_State* state)
+	{
+		auto& self = lua::Converter<NodePtr>::extract(state, 1);
+		lua_pushunsigned(state, static_cast<int>(self->kind()));
+		return 1;
+	}
 	void bind_node(lua::State& state)
 	{
 		/// Node represent a vertex in the build graph.
 		//
 		// @classmod Node
-		lua::Type<Node, NodePtr>(state, "Node")
+		lua::Type<Node, NodePtr> type(state, "Node");
+		type
 			/// True if the node is a virtual node.
 			// @function Node:is_virtual
 			// @treturn bool
@@ -131,7 +138,22 @@ namespace configure {
 			// @treturn bool
 			// @function Node:is_virtual
 			.def("is_virtual", &Node::is_virtual)
+
+			/// Kind of a node
+			// @treturn Kind
+			// @function Node::kind
+			.def("kind", &Node_kind)
 		;
+#define ENUM_VALUE(key)                                              \
+	lua_pushunsigned(state.ptr(), static_cast<unsigned>(Node::key)); \
+	lua_setfield(state.ptr(), -2, #key);                             \
+		// Kind
+		lua_newtable(state.ptr());
+		ENUM_VALUE(file_node);
+		ENUM_VALUE(directory_node);
+		ENUM_VALUE(virtual_node);
+		lua_setfield(state.ptr(), -2, "Kind");
+#undef ENUM_VALUE
 	}
 
 }
