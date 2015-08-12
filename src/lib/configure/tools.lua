@@ -8,24 +8,48 @@ local M = {}
 -- @param dirs a list of string, path or nodes
 -- @return a list of directory `Node`s
 function M.normalize_directories(build, dirs)
+	return M.normalize_paths(build, dirs, Node.Kind.directory_node)
+end
+
+--- Convert a list of string, path or `Node` to a list of file `Node`s
+--
+-- @param dirs a list of string, path or nodes
+-- @return a list of file `Node`s
+function M.normalize_files(build, files)
+	return M.normalize_paths(build, files, Node.Kind.file_node)
+end
+
+--- Convert a list of string, path or `Node` to a list of `Node`s
+--
+-- @param build Build instance
+-- @param files a list of string, path or nodes
+-- @tparam `Node.Kind` kind
+-- @return a list of file `Node`s
+function M.normalize_paths(build, paths, kind)
 	local res = {}
-	for _, dir in ipairs(dirs)
+	for _, path in ipairs(paths)
 	do
-		if dir ~= nil then
-			if type(dir) == "string" then
-				dir = Path:new(dir)
+		if path ~= nil then
+			if type(path) == "string" then
+				path = Path:new(path)
 			end
-			if getmetatable(dir) == Path then
-				if not dir:is_absolute() then
-					dir = build:project_directory() / dir
+			if getmetatable(path) == Path then
+				if not path:is_absolute() then
+					path = build:project_directory() / path
 				end
-				dir = build:directory_node(dir)
-			elseif getmetatable(dir) ~= Node then
-				error("Expected string, Path or Node, got " .. tostring(dir))
-			elseif not dir:is_directory() then
-				error("Expected a directory node, got " .. tostring(dir))
+				if kind == Node.Kind.file_node then
+					path = build:directory_node(path)
+				elseif kind == Node.Kind.directory_node then
+					path = build:directory_node(path)
+				else
+					build:error("Invalid node kind:", tostring(kind))
+				end
+			elseif getmetatable(path) ~= Node then
+				error("Expected string, Path or Node, got " .. tostring(path))
+			elseif path:kind() ~= kind then
+				build:error("Expected a", tostring(kind), "node, got " .. tostring(path:kind()))
 			end
-			table.append(res, dir)
+			table.append(res, path)
 		end
 	end
 	return res
