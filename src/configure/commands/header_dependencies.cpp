@@ -77,10 +77,11 @@ namespace configure { namespace commands {
 
 		for (auto& target: targets)
 			out << target.string() << ' ';
-		out << ": \\\n";
+		out << ":";
 
 		for (auto& el: seen)
-			out << "  " << el.string() << " \\\n";
+			out << " \\\n  " << el.string();
+		out << "\n";
 	}
 
 }}
