@@ -22,7 +22,11 @@ return {
 		o.runtime_files = args.runtime_files or {}
 		o.directories = {}
 		for _, f in ipairs(o.files) do
-			table.append(o.directories, f:path():parent_path())
+			local path = f
+			if getmetatable(f) == Node then
+				path = f:path()
+			end
+			table.append(o.directories, path:parent_path())
 		end
 		o.defines = args.defines or {}
 		o.kind = args.kind
