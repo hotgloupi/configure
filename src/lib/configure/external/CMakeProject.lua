@@ -50,7 +50,6 @@ function CMakeProject:configure(args)
 		{
 			command = command,
 			working_directory = self:step_directory('build'),
-			env = { CC = self.compiler.binary_path },
 		}
 	)
 end
