@@ -323,20 +323,27 @@ namespace configure { namespace generators {
 				bool had_commands_property = node->has_property(
 					generated_commands_property_name
 				);
+				auto new_command = boost::join(command_strings, "\n");
+				if (had_commands_property && node != makefile_node)
+				{
+					auto& old_command = node->property<std::string>(generated_commands_property_name);
+				    if (old_command != new_command)
+					{
+						log::verbose("Deleting node", node->string(),
+						             "(command line changed: ", old_command,
+						             "->", new_command, ")");
+						to_delete.insert(node.get());
+					}
+				}
 				node->set_property<std::string>(
 					generated_commands_property_name,
-					boost::join(command_strings, "\n")
+					new_command
 				);
-				if (had_commands_property &&
-				    node != makefile_node &&
-				    node->properties().dirty())
-					to_delete.insert(node.get());
 			}
 		}
 
 		for (auto node: to_delete)
 		{
-			log::verbose("Deleting node", node->string(), "(command line changed)");
 			try {
 				boost::filesystem::remove(node->path());
 			} catch (...) {
