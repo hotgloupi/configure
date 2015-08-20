@@ -405,6 +405,16 @@ namespace configure { namespace lua {
 
 		int table_append(lua_State* state)
 		{
+			if ((lua_gettop(state) != 2))
+			{
+				lua_pushstring(state, "table.append(): Two arguments expected");
+				lua_error(state);
+			}
+			if (!lua_istable(state, 1))
+			{
+				lua_pushstring(state, "table.append(): First argument should be a table");
+				lua_error(state);
+			}
 			// table : value
 			int len = lua_rawlen(state, 1);
 			lua_rawseti(state, 1, len + 1);
