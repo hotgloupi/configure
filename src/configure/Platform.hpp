@@ -65,6 +65,11 @@ namespace configure {
 #undef CONFIGURE_PLATFORM_PROPERTY
 
 	public:
+		bool is_osx() const { return _os == OS::osx; }
+		bool is_windows() const { return _os == OS::windows; }
+		bool is_linux() const { return _os == OS::linux; }
+
+	public:
 		static Platform current();
 
 		template<typename EnumType>

@@ -54,6 +54,9 @@ namespace configure {
 			.def("arch_string", &Platform::arch_string)
 			.def("sub_arch_string", &Platform::sub_arch_string)
 			.def("os_string", &Platform::os_string)
+			.def("is_osx", &Platform::is_osx)
+			.def("is_windows", &Platform::is_windows)
+			.def("is_linux", &Platform::is_linux)
 			.def("__tostring", &Platform_string)
 
 		;
