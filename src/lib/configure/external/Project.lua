@@ -50,7 +50,23 @@ end
 -- @param args
 -- @param args.url The download link
 -- @param args.filename The filename if it cannot be infered from the url.
-function Project:download_tarball(args)
+-- @param args.method Method used to retreive the sources (defaults to 'fetch')
+function Project:download(args)
+	local args = table.update(
+		{method = 'fetch'},
+		args
+	)
+	local callbacks = {
+		fetch = self._download_tarball,
+	}
+	local cb = callbacks[args.method]
+	if cb == nil then
+		self.build:error("The method " .. tostring(args.method) .. " does not exist")
+	end
+	return cb(self, args)
+end
+
+function Project:_download_tarball(args)
 	local filename = args.filename
 	if filename == nil then
 		local index = args.url:find("/[^/]*$")
