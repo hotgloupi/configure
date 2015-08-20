@@ -236,7 +236,11 @@ end
 function Compiler:_system_library_directories()
 	local cmd = {self.binary,  '-Xlinker', '--verbose'}
 	if self.name == 'clang' then
-		cmd = { self.binary, '-Xlinker', '-v' }
+		if self.build:host():os() == Platform.OS.osx then
+			cmd = { self.binary, '-Xlinker', '-v' }
+		else
+			cmd = { self.binary, '-Xlinker', '--verbose' }
+		end
 	end
 	self:_add_language_flag(cmd)
 	table.append(cmd, '/dev/null')
