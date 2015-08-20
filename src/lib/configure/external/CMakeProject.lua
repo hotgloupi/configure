@@ -45,13 +45,24 @@ function CMakeProject:configure(args)
 		{self.cmake, self:step_directory('source')},
 		vars
 	)
-	return Project.configure(
-		self,
-		{
-			command = command,
-			working_directory = self:step_directory('build'),
-		}
-	)
+	local build_dir = self:step_directory('build')
+	return self:add_step{
+		name = 'configure',
+		targets = {
+			[0] = {
+				{'rm', '-rf', build_dir},
+				{'mkdir', build_dir},
+				table.extend(
+					{self.cmake,
+					'-B' .. tostring(build_dir),
+					'-H' .. tostring(self:step_directory('source'))},
+					vars
+				)
+			},
+		},
+		env = args.env,
+	}
+
 end
 
 function CMakeProject:build(args)
