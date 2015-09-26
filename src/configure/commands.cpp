@@ -1,7 +1,9 @@
 #include "commands.hpp"
-#include "commands/header_dependencies.hpp"
-#include "commands/fetch.hpp"
+
 #include "commands/extract.hpp"
+#include "commands/fetch.hpp"
+#include "commands/header_dependencies.hpp"
+#include "commands/lua_function.hpp"
 #include "commands/touch.hpp"
 
 #include <fstream>
@@ -31,6 +33,9 @@ namespace configure { namespace commands {
 			extract(args.at(1), args.at(2));
 		else if (args[0] == "touch")
 			touch(args.at(1));
+		else if (args[0] == "lua-function")
+			lua_function(
+			  args.at(1), args.at(2), {args.begin() + 3, args.end()});
 		else
 			throw std::runtime_error("Unknown command '" + args[0] + "'");
 	}

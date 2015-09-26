@@ -16,12 +16,16 @@ def cmd(*args, **kw):
         stderr = subprocess.PIPE,
         **kw
     )
+    all_out = ''
+    all_err = ''
     while process.returncode is None:
         out, err = process.communicate()
         out, err = out.decode('utf8'), err.decode('utf8')
         print(out)
         print(err, file = sys.stderr)
-    return process.returncode
+        if out is not None: all_out += out
+        if err is not None: all_err += err
+    return (process.returncode, all_out, all_err)
 
 def before_all(ctx):
     bin = os.getenv('CONFIGURE_EXE')
@@ -30,7 +34,6 @@ def before_all(ctx):
     if not os.path.exists(bin):
         raise Exception("The configure binary '%s' does not exists" % bin)
     ctx.configure_exe = os.path.abspath(bin)
-    ctx.cmd = cmd
     ctx.disable_coverage = False
     def _cmd(*args, **kw):
         if ctx.disable_coverage:
@@ -38,7 +41,8 @@ def before_all(ctx):
             env.pop('COVERAGE_PROCESS_STARTUP', None)
             env.pop('COVERAGE_FILE', None)
             kw['env'] = env
-        return cmd(*args, **kw)
+        ret, ctx.cmd_out, ctx.cmd_err = cmd(*args, **kw)
+        return ret
     ctx.cmd = _cmd
 
 def before_tag(ctx, tag):

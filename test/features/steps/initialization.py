@@ -27,7 +27,7 @@ def step_impl(ctx):
 @when('I configure')
 @then('I configure')
 def step_impl(ctx):
-    ctx.configured = ctx.cmd('configure') == 0
+    ctx.configured = ctx.cmd(ctx.configure_exe) == 0
 
 @then('A .config directory is created')
 def step_impl(ctx):
@@ -87,3 +87,7 @@ def impl(ctx, args):
 def impl(ctx, args):
     ctx.execute_steps(u"When I try configure with %s" % args)
     assert ctx.configured
+
+@then('the stripped command output is "{out}"')
+def impl(ctx, out):
+    assert ctx.cmd_out.strip() == out
