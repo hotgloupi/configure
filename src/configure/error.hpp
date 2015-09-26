@@ -107,3 +107,11 @@ namespace configure {
 
 #undef MAKE_ERROR_INFO
 
+namespace configure { namespace error {
+		template <typename E>
+		nested make_nested(E&& e)
+		{
+			return nested(std::make_exception_ptr(std::forward<E>(e)));
+		}
+	}
+}
