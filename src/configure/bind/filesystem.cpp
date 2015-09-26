@@ -7,7 +7,7 @@
 #include <configure/Node.hpp>
 #include <configure/bind/path_utils.hpp>
 
-#include <boost/filesystem/path.hpp>
+#include <boost/filesystem.hpp>
 
 namespace fs = boost::filesystem;
 
@@ -135,6 +135,32 @@ namespace configure {
 		return 1;
 	}
 
+	static int fs_cwd(lua_State* state)
+	{
+		lua::Converter<fs::path>::push(state, fs::current_path());
+		return 1;
+	}
+
+	static int fs_current_script(lua_State* state)
+	{
+		lua_Debug ar;
+		if (lua_getstack(state, 1, &ar) != 1)
+			CONFIGURE_THROW(error::LuaError("Couldn't get the stack"));
+		if (lua_getinfo(state, "S", &ar) == 0)
+			CONFIGURE_THROW(error::LuaError("Couldn't get stack info"));
+		if (ar.source == nullptr)
+			CONFIGURE_THROW(error::LuaError("Invalid source file"));
+		fs::path src(ar.source[0] == '@' ? &ar.source[1] : ar.source);
+		if (!src.is_absolute())
+			src = fs::current_path() / src;
+
+		if (!fs::exists(src))
+			CONFIGURE_THROW(error::LuaError("Couldn't find the script path")
+			                << error::path(src));
+		lua::Converter<fs::path>::push(state, src);
+		return 1;
+	}
+
 	static int fs_copy(lua_State* state)
 	{
 		Filesystem& self = lua::Converter<std::reference_wrapper<Filesystem>>::extract(state, 1);
@@ -168,7 +194,7 @@ namespace configure {
 	{
 		/// Filesystem operations.
 		// @classmod Filesystem
-		lua::Type<Filesystem, std::reference_wrapper<Filesystem>>(state)
+		lua::Type<Filesystem, std::reference_wrapper<Filesystem>>(state, "Filesystem")
 			/// Find files according to a glob pattern
 			// @function Filesystem:glob
 			// @string pattern A glob pattern
@@ -205,6 +231,15 @@ namespace configure {
 			// @function Filesystem:copy
 			// @treturn Node the target node
 			.def("copy", &fs_copy)
+
+			/// Return the current working directory
+			// @function Filesystem:cwd
+			// @treturn Path current directory
+			.def("cwd", &fs_cwd)
+
+			/// Return the current script path
+			// @function Filesystem.current_script
+			.def("current_script", &fs_current_script)
 		;
 	}
 
