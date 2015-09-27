@@ -81,7 +81,8 @@ function Project:_download_tarball(args)
 				{self._build:configure_program(), '-E', 'fetch', args.url, tarball},
 				{self._build:configure_program(), '-E', 'extract', tarball, self:step_directory('extract')}
 			}
-		}
+		},
+		sources = args.sources,
 	}
 end
 
@@ -93,6 +94,7 @@ function Project:configure(args)
 		},
 		working_directory = args.working_directory,
 		env = args.env,
+		sources = args.sources,
 	}
 end
 
@@ -104,6 +106,7 @@ function Project:build(args)
 		},
 		working_directory = args.working_directory,
 		env = args.env,
+		sources = args.sources,
 	}
 end
 
@@ -115,6 +118,7 @@ function Project:install(args)
 		},
 		working_directory = args.working_directory,
 		env = args.env,
+		sources = args.sources,
 	}
 end
 
@@ -132,6 +136,7 @@ end
 -- @param[opt] args.working_directory Where to trigger the commands
 -- @param[opt] args.env Environ to use for the command
 -- @param[opt] args.directory The step directory
+-- @param[opt] args.sources Dependency nodes
 function Project:add_step(args)
 	local name = args.name
 	local directory = args.directory or self:step_directory(name)
@@ -139,11 +144,11 @@ function Project:add_step(args)
 
 	local stamped_rule = Rule:new():add_target(stamp)
 
-	--for _, target in ipairs(args.targets or {}) do
-	--	stamped_rule:add_target(self._build:target_node(target))
-	--end
+	for _, source in ipairs(args.sources or {}) do
+		stamped_rule:add_source(source)
+	end
 
-	for target, commands in pairs(args.targets) do
+	for target, commands in pairs(args.targets or {}) do
 		local rule = stamped_rule
 		if target ~= 0 then
 			rule = Rule:new():add_target(self._build:target_node(target))

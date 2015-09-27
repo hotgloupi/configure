@@ -22,6 +22,7 @@ function AutotoolsProject:configure(args)
 			},
 			working_directory = self:step_directory('build'),
 			env = { CC = self.compiler.binary_path },
+			sources = args.sources,
 		}
 	)
 end
@@ -33,6 +34,7 @@ function AutotoolsProject:build(args)
 			command = {self.make},
 			working_directory = self:step_directory('build'),
 			env = { MAKEFLAGS = '', },
+			sources = args.sources,
 		}
 	)
 end
@@ -44,6 +46,7 @@ function AutotoolsProject:install(args)
 			command = {self.make, 'install'},
 			working_directory = self:step_directory('build'),
 			env = { MAKEFLAGS = '', },
+			sources = args.sources,
 		}
 	)
 end

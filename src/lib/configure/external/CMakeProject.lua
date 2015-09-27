@@ -61,6 +61,7 @@ function CMakeProject:configure(args)
 			},
 		},
 		env = args.env,
+		sources = args.sources,
 	}
 
 end
