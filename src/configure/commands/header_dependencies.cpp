@@ -49,6 +49,7 @@ namespace configure { namespace commands {
 			fs::path local = source_dir / el;
 			if (fs::is_regular_file(local))
 			{
+				local = fs::canonical(local);
 				if (seen.insert(local).second == true)
 					inspect(local, seen, include_directories);
 				continue;
@@ -58,6 +59,7 @@ namespace configure { namespace commands {
 				fs::path local = include_dir / el;
 				if (fs::is_regular_file(local))
 				{
+					local = fs::canonical(local);
 					if (seen.insert(local).second == true)
 						inspect(local, seen, include_directories);
 					continue;
