@@ -83,6 +83,7 @@ function Compiler:_build_object(args)
 	self.build:add_rule(
 		Rule:new()
 			:add_source(args.source)
+			:add_sources(args.install_nodes)
 			:add_target(args.target)
 			:add_shell_command(ShellCommand:new(table.unpack(command)))
 	)

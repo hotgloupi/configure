@@ -298,6 +298,7 @@ function M:_build_objects(args)
 	local object_extension = self:_object_extension(args.object_extension)
 	local include_directories = self:_include_directories(args)
 	local include_files = self:_include_files(args)
+	local install_nodes = self:_install_nodes(args)
 	local defines = self:_defines(args)
 	local standard = args.standard or self.standard
 	local standard_library = args.standard_library or self.standard_library
@@ -330,6 +331,7 @@ function M:_build_objects(args)
 			standard_library = standard_library,
 			coverage = coverage,
 			include_files = include_files,
+			install_nodes = install_nodes,
 			threading = threading,
 			debug = debug,
 			exception = exception,
@@ -359,7 +361,25 @@ function M:_include_directories(args)
 	end
 	return tools.unique(tools.normalize_directories(self.build, dirs))
 end
---
+
+--- Concat all the install nodes found in libraries
+function M:_install_nodes(args)
+	local install_nodes = {}
+	for _, lib in ipairs(args.libraries or {})
+	do
+		if lib.install_node ~= nil then
+			table.append(install_nodes, lib.install_node)
+		end
+	end
+	for _, lib in ipairs(self.libraries)
+	do
+		if lib.install_node ~= nil then
+			table.append(install_nodes, lib.install_node)
+		end
+	end
+	return tools.unique(install_nodes)
+end
+
 --- Concat and normalize library directories from argument and compiler.
 --
 -- @param args
