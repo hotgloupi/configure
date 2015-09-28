@@ -122,7 +122,7 @@ function Project:install(args)
 	}
 end
 
-function Project:_stamp(name)
+function Project:stamp_node(name)
 	return self._build:target_node(self.root_directory / 'stamps' / name)
 end
 
@@ -140,7 +140,7 @@ end
 function Project:add_step(args)
 	local name = args.name
 	local directory = args.directory or self:step_directory(name)
-	local stamp = self:_stamp(name)
+	local stamp = self:stamp_node(name)
 
 	local stamped_rule = Rule:new():add_target(stamp)
 
@@ -231,7 +231,7 @@ function Project:node(args)
 		else
 			node = self._build:target_node(path)
 			self._build:add_rule(
-				Rule:new():add_source(self:_stamp(step)):add_target(node)
+				Rule:new():add_source(self:stamp_node(step)):add_target(node)
 			)
 		end
 		self.files[tostring(path)] = node
