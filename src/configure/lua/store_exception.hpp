@@ -31,14 +31,14 @@ namespace configure { namespace lua {
 				std::string name = function_name();
 				if (!name.empty())
 					CONFIGURE_THROW(
-						error::LuaError("While Calling C++")
+						error::LuaError("While Calling builtin")
 							<< error::lua_function(std::move(name))
 							<< error::lua_traceback(traceback(state))
 							<< error::nested(std::current_exception())
 					);
 				else
 					CONFIGURE_THROW(
-						error::LuaError("While Calling C++")
+						error::LuaError("While Calling builtin")
 							<< error::lua_traceback(traceback(state))
 							<< error::nested(std::current_exception())
 					);
