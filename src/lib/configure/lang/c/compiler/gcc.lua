@@ -90,12 +90,23 @@ function Compiler:_build_object(args)
 	return args.target
 end
 
+function Compiler:_add_rpath_flag(cmd, args)
+	local lib_dir = Path:new(
+		args.shared_library_directory or self.shared_library_directory
+	)
+	if not lib_dir:is_absolute() then
+		lib_dir = self.build:directory() / lib_dir
+	end
+	table.extend(cmd, {'-Wl,-rpath=' .. tostring(lib_dir)})
+end
+
 -- Generic linker flags generation
 function Compiler:_add_linker_flags(cmd, args, sources)
 	self:_add_standard_flag(cmd, args)
 	self:_add_standard_library_flag(cmd, args)
 	self:_add_coverage_flag(cmd, args)
 	self:_add_optimization_flag(cmd, args)
+	self:_add_rpath_flag(cmd, args)
 end
 
 function Compiler:_add_linker_library_flags(cmd, args, sources)
