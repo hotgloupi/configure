@@ -151,9 +151,12 @@ namespace configure {
 		  .def("project_directory", &Build::project_directory)
 
 		  /// Configure a sub-project
-		  // @function Build:configure
-		  // @param Path relative path to the sub-project directory
-		  .def("configure", &Build_configure)
+		  // @function Build:include
+		  // @tparam table args
+		  // @tparam Path args.directory relative path to the sub-project directory
+		  // @tparam[opt] args table Arguments for the configure function
+		  // @returns The configuration function return value
+		  .def("include", &Build_configure)
 
 		  /// Current build directory @{Path}.
 		  // @function Build:directory
