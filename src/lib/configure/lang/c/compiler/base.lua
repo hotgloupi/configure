@@ -237,8 +237,9 @@ function M:link_library(args)
 		and self.shared_library_directory
 		or self.static_library_directory
 	))
-	local prefix = self:_library_filename_prefix(args.filename_prefix)
+	local prefix = self:_library_filename_prefix(args.kind, args.filename_prefix)
 	local runtime = self:_runtime(args)
+    print(prefix, args.name, args.filename_prefix)
 
 	local target = self:_link_library{
 		objects = self:_build_objects(args),
@@ -552,7 +553,7 @@ function M:_executable_extension(ext)
 end
 
 function M:_library_extension(kind, ext)
-	if ext then return ext end
+	if ext ~= nil then return ext end
 	if kind == 'shared' then
 		if self.build:target():os() == Platform.OS.osx then
 			return ".dylib"
@@ -565,7 +566,7 @@ function M:_library_extension(kind, ext)
 end
 
 function M:_library_filename_prefix(kind, prefix)
-	if prefix then return prefix end
+	if prefix ~= nil then return prefix end
 	return 'lib'
 end
 
