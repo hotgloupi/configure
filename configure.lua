@@ -43,7 +43,7 @@ return function(build)
 		optimization = (build_type == 'debug') and 'no' or 'fastest',
 	}
 
-	local lua = build:configure({
+	local lua = build:include({
 		directory = 'lua',
 		args = {compiler = compiler}
 	})
