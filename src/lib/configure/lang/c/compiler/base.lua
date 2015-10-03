@@ -239,7 +239,6 @@ function M:link_library(args)
 	))
 	local prefix = self:_library_filename_prefix(args.kind, args.filename_prefix)
 	local runtime = self:_runtime(args)
-    print(prefix, args.name, args.filename_prefix)
 
 	local target = self:_link_library{
 		objects = self:_build_objects(args),
