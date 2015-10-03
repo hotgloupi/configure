@@ -191,6 +191,10 @@ namespace configure {
 
 		try {
 			_this->lua.load(find_project_file(project_directory), 1);
+			if (lua_isnil(_this->lua.ptr(), -1))
+				CONFIGURE_THROW(error::InvalidProject(
+					"No function returned from the configuration script")
+						<< error::path(project_directory));
 			_this->lua.construct<std::reference_wrapper<Build>>(*this);
 			if (has_args)
 				_this->lua.pushvalue(-3);
