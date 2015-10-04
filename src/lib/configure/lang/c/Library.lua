@@ -33,7 +33,7 @@ return {
 		o.kind = args.kind
 		o.bundle = args.bundle or {}
 		o.install_node = args.install_node or nil
-		assert(o.kind == nil or o.kind == 'static' or o.kind == 'shared')
+		assert(o.kind == 'static' or o.kind == 'shared')
 		setmetatable(o, self)
 		self.__index = self
 		return o
