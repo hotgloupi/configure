@@ -38,7 +38,7 @@ function M.normalize_paths(build, paths, kind)
 					path = build:project_directory() / path
 				end
 				if kind == Node.Kind.file_node then
-					path = build:directory_node(path)
+					path = build:file_node(path)
 				elseif kind == Node.Kind.directory_node then
 					path = build:directory_node(path)
 				else
