@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(configure_invalid_project_dir)
 BOOST_AUTO_TEST_CASE(inexistent_source_node)
 {
 	TemporaryProject project(
-	    "function configure(build)\n"
+	    "return function(build)\n"
 	    "  build:source_node(Path:new('NOT_THERE'))\n"
 	    "end"
 	);
