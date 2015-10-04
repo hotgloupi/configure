@@ -267,6 +267,7 @@ function M:link_library(args)
 		include_directories = self:_include_directories(args),
 		defines = self:_defines(args),
 		runtime = runtime,
+		kind = args.kind,
 	}
 end
 
@@ -281,6 +282,44 @@ function M:usable_with_binary(build, path)
 		if tostring(path:filename()):starts_with(binary_name) then return true end
 	end
 	return false
+end
+
+--- Canonical library filename
+--
+-- @string name
+-- @string kind
+-- @treturn Path the filename
+function M:canonical_library_filename(name, kind)
+	return 'lib' .. name ..  self:_library_extension(kind)
+end
+
+--- Find system library
+--
+-- @string name
+-- @string kind
+-- @treturn Library
+function M:find_system_library(name, kind)
+	local try_kinds = {}
+	if kind == nil then
+		try_kinds = {'static', 'shared'}
+	else
+		try_kinds = {kind}
+	end
+	local library_directories = self:system_library_directories()
+	for _, kind in ipairs(try_kinds) do
+		local filename = self:canonical_library_filename(name, kind)
+		for _, dir in ipairs(library_directories) do
+			local file = dir / filename
+			if file:exists() then
+				return self.Library:new{
+					name = name,
+					kind = kind,
+					files = {file},
+				}
+			end
+		end
+	end
+	self.build:error("Couldn't find library '" .. name .. "'")
 end
 
 -------------------------------------------------------------------------------
