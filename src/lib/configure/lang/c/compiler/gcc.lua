@@ -117,10 +117,14 @@ end
 function Compiler:_gen_rpath_flags(dirs)
 	local rpath = ''
 	for _, dir in ipairs(dirs) do
-		if rpath then rpath = rpath .. ':' end
+		if rpath ~= '' then rpath = rpath .. ':' end
 		rpath = rpath .. tostring('$ORIGIN' / dir)
 	end
-	return {'-Wl,-rpath,' .. rpath}
+	if rpath ~= '' then
+		return {'-Wl,-rpath,' .. rpath}
+	else
+		return {}
+	end
 end
 
 -- Generic linker flags generation
