@@ -111,9 +111,16 @@ function Compiler:_add_rpath_flag(cmd, args)
 	end
 	dirs = tools.unique(dirs)
 
+	table.extend(cmd, self:_gen_rpath_flags(dirs))
+end
+
+function Compiler:_gen_rpath_flags(dirs)
+	local rpath = ''
 	for _, dir in ipairs(dirs) do
-		table.extend(cmd, {'-Wl,-rpath=' .. tostring('$ORIGIN' / dir)})
+		if rpath then rpath = rpath .. ':' end
+		rpath = rpath .. tostring('$ORIGIN' / dir)
 	end
+	return {'-Wl,-rpath,' .. rpath}
 end
 
 -- Generic linker flags generation
