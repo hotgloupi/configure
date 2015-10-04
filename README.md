@@ -4,6 +4,8 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/9m3dpenqbakd6nf0/branch/master?svg=true)](https://ci.appveyor.com/project/hotgloupi/configure/branch/master)
 [![Build Status](https://drone.io/github.com/hotgloupi/configure/status.png)](https://drone.io/github.com/hotgloupi/configure/latest)
 
+[![Build Status](https://travis-matrix-badges.herokuapp.com/repos/hotgloupi/configure/branches/master)](https://travis-ci.org/hotgloupi/configure)
+
 # configure
 
  *Configure your projects' builds*
