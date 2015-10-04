@@ -1,6 +1,7 @@
 --- GCC compiler implementation
 -- @classmod configure.lang.c.compiler.gcc
 local BaseCompiler = require('configure.lang.c.compiler.base')
+local tools = require('configure.tools')
 local Compiler = table.update(
 	{},
 	BaseCompiler
@@ -91,13 +92,28 @@ function Compiler:_build_object(args)
 end
 
 function Compiler:_add_rpath_flag(cmd, args)
-	local lib_dir = Path:new(
-		args.shared_library_directory or self.shared_library_directory
-	)
-	if not lib_dir:is_absolute() then
-		lib_dir = self.build:directory() / lib_dir
+	local shared_library_files = {}
+	for _, lib in ipairs(args.libraries) do
+		if lib.kind == 'shared' then
+			table.extend(shared_library_files, lib.files)
+		else
+			assert(lib.kind == 'static')
+		end
 	end
-	table.extend(cmd, {'-Wl,-rpath=' .. tostring(lib_dir)})
+	shared_library_files = tools.normalize_files(self.build, shared_library_files)
+	local dirs = {}
+	local build_dir = tostring(self.build:directory())
+	local target_dir = args.target:path():parent_path()
+	for _, file in ipairs(shared_library_files) do
+		if tostring(file:path()):starts_with(build_dir) then
+			table.append(dirs, file:relative_path(target_dir):parent_path())
+		end
+	end
+	dirs = tools.unique(dirs)
+
+	for _, dir in ipairs(dirs) do
+		table.extend(cmd, {'-Wl,-rpath=' .. tostring('$ORIGIN' / dir)})
+	end
 end
 
 -- Generic linker flags generation
