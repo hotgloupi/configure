@@ -13,25 +13,28 @@ function AutotoolsProject:_init()
 end
 
 function AutotoolsProject:configure(args)
+	local command = {
+		self:step_directory('source') / 'configure',
+		'--prefix', tostring(self:step_directory('install'))
+	}
+	table.extend(command, args.args or {})
 	return Project.configure(
 		self,
 		{
-			command = {
-				self:step_directory('source') / 'configure',
-				'--prefix', tostring(self:step_directory('install'))
-			},
+			command = command,
 			working_directory = self:step_directory('build'),
-			env = { CC = self.compiler.binary_path },
+			env = table.update({ CC = self.compiler.binary_path }, args.env or {}),
 			sources = args.sources,
 		}
 	)
 end
 
 function AutotoolsProject:build(args)
+	local command = table.extend({self.make}, args.args or {})
 	return Project.build(
 		self,
 		{
-			command = {self.make},
+			command = command,
 			working_directory = self:step_directory('build'),
 			env = { MAKEFLAGS = '', },
 			sources = args.sources,
