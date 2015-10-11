@@ -70,13 +70,16 @@ function Compiler:_build_object(args)
 		table.extend(command, {'-I', dir})
 	end
 
+	local defines = {}
 	for _, define in ipairs(args.defines) do
 		if define[2] == nil then
-			table.insert(command, '-D' .. define[1])
+			table.append(defines, '-D' .. define[1])
 		else
-			table.insert(command, '-D' .. define[1] .. '=' .. tostring(define[2]))
+			table.append(defines, '-D' .. define[1] .. '=' .. tostring(define[2]))
 		end
 	end
+	table.extend(command, tools.unique(defines))
+
 	for _, file in ipairs(args.include_files) do
 		table.extend(command, {'-include', file})
 	end
