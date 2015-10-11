@@ -309,16 +309,25 @@ function Compiler:_system_library_directories()
 		for _, line in ipairs(out:split('\n')) do
 			if line:starts_with("Library search paths:") then
 				current = 'libraries'
+				self.build:debug("Reading library dirs")
 			elseif line:starts_with("Framework search paths:") then
 				current = 'frameworks'
+				self.build:debug("Reading framework dirs")
 			else
-				if current == 'libraries' then
-					line = line:strip()
-					if line:starts_with('/') then
-						local path = Path:new(line)
-						if path:is_directory() then
+				line = line:strip()
+				if line:starts_with('/') then
+					local path = Path:new(line)
+					if path:is_directory() then
+						if current == 'libraries' then
 							self.build:debug("Found", self.binary_path, "system library dir:", path)
 							table.append(library_directories, path)
+						elseif current == 'frameworks' then
+							for _, dir in ipairs(self.build:fs():list_directory(path)) do
+								if tostring(dir:path():ext()) == ".framework" then
+									self.build:debug("Found", self.binary_path, "system library dir:", dir)
+									table.append(library_directories, dir)
+								end
+							end
 						end
 					end
 				end
