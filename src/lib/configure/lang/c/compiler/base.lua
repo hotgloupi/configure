@@ -323,6 +323,15 @@ function M:find_system_library(name, kind)
 	self.build:error("Couldn't find library '" .. name .. "'")
 end
 
+function M:find_system_library_filename(filename)
+	local library_directories = self:system_library_directories()
+	for _, dir in ipairs(library_directories) do
+		local file = dir / filename
+		if file:exists() then return self.build:file_node(file) end
+	end
+	self.build:error("Couldn't find library '" .. filename .. "'")
+end
+
 -------------------------------------------------------------------------------
 --- Private methods
 --
