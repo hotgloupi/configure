@@ -230,6 +230,7 @@ end
 -- @param args.sources Sources to be compiled.
 -- @param[opt] args.filename_prefix Prefix used (OS dependent)
 -- @param[opt] args.extension Extension of the library (Compiler dependant).
+-- @param[opt] args.public_defines Preprocessor definition of the resulting library.
 -- @param args.... see @{lang.c.base}
 -- @return A @{Library} instance
 function M:link_library(args)
@@ -271,7 +272,7 @@ function M:link_library(args)
 		system = false,
 		files = {target},
 		include_directories = self:_include_directories(args),
-		defines = self:_defines(args),
+		defines = args.public_defines,
 		runtime = runtime,
 		kind = args.kind,
 	}
@@ -303,7 +304,7 @@ end
 --
 -- @string name
 -- @string kind
--- @treturn Library
+-- @treturn Node
 function M:find_system_library(name, kind)
 	local try_kinds = {}
 	if kind == nil then
