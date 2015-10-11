@@ -16,4 +16,10 @@ function Compiler:_gen_rpath_flags(dirs)
 	return res
 end
 
+function Compiler:_add_unresolved_symbols_policy_flag(cmd, args)
+	if args.allow_unresolved_symbols then
+		table.append(cmd, '-Wl,-undefined,dynamic_lookup')
+	end
+end
+
 return Compiler

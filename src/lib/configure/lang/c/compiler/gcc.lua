@@ -127,12 +127,19 @@ function Compiler:_gen_rpath_flags(dirs)
 	end
 end
 
+function Compiler:_add_unresolved_symbols_policy_flag(cmd, args)
+	if args.allow_unresolved_symbols then
+		table.append(cmd, '-Wl,-undefined=dynamic_lookup')
+	end
+end
+
 -- Generic linker flags generation
 function Compiler:_add_linker_flags(cmd, args, sources)
 	self:_add_standard_flag(cmd, args)
 	self:_add_standard_library_flag(cmd, args)
 	self:_add_coverage_flag(cmd, args)
 	self:_add_optimization_flag(cmd, args)
+	self:_add_unresolved_symbols_policy_flag(cmd, args)
 	self:_add_rpath_flag(cmd, args)
 end
 

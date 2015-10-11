@@ -85,6 +85,9 @@
 --    - "harder": Try harder to make your code fast
 --    - "fastest": Tell the compiler to do its best (ignoring code size).
 --
+-- `allow_unresolved_symbols`
+-- : Whether or not ignore unresolved symbols (defaults to false)
+--
 -- @classmod configure.lang.c.compiler.base
 
 local undefined = {}
@@ -116,6 +119,7 @@ local M = {
 		warnings = true,
 		standard_library = nil,
 		optimization = "no",
+		allow_unresolved_symbols = false,
 	},
 }
 
@@ -194,6 +198,7 @@ function M:link_executable(args)
 		exception = self:_exception(args),
 		warnings = self:_warnings(args),
 		optimization = self:_optimization(args),
+		allow_unresolved_symbols = self:_allow_unresolved_symbols(args),
 		runtime = self:_runtime(args),
 	}
 	target:set_property("install", self:_install(args))
@@ -257,6 +262,7 @@ function M:link_library(args)
 		exception = self:_exception(args),
 		warnings = self:_warnings(args),
 		optimization = self:_optimization(args),
+		allow_unresolved_symbols = self:_allow_unresolved_symbols(args),
 		runtime = runtime,
 	}
 	self.build:add_rule(Rule:new():add_target(target))
@@ -561,6 +567,18 @@ function M:_optimization(args)
 		lvl = self.optimization
 	end
 	return lvl
+end
+
+--- Unresolved symbols policy
+-- @param args
+-- @tparam[opt] bool args.allow_unresolved_symbols
+-- @treturn bool
+function M:_allow_unresolved_symbols(args)
+	if args.allow_unresolved_symbols ~= nil then
+		return args.allow_unresolved_symbols
+	else
+		return self.allow_unresolved_symbols
+	end
 end
 
 --- Runtime link mode
