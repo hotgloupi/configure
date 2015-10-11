@@ -317,13 +317,7 @@ function M:find_system_library(name, kind)
 		local filename = self:canonical_library_filename(name, kind)
 		for _, dir in ipairs(library_directories) do
 			local file = dir / filename
-			if file:exists() then
-				return self.Library:new{
-					name = name,
-					kind = kind,
-					files = {file},
-				}
-			end
+			if file:exists() then return self.build:file_node(file) end
 		end
 	end
 	self.build:error("Couldn't find library '" .. name .. "'")
