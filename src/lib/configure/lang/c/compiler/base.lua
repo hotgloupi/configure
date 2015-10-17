@@ -300,12 +300,34 @@ function M:canonical_library_filename(name, kind)
 	return 'lib' .. name ..  self:_library_extension(kind)
 end
 
---- Find system library
+
+--- Find system library from name and kind
+--
+-- @string name
+-- @string kind
+-- @treturn Library
+function M:find_system_library(name, kind)
+	local file = self:find_system_library_file(name, kind)
+	return self.Library:new{
+		name = name,
+		kind = self:library_kind_from_filename(file),
+		files = {file},
+	}
+end
+
+function M:library_kind_from_filename(file)
+	local ext = tostring(tools.path(file):ext())
+	if ext == '.a' then return 'static' end
+	if ext == '.so' or ext == '.dylib' then return 'shared' end
+	self.build:error("Cannot deduce the kind of '" .. tostring(file) .. "'")
+end
+
+--- Find system library file from name and kind
 --
 -- @string name
 -- @string kind
 -- @treturn Node
-function M:find_system_library(name, kind)
+function M:find_system_library_file(name, kind)
 	local try_kinds = {}
 	if kind == nil then
 		try_kinds = {'static', 'shared'}
@@ -323,7 +345,7 @@ function M:find_system_library(name, kind)
 	self.build:error("Couldn't find library '" .. name .. "'")
 end
 
-function M:find_system_library_filename(filename)
+function M:find_system_library_file_from_filename(filename)
 	local library_directories = self:system_library_directories()
 	for _, dir in ipairs(library_directories) do
 		local file = dir / filename
