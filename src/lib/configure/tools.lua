@@ -55,6 +55,21 @@ function M.normalize_paths(build, paths, kind)
 	return res
 end
 
+--- Convert a string, `Node` or a `Path` to a `Path` instance
+--
+-- @param object
+-- @treturn Path
+function M.path(object)
+	if type(object) == "string" then
+		return Path:new(object)
+	elseif getmetatable(object) == Node then
+		return object:path()
+	elseif getmetatable(object) == Path then
+		return object
+	end
+	error("Cannot convert '" .. tostring(object) .. "' to a Path")
+end
+
 function M.unique(list)
 	local res = {}
 	for _, v in ipairs(list) do
