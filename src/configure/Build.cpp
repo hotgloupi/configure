@@ -136,7 +136,8 @@ namespace configure {
 
 	Build::~Build()
 	{
-		if (fs::is_directory(_this->root_directory))
+		auto cache = _this->root_directory / ".build";
+		if (fs::is_directory(cache))
 		{
 			try {
 				_this->env.save(_this->env_path);
@@ -154,13 +155,13 @@ namespace configure {
 				for (auto& el: _this->properties)
 					ar << el;
 			} catch (...) {
-				log::error("Couldn't save properties in", _this->env_path, ":",
+				log::error("Couldn't save properties in", _this->properties_path, ":",
 						   error_string());
 			}
 		}
 		else
 		{
-			log::debug("Build directory", _this->root_directory,
+			log::debug("Build directory", cache,
 			           "not found, dropping the environ");
 		}
 	}
