@@ -193,7 +193,7 @@ function Compiler:_add_linker_library_flags(cmd, args, sources)
 				end
 			end
 			if self.build:host():os() == Platform.OS.osx then
-				table.append(cmd, "-reexport-l" .. lib.name)
+				table.append(cmd, "-Wl,-reexport-l" .. lib.name)
 			else
 				if lib.kind == 'shared' then
 					table.append(cmd, "-Wl,--export-dynamic")
@@ -206,9 +206,9 @@ function Compiler:_add_linker_library_flags(cmd, args, sources)
 				end
 			end
 		else
-			if self.build:host():os() == Platform.OS.osx then
+			if self.build:host():is_osx() then
 				for _, file in ipairs(lib.files) do
-					table.extend(cmd, {"-reexport-library", file})
+					table.extend(cmd, {"-Wl,-reexport_library", file})
 				end
 			else
 				if lib.kind == 'shared' then
