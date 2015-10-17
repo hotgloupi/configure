@@ -59,6 +59,10 @@
 --  `libraries`
 --  : A list of `Library` instances to link against (default to an empty list).
 --
+--  `export\_libraries`
+--  : A list of `Library` instance to link against and re-export (defaults to
+--  an empty list).
+--
 --  `standard`
 --  : The standard used to compile. Accepted values depends on the language
 --    used: `c89`, `c99` or `c11` are valid values for a C compiler.
@@ -88,6 +92,9 @@
 -- `allow_unresolved_symbols`
 -- : Whether or not ignore unresolved symbols (defaults to false)
 --
+-- `export_dynamic`
+-- : Exported symbols are exposed in the dynamic symbol table (default to false).
+--
 -- @classmod configure.lang.c.compiler.base
 
 local undefined = {}
@@ -112,6 +119,7 @@ local M = {
 		include_files = {},
 		install = true,
 		libraries = {},
+		export_libraries = {},
 		object_directory = nil,
 		shared_library_directory = 'lib',
 		static_library_directory = 'lib',
@@ -120,6 +128,7 @@ local M = {
 		standard_library = nil,
 		optimization = "no",
 		allow_unresolved_symbols = false,
+		export_dynamic = false,
 	},
 }
 
@@ -181,7 +190,6 @@ end
 function M:link_executable(args)
 	local standard = args.standard or self.standard
 	local standard_library = args.standard_library or self.standard_library
-	local libraries = self:_libraries(args)
 	local directory = Path:new(args.directory or self.executable_directory)
 	local target = self:_link_executable{
 		objects = self:_build_objects(args),
@@ -190,7 +198,8 @@ function M:link_executable(args)
 		),
 		standard = standard,
 		standard_library = standard_library,
-		libraries = libraries,
+		libraries = self:_libraries(args),
+		export_libraries = self:_export_libraries(args),
 		library_directories = self:_library_directories(args),
 		coverage = self:_coverage(args),
 		threading = self:_threading(args),
@@ -199,6 +208,7 @@ function M:link_executable(args)
 		warnings = self:_warnings(args),
 		optimization = self:_optimization(args),
 		allow_unresolved_symbols = self:_allow_unresolved_symbols(args),
+		export_dynamic = self:_export_dynamic(args),
 		runtime = self:_runtime(args),
 	}
 	target:set_property("install", self:_install(args))
@@ -237,7 +247,6 @@ function M:link_library(args)
 	assert(args.kind == 'shared' or args.kind == 'static')
 	local standard = args.standard or self.standard
 	local standard_library = args.standard_library or self.standard_library
-	local libraries = self:_libraries(args)
 	local directory = Path:new(args.directory or (
 		args.kind == 'shared'
 		and self.shared_library_directory
@@ -255,7 +264,8 @@ function M:link_library(args)
 		kind = args.kind,
 		standard = standard,
 		standard_library = standard_library,
-		libraries = libraries,
+		libraries = self:_libraries(args),
+		export_libraries = self:_export_libraries(args),
 		library_directories = self:_library_directories(args),
 		coverage = self:_coverage(args),
 		threading = self:_threading(args),
@@ -264,6 +274,7 @@ function M:link_library(args)
 		warnings = self:_warnings(args),
 		optimization = self:_optimization(args),
 		allow_unresolved_symbols = self:_allow_unresolved_symbols(args),
+		export_dynamic = self:_export_dynamic(args),
 		runtime = runtime,
 	}
 	self.build:add_rule(Rule:new():add_target(target))
@@ -373,7 +384,6 @@ function M:_build_objects(args)
 	local defines = self:_defines(args)
 	local standard = args.standard or self.standard
 	local standard_library = args.standard_library or self.standard_library
-	local libraries = self:_libraries(args)
 	local coverage = self:_coverage(args)
 	local threading = self:_threading(args)
 	local debug = self:_debug(args)
@@ -420,15 +430,12 @@ end
 -- @param[opt] args.include_directories
 function M:_include_directories(args)
 	local dirs = {}
-	table.extend(dirs, args.include_directories or {})
-	for _, lib in ipairs(args.libraries or {})
-	do
-		table.extend(dirs, lib.include_directories)
-	end
-	table.extend(dirs, self.include_directories)
-	for _, lib in ipairs(self.libraries)
-	do
-		table.extend(dirs, lib.include_directories)
+	for _, list in ipairs({
+		{args}, args.libraries or {}, args.export_libraries or {},
+		{self}, self.libraries or {}, self.export_libraries or {}}) do
+		for _, obj in ipairs(list) do
+			table.extend(dirs, obj.include_directories or {})
+		end
 	end
 	return tools.unique(tools.normalize_directories(self.build, dirs))
 end
@@ -436,16 +443,13 @@ end
 --- Concat all the install nodes found in libraries
 function M:_install_nodes(args)
 	local install_nodes = {}
-	for _, lib in ipairs(args.libraries or {})
-	do
-		if lib.install_node ~= nil then
-			table.append(install_nodes, lib.install_node)
-		end
-	end
-	for _, lib in ipairs(self.libraries)
-	do
-		if lib.install_node ~= nil then
-			table.append(install_nodes, lib.install_node)
+	for _, list in ipairs({
+		args.libraries or {}, args.export_libraries or {},
+		self.libraries or {}, self.export_libraries or {}}) do
+		for _, lib in ipairs(list) do
+			if lib.install_node ~= nil then
+				table.append(install_nodes, lib.install_node)
+			end
 		end
 	end
 	return tools.unique(install_nodes)
@@ -474,21 +478,32 @@ function M:_libraries(args)
 	return libs
 end
 
+--- Concat arguments export libraries and compiler export libraries
+--
+-- @param args
+-- @param[opt] args.libraries
+-- @return A list of libraries
+function M:_export_libraries(args)
+	local libs = {}
+	table.extend(libs, self.export_libraries)
+	table.extend(libs, args.export_libraries or {})
+	return libs
+end
+
 --- Concat and normalize defines
 -- @param args
 -- @param[opt] args.defines
 -- @return A list of pairs `{key, value}` where value is `nil` or a `string`.
 function M:_defines(args)
 	local res = {}
-	for _, lib in ipairs(self.libraries) do
-		table.extend(res, lib.defines)
+	for _, list in ipairs({
+		self.libraries or {}, self.export_libraries or {}, {self},
+		args.libraries or {}, args.export_libraries or {}, {args},
+	}) do
+		for _, obj in ipairs(list) do
+			table.extend(res, obj.defines or {})
+		end
 	end
-	table.extend(res, self.defines)
-
-	for _, lib in ipairs(args.libraries or {}) do
-		table.extend(res, lib.defines)
-	end
-	table.extend(res, args.defines or {})
 	for i, v in ipairs(res)
 	do
 		if type(v) ~= 'table' then v = {v, nil} end
@@ -614,6 +629,19 @@ end
 -- @treturn string 'shared' or 'static'
 function M:_runtime(args)
 	return args.runtime or self.runtime
+end
+
+--- Export dynamic switch
+--
+-- @param args
+-- @tparam[opt] bool args.export_dynamic
+-- @treturn bool
+function M:_export_dynamic(args)
+	local res = args.export_dynamic
+	if res == nil then
+		res = self.export_dynamic
+	end
+	return res
 end
 
 --- Built objects extension

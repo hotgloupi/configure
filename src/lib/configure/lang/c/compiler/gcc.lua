@@ -136,10 +136,17 @@ function Compiler:_add_unresolved_symbols_policy_flag(cmd, args)
 	end
 end
 
+function Compiler:_add_export_dynamic_flag(cmd, args)
+	if args.export_dynamic then
+		table.append(cmd, '-rdynamic')
+	end
+end
+
 -- Generic linker flags generation
 function Compiler:_add_linker_flags(cmd, args, sources)
 	self:_add_standard_flag(cmd, args)
 	self:_add_standard_library_flag(cmd, args)
+	self:_add_export_dynamic_flag(cmd, args)
 	self:_add_coverage_flag(cmd, args)
 	self:_add_optimization_flag(cmd, args)
 	self:_add_unresolved_symbols_policy_flag(cmd, args)
@@ -173,6 +180,57 @@ function Compiler:_add_linker_library_flags(cmd, args, sources)
 			end
 		end
 	end
+
+	for _, lib in ipairs(args.export_libraries)
+	do
+		if lib.system then
+			if self.build:host():os() ~= Platform.OS.osx then
+				if lib.kind == 'static' then
+					table.append(cmd, '-Wl,-Bstatic')
+				end
+				if lib.kind == 'shared' then
+					table.append(cmd, '-Wl,-Bdynamic')
+				end
+			end
+			if self.build:host():os() == Platform.OS.osx then
+				table.append(cmd, "-reexport-l" .. lib.name)
+			else
+				if lib.kind == 'shared' then
+					table.append(cmd, "-Wl,--export-dynamic")
+					table.append(cmd, '-l' .. lib.name)
+					table.append(cmd, "-Wl,--no-export-dynamic")
+				else
+					table.append(cmd, "-Wl,--whole-archive")
+					table.append(cmd, '-l' .. lib.name)
+					table.append(cmd, "-Wl,--no-whole-archive")
+				end
+			end
+		else
+			if self.build:host():os() == Platform.OS.osx then
+				for _, file in ipairs(lib.files) do
+					table.extend(cmd, {"-reexport-library", file})
+				end
+			else
+				if lib.kind == 'shared' then
+					for _, file in ipairs(lib.files) do
+						table.append(cmd, "-Wl,--export-dynamic," .. tostring(tools.path(file)))
+					end
+					table.append(cmd, "-Wl,--no-export-dynamic")
+				else
+					for _, file in ipairs(lib.files) do
+						table.append(cmd, "-Wl,--whole-archive," .. tostring(tools.path(file)))
+					end
+					table.append(cmd, "-Wl,--no-whole-archive")
+				end
+			end
+			for _, file in ipairs(lib.files) do
+				if getmetatable(file) == Node then
+					table.append(sources, file)
+				end
+			end
+		end
+	end
+
 	if self.build:host():os() ~= Platform.OS.osx then
 		if args.threading then
 			table.append(cmd, '-pthread')
