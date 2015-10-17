@@ -22,7 +22,7 @@ namespace configure { namespace commands {
 		else if (ext == ".zip")
 		{
 			Process::Options options;
-			Process::check_call({"unzip", tarball.string(), "-d",
+			Process::check_call({"unzip", tarball.string(), "-d", "-o",
 			                     dest_dir.string()},
 			                    options);
 		}
