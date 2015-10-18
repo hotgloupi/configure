@@ -13,6 +13,7 @@ CXX="${CXX:-cl}"
 BIN="configure.exe"
 BOOST_ROOT=${BOOST_ROOT:-c:/Libraries/boost}
 BOOST_LIBRARY_DIR=${BOOST_LIBRARY_DIR:-${BOOST_ROOT}/stage/lib}
+ARCH=${ARCH:-I386}
 
 LUA_SRCS="
 ${LUA_SRC_DIR}/lapi.c
@@ -79,11 +80,11 @@ do
 	)
 done
 
-link -nologo \
+"${VCINSTALLDIR}\bin\link.exe" -nologo  \
 	-OUT:"${BIN}" \
 	-LIBPATH:"${BOOST_LIBRARY_DIR}" \
 	-subsystem:console \
-	-machine:I386 \
+	-machine:$ARCH \
 	temp/*.obj \
 	Shlwapi.lib
 
