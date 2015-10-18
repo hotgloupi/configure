@@ -31,14 +31,14 @@ BOOST_AUTO_TEST_CASE(normalize)
 	BOOST_CHECK_THROW(N("a_"), error::InvalidKey);
 	BOOST_CHECK_THROW(N("a-"), error::InvalidKey);
 	BOOST_CHECK_THROW(N("abé"), error::InvalidKey);
-	BOOST_CHECK_THROW(N("test~"), error::InvalidKey)
-	BOOST_CHECK_THROW(N("test#"), error::InvalidKey)
-	BOOST_CHECK_THROW(N("test$"), error::InvalidKey)
-	BOOST_CHECK_THROW(N("test%"), error::InvalidKey)
-	BOOST_CHECK_THROW(N("test!"), error::InvalidKey)
-	BOOST_CHECK_THROW(N("t e s t"), error::InvalidKey)
-	BOOST_CHECK_THROW(N(" test"), error::InvalidKey)
-	BOOST_CHECK_THROW(N("test "), error::InvalidKey)
+	BOOST_CHECK_THROW(N("test~"), error::InvalidKey);
+	BOOST_CHECK_THROW(N("test#"), error::InvalidKey);
+	BOOST_CHECK_THROW(N("test$"), error::InvalidKey);
+	BOOST_CHECK_THROW(N("test%"), error::InvalidKey);
+	BOOST_CHECK_THROW(N("test!"), error::InvalidKey);
+	BOOST_CHECK_THROW(N("t e s t"), error::InvalidKey);
+	BOOST_CHECK_THROW(N(" test"), error::InvalidKey);
+	BOOST_CHECK_THROW(N("test "), error::InvalidKey);
 
 #undef N
 }
