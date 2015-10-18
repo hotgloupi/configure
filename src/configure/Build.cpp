@@ -279,6 +279,10 @@ namespace configure {
 				}
 				_this->env.set(name, value);
 			}
+			else if (std::is_same<T, Path>::value)
+			{
+				_this->env.set(name, Path(it->second));
+			}
 			else
 			{
 				try {
