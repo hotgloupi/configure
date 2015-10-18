@@ -8,6 +8,7 @@
 
 #include <boost/filesystem/path.hpp>
 #include <boost/variant/variant.hpp>
+#include <boost/utility/in_place_factory.hpp>
 #include <boost/optional.hpp>
 
 namespace configure {
