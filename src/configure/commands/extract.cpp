@@ -14,9 +14,19 @@ namespace configure { namespace commands {
 		auto ext = tarball.extension().string();
 		if (ext == ".tgz" || boost::ends_with(tarball.string(), ".tar.gz"))
 		{
+			auto tarball_resolved = boost::filesystem::canonical(tarball);
+			tarball_resolved.make_preferred();
+			auto dest_dir_resolved = boost::filesystem::canonical(dest_dir);
+			dest_dir_resolved.make_preferred();
+#ifdef _WIN32
+			tarball_resolved = boost::replace_all_copy(tarball_resolved.string(), "\\", "/");
+			dest_dir_resolved = boost::replace_all_copy(dest_dir_resolved.string(), "\\", "/");
+#endif
 			Process::Options options;
-			Process::check_call({"tar", "-xf", tarball.string(), "-C",
-			                     dest_dir.string(), "--strip-components=1"},
+			Process::check_call({"tar", "-xf", tarball_resolved.string(), "-C",
+			                     dest_dir_resolved.string(), "--strip-components=1",
+			                     // We force tar to ignore colon if file names
+			                     "--force-local"},
 			                    options);
 		}
 		else if (ext == ".zip")
