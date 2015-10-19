@@ -10,6 +10,7 @@ end
 function AutotoolsProject:_init()
 	Project._init(self)
 	self.make = self._build:fs():which('make')
+	if self.make == nil then error("Make is not available") end
 end
 
 function AutotoolsProject:configure(args)
