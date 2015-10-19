@@ -16,6 +16,7 @@ function CMakeProject:configure(args)
 	local default = {
 		CMAKE_INSTALL_PREFIX = self:step_directory('install'),
 		CMAKE_VERBOSE_MAKEFILE = true,
+		CMAKE_BUILD_TYPE = 'Release',
 	}
 	if self.compiler.lang == 'c' then
 		default['CMAKE_C_COMPILER'] = self.compiler.binary_path
@@ -41,23 +42,23 @@ function CMakeProject:configure(args)
 		)
 	end
 	table.sort(vars)
-	local command = table.extend(
-		{self.cmake, self:step_directory('source')},
+	local build_dir = self:step_directory('build')
+	local command  = table.extend(
+		{self.cmake,
+		'-B' .. tostring(build_dir),
+		'-H' .. tostring(self:step_directory('source'))},
 		vars
 	)
-	local build_dir = self:step_directory('build')
+	if self.compiler.build:host():is_windows() then
+		table.extend(command, {'-G', 'NMake Makefiles'})
+	end
 	return self:add_step{
 		name = 'configure',
 		targets = {
 			[0] = {
 				{'rm', '-rf', build_dir},
 				{'mkdir', build_dir},
-				table.extend(
-					{self.cmake,
-					'-B' .. tostring(build_dir),
-					'-H' .. tostring(self:step_directory('source'))},
-					vars
-				)
+				command,
 			},
 		},
 		env = args.env,
@@ -67,10 +68,11 @@ function CMakeProject:configure(args)
 end
 
 function CMakeProject:build(args)
+	local command = {self.cmake, '--build', '.', "--config", "Release"}
 	return Project.build(
 		self,
 		{
-			command = {self.cmake, '--build', '.'},
+			command = command,
 			working_directory = self:step_directory('build'),
 			env = { MAKEFLAGS = '', },
 		}
