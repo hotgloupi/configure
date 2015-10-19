@@ -204,7 +204,9 @@ namespace configure {
 			, options(std::move(options))
 			, exit_code(boost::none)
 			, child(_create_child())
-		{}
+		{
+			log::debug("Spawn process for command:", boost::join(this->command, " "));
+		}
 
 #ifdef BOOST_POSIX_API
 		pid_t _create_child()
