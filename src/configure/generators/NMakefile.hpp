@@ -25,7 +25,9 @@ namespace configure { namespace generators {
 		static bool is_available(Build& build);
 
 	protected:
-		std::string dump_command(std::vector<std::string> const& cmd) const override;
+		std::string dump_command(ShellCommand const& cmd,
+		                         DependencyLink const& link,
+		                         ShellFormatter const& formatter) const override;
 		bool use_relative_path() const override;
 		void include_dependencies(std::ostream& out, bool relative) const override;
 		void prepare();

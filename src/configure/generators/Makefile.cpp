@@ -296,23 +296,8 @@ namespace configure { namespace generators {
 					continue;
 				for (auto const& shell_command: cmd_ptr->shell_commands())
 				{
-					std::string wd;
-					if (shell_command.has_working_directory())
-					{
-						ShellCommand chdir;
-						chdir.append("cd", shell_command.working_directory());
-						wd = this->dump_command(chdir.string(_build, link, *formatter)) + " && ";
-					}
-					std::string env;
-					if (shell_command.has_env())
-					{
-						for (auto&& pair: shell_command.env())
-							env += pair.first + "=" + pair.second + " ";
-					}
 					command_strings.push_back(
-						wd + env + this->dump_command(
-							shell_command.string(_build, link, *formatter)
-						)
+						this->dump_command(shell_command, link, *formatter)
 					);
 					out << '\t' << command_strings.back() << std::endl;
 				}
@@ -363,24 +348,39 @@ namespace configure { namespace generators {
 				out << "-include " << absolute_node_path(_build, *node) << std::endl;
 	}
 
-	std::string Makefile::dump_command(std::vector<std::string> const& cmd) const
+	std::string Makefile::dump_command(ShellCommand const& cmd,
+	                                   DependencyLink const& link,
+	                                   ShellFormatter const& formatter) const
 	{
+		std::string res;
+
+		if (cmd.has_working_directory())
+		{
+			ShellCommand chdir;
+			chdir.append("cd", cmd.working_directory());
+			res += quote<CommandParser::make>(chdir.string(_build, link, formatter)) + " && ";
+		}
+		if (cmd.has_env())
+		{
+			for (auto& pair: cmd.env())
+				res += pair.first + "=" + pair.second + " ";
+		}
+		auto cmd_args = cmd.string(_build, link, formatter);
+		std::string cmd_str = quote<CommandParser::make>(cmd_args);
 #ifdef _WIN32
-		if (cmd.size() == 1)
+		if (cmd_args.size() == 1)
 		{
 			// Workaroung a bug in GNU Make, when commands contain a double quote
 			// they are spawned through CreateProcess() as 'sh -c \"COMMAND HERE\"'
 			// when the argument does have any special character other than slash
 			// and there is only one argument, quotes are left ...
-			auto res = quote<CommandParser::make>(cmd);
-			if (res[0] == '"' && res.back() == '"' )
+			if (cmd_str[0] == '"' && cmd_str.back() == '"' )
 			{
-				res = res.substr(1, res.size() - 2);
+				cmd_str = cmd_str.substr(1, cmd_str.size() - 2);
 			}
-			return res;
 		}
 #endif
-		return quote<CommandParser::make>(cmd);
+		return res + cmd_str;
 	}
 
 	bool Makefile::is_available(Build& build)

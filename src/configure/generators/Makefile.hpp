@@ -1,5 +1,6 @@
 #pragma once
 
+#include <configure/fwd.hpp>
 #include <configure/Generator.hpp>
 
 #include <vector>
@@ -31,7 +32,9 @@ namespace configure { namespace generators {
 		static bool is_available(Build& build);
 
 	protected:
-		virtual std::string dump_command(std::vector<std::string> const& cmd) const;
+		virtual std::string dump_command(ShellCommand const& cmd,
+		                                 DependencyLink const& link,
+		                                 ShellFormatter const& formatter) const;
 		virtual bool use_relative_path() const;
 		virtual void include_dependencies(std::ostream& out, bool relative) const;
 		void prepare();

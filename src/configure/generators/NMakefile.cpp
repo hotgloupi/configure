@@ -4,6 +4,7 @@
 #include <configure/Filesystem.hpp>
 #include <configure/quote.hpp>
 #include <configure/Node.hpp>
+#include <configure/ShellCommand.hpp>
 
 #include <iostream>
 
@@ -21,8 +22,25 @@ namespace configure { namespace generators {
 		return build.fs().which("nmake") != boost::none;
 	}
 
-	std::string NMakefile::dump_command(std::vector<std::string> const& cmd) const
-	{ return quote<CommandParser::nmake>(cmd); }
+	std::string NMakefile::dump_command(ShellCommand const& cmd,
+	                                    DependencyLink const& link,
+	                                    ShellFormatter const& formatter) const
+	{
+		std::string res;
+
+		if (cmd.has_working_directory())
+		{
+			ShellCommand chdir;
+			chdir.append("cd", cmd.working_directory());
+			res += quote<CommandParser::make>(chdir.string(_build, link, formatter)) + " && ";
+		}
+		if (cmd.has_env())
+		{
+			for (auto& pair: cmd.env())
+				res += "SET " + pair.first + "=" + pair.second + " && ";
+		}
+		return res + quote<CommandParser::make>(cmd.string(_build, link, formatter));
+	}
 
 	std::vector<std::string>
 	NMakefile::build_command(std::string const& target) const
