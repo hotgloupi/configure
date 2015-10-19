@@ -241,6 +241,8 @@ end
 -- @param[opt] args.filename_prefix Prefix used (OS dependent)
 -- @param[opt] args.extension Extension of the library (Compiler dependant).
 -- @param[opt] args.public_defines Preprocessor definition of the resulting library.
+-- @param[opt] args.import_library_directory Where to generate the import library
+--             when compiling a shared library on windows (defaults to the static library directory)
 -- @param args.... see @{lang.c.base}
 -- @return A @{Library} instance
 function M:link_library(args)
@@ -264,6 +266,7 @@ function M:link_library(args)
 		kind = args.kind,
 		standard = standard,
 		standard_library = standard_library,
+		import_library_directory = args.import_library_directory or self.static_library_directory,
 		libraries = self:_libraries(args),
 		export_libraries = self:_export_libraries(args),
 		library_directories = self:_library_directories(args),

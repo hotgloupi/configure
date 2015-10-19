@@ -141,7 +141,7 @@ function Compiler:_link_library(args)
 	local rule = Rule:new():add_sources(args.objects):add_target(args.target)
 	if args.kind == 'shared' then
 		linker_lib = self.build:target_node(
-			self.static_library_directory / (args.target:path():stem() + ".lib")
+			args.import_library_directory / (args.target:path():stem() + ".lib")
 		)
 		rule:add_target(linker_lib)
 		table.extend(command, {self.link_path, '-DLL', '-IMPLIB:' .. tostring(linker_lib:path())})
