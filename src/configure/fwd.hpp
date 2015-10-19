@@ -18,6 +18,7 @@ namespace configure {
 	class Rule;
 	class ShellArg;
 	class ShellCommand;
+	class ShellFormatter;
 
 	typedef std::shared_ptr<Command> CommandPtr;
 	typedef std::shared_ptr<Node> NodePtr;
