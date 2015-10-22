@@ -82,6 +82,7 @@ function Compiler:_build_object(args)
 	self.build:add_rule(
 		Rule:new()
 			:add_source(args.source)
+			:add_sources(args.install_nodes)
 			:add_target(args.target)
 			:add_shell_command(ShellCommand:new(table.unpack(command)))
 	)
@@ -174,6 +175,39 @@ end
 
 function Compiler:_object_extension(ext)
 	return ext or ".obj"
+end
+
+local os = require('os')
+
+function Compiler:_system_include_directories()
+    local res = {}
+    table.extend(res, os.getenv('INCLUDE'):split(';'))
+    local dirs = {}
+    for _, dir in ipairs(res) do
+        local p = Path:new(dir)
+        if p:is_directory() then
+            self.build:debug('Found system include dir', p)
+            table.append(dirs, p)
+        end
+    end
+    return dirs
+end
+
+function Compiler:_system_library_directories()
+    local res = {}
+    table.extend(res, os.getenv('LIB'):split(';'))
+    table.extend(res, os.getenv('LIBPATH'):split(';'))
+    local dirs = {}
+    for _, dir in ipairs(res) do
+        local p = Path:new(dir)
+        if p:is_directory() then
+            self.build:debug('Found system library dir', p)
+            table.append(dirs, p)
+        else
+            self.build:debug('ignore system library dir', p)
+        end
+    end
+    return dirs
 end
 
 return Compiler
