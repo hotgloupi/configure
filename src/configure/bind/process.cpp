@@ -10,18 +10,12 @@ namespace fs = boost::filesystem;
 
 namespace configure {
 
-	static int Process_check_output(lua_State* state)
+	static Process::Command parse_command(lua_State* state, int index)
 	{
-		if (!lua_istable(state, 2))
-			CONFIGURE_THROW(
-				error::LuaError(
-					"Expected a table, got '" + std::string(luaL_tolstring(state, 2, nullptr)) + "'"
-				)
-			);
 		Process::Command command;
-		for (int i = 1, len = lua_rawlen(state, 2); i <= len; ++i)
+		for (int i = 1, len = lua_rawlen(state, index); i <= len; ++i)
 		{
-			lua_rawgeti(state, 2, i);
+			lua_rawgeti(state, index, i);
 			if (NodePtr* n = lua::Converter<NodePtr>::extract_ptr(state, -1))
 				command.push_back((*n)->path().string());
 			else if (fs::path* ptr = lua::Converter<fs::path>::extract_ptr(state, -1))
@@ -36,14 +30,19 @@ namespace configure {
 					)
 				);
 		}
+		return command;
+	}
+
+	static std::pair<Process::Options, bool> parse_options(lua_State* state, int index)
+	{
 		Process::Options options;
 		options.stdout_ = Process::Stream::PIPE;
 		options.stderr_ = Process::Stream::DEVNULL;
 		bool ignore_errors = false;
-		if (lua_istable(state, 3))
+		if (lua_istable(state, index))
 		{
 			lua_pushnil(state);
-			while (lua_next(state, 3))
+			while (lua_next(state, index))
 			{
 				std::string key = lua::Converter<std::string>::extract(state, -2);
 				if (key == "stdin")
@@ -62,10 +61,37 @@ namespace configure {
 			}
 			lua_pop(state, 1);
 		}
+		return {options, ignore_errors};
+	}
+
+	static int Process_check_output(lua_State* state)
+	{
+		if (!lua_istable(state, 2))
+			CONFIGURE_THROW(
+				error::LuaError(
+					"Expected a table, got '" + std::string(luaL_tolstring(state, 2, nullptr)) + "'"
+				)
+			);
+		auto command = parse_command(state, 2);
+		auto options = parse_options(state, 3);
 		lua::Converter<std::string>::push(
 			state,
-			Process::check_output(command, options, ignore_errors)
+			Process::check_output(command, options.first, options.second)
 		);
+		return 1;
+	}
+
+	static int Process_check_call(lua_State* state)
+	{
+		if (!lua_istable(state, 2))
+			CONFIGURE_THROW(
+				error::LuaError(
+					"Expected a table, got '" + std::string(luaL_tolstring(state, 2, nullptr)) + "'"
+				)
+			);
+		auto command = parse_command(state, 2);
+		auto options = parse_options(state, 3);
+		Process::check_call(command, options.first);
 		return 1;
 	}
 
@@ -79,6 +105,10 @@ namespace configure {
 			// @function Process::check_output
 			// @treturn string Command output
 			.def("check_output", Process_check_output)
+
+			/// Spawn a process and wait for it to terminate. Raise on errors.
+			// @function Process::check_call
+			.def("check_call", Process_check_call)
 		;
 
 #define ENUM_VALUE(T, key) \
