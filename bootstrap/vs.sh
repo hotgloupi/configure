@@ -7,8 +7,9 @@ set -e
 
 SCRIPT="$0"
 SCRIPT_DIR="$(cd "$(dirname ${SCRIPT})" && pwd)"
-LUA_SRC_DIR="${SCRIPT_DIR}/../lua/src"
-SRC_DIR="${SCRIPT_DIR}/../src"
+cd "${SCRIPT_DIR}/.."
+LUA_SRC_DIR="lua/src"
+SRC_DIR="src"
 CXX="${CXX:-cl}"
 BIN="configure.exe"
 BOOST_ROOT=${BOOST_ROOT:-c:/Libraries/boost}
@@ -60,7 +61,7 @@ ${SRC_DIR}/configure/lua/*.cpp
 ${SRC_DIR}/configure/utils/*.cpp
 )
 
-SRCS="$(echo ${SRCS[@]})"
+SRCS="${SRCS[@]}"
 
 ls "$BOOST_LIBRARY_DIR"
 ls "${BOOST_ROOT}"
