@@ -163,7 +163,6 @@ function Project:add_step(args)
 			rule = Rule:new():add_target(self._build:target_node(target))
 			for _, p in ipairs(previous) do
 				rule:add_source(p)
-				print(target, 'depends on', p)
 			end
 			stamped_rule:add_source(self._build:target_node(target))
 		end
