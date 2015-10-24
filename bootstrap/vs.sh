@@ -60,6 +60,8 @@ ${SRC_DIR}/configure/lua/*.cpp
 ${SRC_DIR}/configure/utils/*.cpp
 )
 
+SRCS="${SRCS[@]}"
+
 ls "$BOOST_LIBRARY_DIR"
 ls "${BOOST_ROOT}"
 
