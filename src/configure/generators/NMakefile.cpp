@@ -32,14 +32,14 @@ namespace configure { namespace generators {
 		{
 			ShellCommand chdir;
 			chdir.append("cd", cmd.working_directory());
-			res += quote<CommandParser::make>(chdir.string(_build, link, formatter)) + " && ";
+			res += quote<CommandParser::nmake>(chdir.string(_build, link, formatter)) + " & ";
 		}
 		if (cmd.has_env())
 		{
 			for (auto& pair: cmd.env())
-				res += "SET " + pair.first + "=" + pair.second + " && ";
+				res += "SET " + pair.first + "=" + pair.second + " & ";
 		}
-		return res + quote<CommandParser::make>(cmd.string(_build, link, formatter));
+		return res + quote<CommandParser::nmake>(cmd.string(_build, link, formatter));
 	}
 
 	std::vector<std::string>
