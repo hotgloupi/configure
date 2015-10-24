@@ -51,13 +51,13 @@ ${LUA_SRC_DIR}/linit.c
 "
 
 SRCS=(
-${SRC_DIR}/main.cpp \
-${SRC_DIR}/configure/*.cpp \
-${SRC_DIR}/configure/bind/*.cpp \
-${SRC_DIR}/configure/commands/*.cpp \
-${SRC_DIR}/configure/generators/*.cpp \
-${SRC_DIR}/configure/lua/*.cpp \
-${SRC_DIR}/configure/utils/*.cpp \
+${SRC_DIR}/main.cpp
+${SRC_DIR}/configure/*.cpp
+${SRC_DIR}/configure/bind/*.cpp
+${SRC_DIR}/configure/commands/*.cpp
+${SRC_DIR}/configure/generators/*.cpp
+${SRC_DIR}/configure/lua/*.cpp
+${SRC_DIR}/configure/utils/*.cpp
 )
 
 ls "$BOOST_LIBRARY_DIR"
