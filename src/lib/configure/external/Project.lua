@@ -148,10 +148,23 @@ function Project:add_step(args)
 		stamped_rule:add_source(source)
 	end
 
+	local previous = table.update({}, args.dependencies or {})
+	if #previous == 0 then
+		if #self.steps > 0 then
+			table.append(previous, self.steps[#self.steps])
+		end
+	end
+	for _, p in ipairs(previous) do
+		stamped_rule:add_source(p)
+	end
 	for target, commands in pairs(args.targets or {}) do
 		local rule = stamped_rule
 		if target ~= 0 then
 			rule = Rule:new():add_target(self._build:target_node(target))
+			for _, p in ipairs(previous) do
+				rule:add_source(p)
+				print(target, 'depends on', p)
+			end
 			stamped_rule:add_source(self._build:target_node(target))
 		end
 		for _, command in ipairs(commands) do
@@ -171,15 +184,6 @@ function Project:add_step(args)
 	stamped_rule:add_shell_command(
 		ShellCommand:new(self._build:configure_program(), '-E', 'touch', stamp)
 	)
-	local previous = table.update({}, args.dependencies or {})
-	if #previous == 0 then
-		if #self.steps > 0 then
-			table.append(previous, self.steps[#self.steps])
-		end
-	end
-	for _, p in ipairs(previous) do
-		stamped_rule:add_source(p)
-	end
 	table.append(self.steps, stamp)
 	self._build:add_rule(stamped_rule)
 	return self
