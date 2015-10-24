@@ -213,8 +213,8 @@ function Project:step_directory(name)
 		else
 			dir = self.root_directory / name
 		end
-		self[attr] = dir
-		self._build:directory_node(dir) -- Add the directory node to the build
+		local node = self._build:directory_node(dir) -- Add the directory node to the build
+		self[attr] = node:path()
 	end
 	return self[attr]
 end
