@@ -93,23 +93,11 @@ function Compiler:_build_object(args)
 	return args.target
 end
 
-function Compiler:_link_executable(args)
-	local command = {self.link_path, '-nologo',}
-
-	if args.debug then
-		table.append(command, '-DEBUG')
-	end
-	if args.coverage then
-		table.append(command, '-Profile')
-	end
-
-	for _, dir in ipairs(args.library_directories)
-	do
+function Compiler:_add_linker_library_flags(command, args, sources)
+	for _, dir in ipairs(args.library_directories) do
 		table.append(command, '-LIBPATH:' .. tostring(dir:path()))
 	end
-	local library_sources = {}
-	for _, lib in ipairs(args.libraries)
-	do
+	for _, lib in ipairs(args.libraries) do
 		if lib.system then
 			if lib.kind == 'static' then
 				table.append(command, lib.name .. '.lib')
@@ -120,7 +108,7 @@ function Compiler:_link_executable(args)
 			for _, file in ipairs(lib.files) do
 				local path = file
 				if getmetatable(file) == Node then
-					table.append(library_sources, file)
+					table.append(sources, file)
 					path = file:path()
 				end
 				table.append(command, '-LIBPATH:' .. tostring(path:parent_path()))
@@ -128,6 +116,20 @@ function Compiler:_link_executable(args)
 			end
 		end
 	end
+end
+
+function Compiler:_link_executable(args)
+	local command = {self.link_path, '-nologo',}
+
+	if args.debug then
+		table.append(command, '-DEBUG')
+	end
+	if args.coverage then
+		table.append(command, '-Profile')
+	end
+
+	local library_sources = {}
+	self:_add_linker_library_flags(command, args, library_sources)
 	table.extend(command, args.objects)
 	table.append(command, "-OUT:" .. tostring(args.target:path()))
 	self.build:add_rule(
@@ -143,7 +145,7 @@ end
 function Compiler:_link_library(args)
 	local command = {}
 	local linker_lib = nil
-	local rule = Rule:new():add_sources(args.objects):add_target(args.target)
+	local rule = Rule:new()
 	if args.kind == 'shared' then
 		linker_lib = self.build:target_node(
 			args.import_library_directory / (args.target:path():stem() + ".lib")
@@ -164,10 +166,16 @@ function Compiler:_link_library(args)
 		'-nologo',
 		'-OUT:' .. tostring(args.target:path())
 	})
+	local library_sources = {}
+	self:_add_linker_library_flags(command, args, library_sources)
 	table.extend(command, args.objects)
 
 	self.build:add_rule(
-		rule:add_shell_command(ShellCommand:new(table.unpack(command)))
+		rule
+			:add_sources(args.objects)
+			:add_sources(library_sources)
+			:add_target(args.target)
+			:add_shell_command(ShellCommand:new(table.unpack(command)))
 	)
 	return linker_lib
 end
