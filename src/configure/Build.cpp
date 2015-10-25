@@ -55,8 +55,8 @@ namespace configure {
 		fs::path                                 properties_path;
 		std::map<std::string, std::string>       options;
 		std::map<std::string, std::string>       build_args;
-		Platform                                 host_platform;
-		Platform                                 target_platform;
+		std::unique_ptr<Platform>                host_platform;
+		std::unique_ptr<Platform>                target_platform;
 
 		Impl(Build& build, fs::path configure_program, lua::State& lua,
 		     fs::path directory)
@@ -78,8 +78,8 @@ namespace configure {
 		    , properties_path(root_directory / ".build" / "properties")
 		    , options()
 		    , build_args()
-		    , host_platform(Platform::current())
-		    , target_platform(Platform::current())
+		    , host_platform(nullptr)
+		    , target_platform(nullptr)
 		{}
 	};
 
@@ -123,15 +123,6 @@ namespace configure {
 				);
 			}
 		}
-
-		if (auto vendor = this->option<std::string>("target-vendor", "Target vendor"))
-			_this->target_platform.vendor(*vendor);
-		if (auto os = this->option<std::string>("target-os", "Target OS"))
-			_this->target_platform.os(*os);
-		if (auto arch = this->option<std::string>("target-arch", "Target architecture"))
-			_this->target_platform.arch(*arch);
-		if (auto sub_arch = this->option<std::string>("target-sub-arch", "Target sub-architecture"))
-			_this->target_platform.sub_arch(*sub_arch);
 	}
 
 	Build::Build(path_t configure_program, lua::State& lua,
@@ -141,6 +132,7 @@ namespace configure {
 	{
 		for (auto& pair: build_args)
 			_this->build_args[Environ::normalize(pair.first)] = pair.second;
+
 	}
 
 	Build::~Build()
@@ -514,10 +506,38 @@ namespace configure {
 	}
 
 	Platform& Build::host()
-	{ return _this->host_platform; }
+	{
+		if (_this->host_platform == nullptr)
+		{
+			_this->host_platform.reset(new Platform(Platform::current()));
+			if (auto vendor = this->option<std::string>("host-vendor", "Host vendor"))
+				_this->host_platform->vendor(*vendor);
+			if (auto os = this->option<std::string>("host-os", "Host OS"))
+				_this->host_platform->os(*os);
+			if (auto arch = this->option<std::string>("host-arch", "Host architecture"))
+				_this->host_platform->arch(*arch);
+			if (auto sub_arch = this->option<std::string>("host-sub-arch", "Host sub-architecture"))
+				_this->host_platform->sub_arch(*sub_arch);
+		}
+		return *_this->host_platform;
+	}
 
 	Platform& Build::target()
-	{ return _this->target_platform; }
+	{
+		if (_this->target_platform == nullptr)
+		{
+			_this->target_platform.reset(new Platform(Platform::current()));
+			if (auto vendor = this->option<std::string>("target-vendor", "Target vendor"))
+				_this->target_platform->vendor(*vendor);
+			if (auto os = this->option<std::string>("target-os", "Target OS"))
+				_this->target_platform->os(*os);
+			if (auto arch = this->option<std::string>("target-arch", "Target architecture"))
+				_this->target_platform->arch(*arch);
+			if (auto sub_arch = this->option<std::string>("target-sub-arch", "Target sub-architecture"))
+				_this->target_platform->sub_arch(*sub_arch);
+		}
+		return *_this->target_platform;
+	}
 
 	void Build::dump_graphviz(std::ostream& out) const
 	{
