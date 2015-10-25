@@ -25,8 +25,11 @@ namespace configure { namespace commands {
 			Process::Options options;
 			Process::check_call({"tar", "-xf", tarball_resolved.string(), "-C",
 			                     dest_dir_resolved.string(), "--strip-components=1",
-			                     // We force tar to ignore colon if file names
-			                     "--force-local"},
+#ifdef _WIN32
+			                     // We force tar to ignore colon in file names (assuming gnu tar)
+			                     "--force-local"
+#endif
+			                     },
 			                    options);
 		}
 		else if (ext == ".zip")
