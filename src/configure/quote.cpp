@@ -32,7 +32,7 @@ namespace configure {
 	}
 
 	template<CommandParser target>
-	static std::string quote_arg(std::string const& arg)
+	std::string quote_arg(std::string const& arg)
 	{
 		bool enclosing_quotes = std::any_of(arg.begin(), arg.end(), &needs_quote<target>);
 
