@@ -9,7 +9,7 @@ local modules = require "configure.modules"
 local version = '0.0.1'
 
 return function(build)
-	build:status("Building on", build:host():os_string())
+	build:status("Building on", build:host(), "for", build:target())
 
 	local with_coverage = build:bool_option(
 		"coverage",
