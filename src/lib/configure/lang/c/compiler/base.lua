@@ -329,7 +329,17 @@ function M:find_system_library(name, kind)
 	}
 end
 
-function M:library_kind_from_filename(file)
+function M:find_system_library_from_filename(filename, kind)
+	local file = self:find_system_library_file_from_filename(filename)
+	return self.Library:new{
+		name = tostring(file:path():stem()),
+		kind = self:library_kind_from_filename(file, kind),
+		files = {file},
+	}
+end
+
+function M:library_kind_from_filename(file, kind)
+	if kind ~= nil then return kind end
 	local ext = tostring(tools.path(file):ext())
 	if ext == '.a' then return 'static' end
 	if ext == '.so' or ext == '.dylib' then return 'shared' end
