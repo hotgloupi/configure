@@ -123,6 +123,15 @@ namespace configure {
 				);
 			}
 		}
+
+		if (auto vendor = this->option<std::string>("target-vendor", "Target vendor"))
+			_this->target_platform.vendor(*vendor);
+		if (auto os = this->option<std::string>("target-os", "Target OS"))
+			_this->target_platform.os(*os);
+		if (auto arch = this->option<std::string>("target-arch", "Target architecture"))
+			_this->target_platform.arch(*arch);
+		if (auto sub_arch = this->option<std::string>("target-sub-arch", "Target sub-architecture"))
+			_this->target_platform.sub_arch(*sub_arch);
 	}
 
 	Build::Build(path_t configure_program, lua::State& lua,
