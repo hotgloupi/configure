@@ -32,7 +32,7 @@ namespace configure {
 	}
 
 	template<CommandParser target>
-	static std::string quote(std::string const& arg)
+	static std::string quote_arg(std::string const& arg)
 	{
 		bool enclosing_quotes = std::any_of(arg.begin(), arg.end(), &needs_quote<target>);
 
@@ -96,7 +96,7 @@ namespace configure {
 	{
 		std::vector<std::string> res;
 		for (auto& arg: cmd)
-			res.push_back(quote<target>(arg));
+			res.push_back(quote_arg<target>(arg));
 		return boost::join(res, " ");
 	}
 
@@ -110,4 +110,20 @@ namespace configure {
 	INSTANCIATE(nmake);
 #undef INSTANCIATE
 
+	std::string quote_arg(CommandParser target, std::string const& arg)
+	{
+		switch (target)
+		{
+#define CASE(value) \
+		case CommandParser::value: \
+			return quote_arg<CommandParser::value>(arg)
+		CASE(unix_shell);
+		CASE(windows_shell);
+		CASE(nmake);
+		CASE(make);
+#undef CASE
+		default:
+			std::abort();
+		}
+	}
 }
