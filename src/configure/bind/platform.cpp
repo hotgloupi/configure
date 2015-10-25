@@ -57,6 +57,9 @@ namespace configure {
 			.def("is_osx", &Platform::is_osx)
 			.def("is_windows", &Platform::is_windows)
 			.def("is_linux", &Platform::is_linux)
+			.def("is_32bit", &Platform::is_32bit)
+			.def("is_64bit", &Platform::is_64bit)
+			.def("address_model", &Platform::address_model)
 			.def("__tostring", &Platform_string)
 
 		;
@@ -77,6 +80,8 @@ namespace configure {
 		// Arch
 		lua_newtable(state.ptr());
 		ENUM_VALUE(Arch, unknown);
+		ENUM_VALUE(Arch, x86);
+		ENUM_VALUE(Arch, x86_64);
 		lua_setfield(state.ptr(), -2, "Arch");
 
 		// SubArch

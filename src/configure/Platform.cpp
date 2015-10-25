@@ -4,6 +4,12 @@
 #include <map>
 #include <cassert>
 
+#ifdef _WIN32
+# include <Windows.h>
+#else
+# include <sys/utsname.h>
+#endif
+
 #if defined(__DragonFly__)
 # define CURRENT_OS configure::Platform::OS::dragonfly
 #elif defined(__FreeBSD__)
@@ -52,7 +58,7 @@ namespace configure {
 		{
 			static std::string const& name()
 			{
-				static std::string const value = "vendor";
+				static std::string const value = "Vendor";
 				return value;
 			}
 
@@ -71,7 +77,7 @@ namespace configure {
 		{
 			static std::string const& name()
 			{
-				static std::string const value = "arch";
+				static std::string const value = "Arch";
 				return value;
 			}
 
@@ -79,6 +85,8 @@ namespace configure {
 			{
 				static std::vector<std::string> res = {
 					"unknown",
+					"x86",
+					"x86_64",
 				};
 				return res;
 			}
@@ -88,7 +96,7 @@ namespace configure {
 		{
 			static std::string const& name()
 			{
-				static std::string const value = "sub-arch";
+				static std::string const value = "SubArch";
 				return value;
 			}
 
@@ -166,10 +174,54 @@ namespace configure {
 	INSTANCIATE(Platform::OS);
 #undef INSTANCIATE
 
+	unsigned Platform::address_model() const
+	{
+		switch (_arch)
+		{
+		case Arch::x86:
+			return 32;
+		case Arch::x86_64:
+			return 64;
+		default:
+			return 0;
+		}
+	}
+
+	static Platform::Arch current_arch()
+	{
+#ifdef _WIN32
+		SYSTEM_INFO info;
+		GetNativeSystemInfo(&info);
+		switch (info.wProcessorArchitecture)
+		{
+		case PROCESSOR_ARCHITECTURE_INTEL: return Platform::Arch::x86;
+		case PROCESSOR_ARCHITECTURE_AMD64: return Platform::Arch::x86_64;
+		// PROCESSOR_ARCHITECTURE_INTEL            0
+		// PROCESSOR_ARCHITECTURE_MIPS             1
+		// PROCESSOR_ARCHITECTURE_ALPHA            2
+		// PROCESSOR_ARCHITECTURE_PPC              3
+		// PROCESSOR_ARCHITECTURE_SHX              4
+		// PROCESSOR_ARCHITECTURE_ARM              5
+		// PROCESSOR_ARCHITECTURE_IA64             6
+		// PROCESSOR_ARCHITECTURE_ALPHA64          7
+		// PROCESSOR_ARCHITECTURE_MSIL             8
+		// PROCESSOR_ARCHITECTURE_AMD64            9
+		// PROCESSOR_ARCHITECTURE_IA32_ON_WIN64    10
+		}
+		return Platform::Arch::unknown;
+#else
+		struct utsname info;
+		if (uname(&info) != 0)
+			return Platform::Arch::unknown;
+		return Platform::from_string<Platform::Arch>(info.machine);
+#endif
+	}
+
 	Platform Platform::current()
 	{
 		Platform p;
 		p.os(CURRENT_OS);
+		p.arch(current_arch());
 		return p;
 	}
 

@@ -16,7 +16,8 @@ namespace configure {
 
 		enum class Arch {
 			unknown,
-
+			x86,
+			x86_64,
 		};
 
 		enum class SubArch {
@@ -69,6 +70,12 @@ namespace configure {
 		bool is_windows() const { return _os == OS::windows; }
 		bool is_linux() const { return _os == OS::linux; }
 
+		// Returns the number of bits necessary to address memory or 0 if the
+		// architecture is unknown.
+		unsigned address_model() const;
+
+		bool is_32bit() const { return address_model() == 32; }
+		bool is_64bit() const { return address_model() == 64; }
 	public:
 		static Platform current();
 
