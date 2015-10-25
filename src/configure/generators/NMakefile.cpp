@@ -32,12 +32,19 @@ namespace configure { namespace generators {
 		{
 			ShellCommand chdir;
 			chdir.append("cd", cmd.working_directory());
-			res += quote<CommandParser::nmake>(chdir.string(_build, link, formatter)) + " & ";
+			res += quote<CommandParser::nmake>(chdir.string(_build, link, formatter)) + " && ";
 		}
 		if (cmd.has_env())
 		{
+			// Note: It's important that there is no space between the value
+			// and the separator.
+			//      Bad: > SET key=value && cmd ...
+			// will set `key` to "value " (with a trailing white space), while
+			//      Good: > SET key=value&& cmd ...
+			// will correctly assign "value" to `key`.
+			// Hours spent fighting with weird windows shell parsing rules: 2
 			for (auto& pair: cmd.env())
-				res += "SET " + pair.first + "=" + pair.second + " & ";
+				res += "SET " + pair.first + "=" + pair.second + "&& ";
 		}
 		return res + quote<CommandParser::nmake>(cmd.string(_build, link, formatter));
 	}
