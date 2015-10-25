@@ -17,6 +17,9 @@ function CMakeProject:configure(args)
 		CMAKE_INSTALL_PREFIX = self:step_directory('install'),
 		CMAKE_VERBOSE_MAKEFILE = true,
 		CMAKE_BUILD_TYPE = 'Release',
+		CMAKE_RUNTIME_OUTPUT_DIRECTORY = self:step_directory('install') / 'bin',
+		CMAKE_LIBRARY_OUTPUT_DIRECTORY = self:step_directory('install') / 'lib',
+		CMAKE_ARCHIVE_OUTPUT_DIRECTORY = self:step_directory('install') / 'lib',
 	}
 	if self.compiler.lang == 'c' then
 		default['CMAKE_C_COMPILER'] = self.compiler.binary_path
