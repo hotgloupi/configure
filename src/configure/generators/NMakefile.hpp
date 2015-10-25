@@ -30,6 +30,7 @@ namespace configure { namespace generators {
 		                         ShellFormatter const& formatter) const override;
 		bool use_relative_path() const override;
 		void include_dependencies(std::ostream& out, bool relative) const override;
+		CommandParser command_parser() const override;
 		void prepare();
 	};
 

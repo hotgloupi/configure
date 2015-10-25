@@ -33,11 +33,18 @@ namespace configure { namespace generators {
 		)
 	{}
 
-	static std::string relative_node_path(Build& b, Node& n)
-	{ return n.relative_path(b.directory()).string(); }
+	std::string Makefile::node_path(Node& node) const
+	{
+		std::string res;
+		if (this->use_relative_path())
+			res = node.relative_path(_build.directory()).string();
+		else
+			res = node.path().string();
+		return quote_arg(this->command_parser(), res);
+	}
 
-	static std::string absolute_node_path(Build&, Node& n)
-	{ return n.path().string(); }
+	CommandParser Makefile::command_parser() const
+	{ return CommandParser::make; }
 
 	void Makefile::prepare()
 	{
@@ -219,12 +226,6 @@ namespace configure { namespace generators {
 		else
 			formatter = std::unique_ptr<ShellFormatter>(new ShellFormatter(_build));
 
-		std::string (*node_path)(Build&, Node&);
-		if (use_relpath)
-			node_path = &relative_node_path;
-		else
-			node_path = &absolute_node_path;
-
 		auto& makefile_node = _build.target_node("Makefile");
 		std::ofstream out(makefile_node->path().string());
 		out << "# Generated " << _name << std::endl;
@@ -250,7 +251,7 @@ namespace configure { namespace generators {
 			for (auto& node: _final_targets)
 			{
 				if (node->is_file())
-					out << ' ' << node_path(_build, *node);
+					out << ' ' << node_path(*node);
 				else if (node->is_virtual() && !node->name().empty())
 					out << ' ' << node->name();
 			}
@@ -259,7 +260,7 @@ namespace configure { namespace generators {
 			out << "clean:\n";
 			for (auto& node: _targets)
 				if (node->is_file())
-					out << '\t' << "rm -f " << node_path(_build, *node) << '\n';
+					out << '\t' << "rm -f " << node_path(*node) << '\n';
 			out << "\n";
 		}
 
@@ -271,7 +272,7 @@ namespace configure { namespace generators {
 			if (node->is_virtual())
 				out << node->name() << ':';
 			else
-				out << node_path(_build, *node) << ':';
+				out << node_path(*node) << ':';
 
 			auto in_edge_range = boost::in_edges(node->index, g);
 			for (GraphTraits::in_edge_iterator i = in_edge_range.first;
@@ -279,7 +280,7 @@ namespace configure { namespace generators {
 			{
 				auto node = bg.node(boost::source(*i, g)).get();
 				if (node->is_file())
-					out << ' ' << node_path(_build, *node);
+					out << ' ' << node_path(*node);
 				else if (node->is_virtual())
 					out << ' ' << node->name();
 			}
@@ -342,10 +343,10 @@ namespace configure { namespace generators {
 	{
 		if (relative)
 			for (auto& node: _includes)
-				out << "-include " << relative_node_path(_build, *node) << std::endl;
+				out << "-include " << node_path(*node) << std::endl;
 		else
 			for (auto& node: _includes)
-				out << "-include " << absolute_node_path(_build, *node) << std::endl;
+				out << "-include " << node_path(*node) << std::endl;
 	}
 
 	std::string Makefile::dump_command(ShellCommand const& cmd,

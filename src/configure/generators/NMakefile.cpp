@@ -49,6 +49,10 @@ namespace configure { namespace generators {
 		return res + quote<CommandParser::nmake>(cmd.string(_build, link, formatter));
 	}
 
+	CommandParser NMakefile::command_parser() const
+	{ return CommandParser::nmake; }
+
+
 	std::vector<std::string>
 	NMakefile::build_command(std::string const& target) const
 	{

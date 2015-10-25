@@ -2,6 +2,7 @@
 
 #include <configure/fwd.hpp>
 #include <configure/Generator.hpp>
+#include <configure/quote.hpp>
 
 #include <vector>
 #include <string>
@@ -37,8 +38,10 @@ namespace configure { namespace generators {
 		                                 ShellFormatter const& formatter) const;
 		virtual bool use_relative_path() const;
 		virtual void include_dependencies(std::ostream& out, bool relative) const;
+		virtual CommandParser command_parser() const;
 		void prepare();
 		void generate() const override;
+		std::string node_path(Node& node) const;
 	};
 
 }}
