@@ -2,6 +2,7 @@
 -- @classmod configure.lang.c.compiler.msvc
 
 local Super = require('configure.lang.c.compiler.base')
+local tools = require('configure.tools')
 local Compiler = table.update({}, Super)
 
 Compiler.name = 'msvc'
@@ -59,20 +60,23 @@ function Compiler:_build_object(args)
 			table.append(command, '-MD')
 		else
 			table.append(command, '-ML') -- Single threaded app
-			defines.append('_DLL')       -- XXX is it enough for dynamic runtime ?
+			defines.append({'_DLL'})       -- XXX is it enough for dynamic runtime ?
 		end
 	end
 
 	for _, dir in ipairs(args.include_directories) do
 		table.extend(command, {'-I', dir})
 	end
+
+	local define_args = {}
 	for _, define in ipairs(defines) do
 		if define[2] == nil then
-			table.insert(command, '-D' .. define[1])
+			table.insert(define_args, '-D' .. define[1])
 		else
-			table.insert(command, '-D' .. define[1] .. '=' .. tostring(define[2]))
+			table.insert(define_args, '-D' .. define[1] .. '=' .. tostring(define[2]))
 		end
 	end
+	table.extend(command, tools.unique(define_args))
 
 	for _, file in ipairs(args.include_files) do
 		table.extend(command, {'-FI', file})
