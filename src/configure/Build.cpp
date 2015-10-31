@@ -414,6 +414,7 @@ namespace configure {
 		if (it != _this->virtual_nodes.end())
 			return it->second;
 		auto node = _this->build_graph.add_node<VirtualNode>(name);
+		log::debug("Created node", node);
 		return (_this->virtual_nodes[name] = std::move(node));
 	}
 
@@ -426,6 +427,7 @@ namespace configure {
 		if (it != _this->file_nodes.end())
 			return it->second;
 		auto node = _this->build_graph.add_node<FileNode>(path);
+		log::debug("Created node", node);
 		return (_this->file_nodes[path] = std::move(node));
 	}
 
@@ -438,6 +440,7 @@ namespace configure {
 		if (it != _this->directory_nodes.end())
 			return it->second;
 		auto node = _this->build_graph.add_node<DirectoryNode>(path);
+		log::debug("Created node", node);
 		return (_this->directory_nodes[path] = std::move(node));
 	}
 
@@ -492,15 +495,20 @@ namespace configure {
 			for (auto& target: rule.targets())
 				for (auto& source: rule.sources())
 				{
+					log::debug("Add commands to generate", target, "from", source);
 					try {
 						_this->build_graph.link(*source, *target)
 							.command(cmd);
 					} catch (error::CommandAlreadySet&) {
 						CONFIGURE_THROW(
-							error::InvalidRule(
-								"Trying to generate " + target->string() + " twice"
-							) << error::nested(std::current_exception())
-						);
+						  error::InvalidRule("Trying to generate " +
+						                     target->string() + " from " +
+						                     source->string() + " twice")
+						  << error::nested(std::current_exception())
+						  //<< error::help("Has '" +
+						  //_this->build_graph.link(*source, *target).command()
+						  //+ "'")
+						  );
 					}
 				}
 	}
