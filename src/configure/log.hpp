@@ -30,7 +30,7 @@ namespace configure { namespace log {
 	{
 		switch (lvl)
 		{
-		case Level::debug: return "[DEBUG]";
+		case Level::debug: return "++";
 		case Level::verbose: return "~~";
 		case Level::status: return "--";
 		case Level::warning: return "[WARNING]";
