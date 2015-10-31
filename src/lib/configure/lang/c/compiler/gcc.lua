@@ -159,6 +159,11 @@ function Compiler:_add_linker_library_flags(cmd, args, sources)
 		table.extend(cmd, {'-L', dir})
 	end
 
+	local to_export = {}
+	for _, lib in ipairs(args.export_libraries) do
+		to_export[lib.name] = true
+	end
+
 	for _, lib in ipairs(args.libraries)
 	do
 		if lib.system then
@@ -170,60 +175,46 @@ function Compiler:_add_linker_library_flags(cmd, args, sources)
 					table.append(cmd, '-Wl,-Bdynamic')
 				end
 			end
-			table.append(cmd, "-l" .. lib.name)
-		else
-			for _, file in ipairs(lib.files) do
-				table.append(cmd, file)
-				if getmetatable(file) == Node then
-					table.append(sources, file)
-				end
-			end
-		end
-	end
-
-	for _, lib in ipairs(args.export_libraries)
-	do
-		if lib.system then
-			if self.build:host():os() ~= Platform.OS.osx then
-				if lib.kind == 'static' then
-					table.append(cmd, '-Wl,-Bstatic')
-				end
-				if lib.kind == 'shared' then
-					table.append(cmd, '-Wl,-Bdynamic')
-				end
-			end
-			if self.build:host():os() == Platform.OS.osx then
-				table.append(cmd, "-Wl,-reexport-l" .. lib.name)
-			else
-				if lib.kind == 'shared' then
-					table.append(cmd, "-Wl,--export-dynamic")
-					table.append(cmd, '-l' .. lib.name)
-					table.append(cmd, "-Wl,--no-export-dynamic")
+			if to_export[lib.name] == true then
+				if self.build:host():os() == Platform.OS.osx then
+					table.append(cmd, "-Wl,-reexport-l" .. lib.name)
 				else
-					table.append(cmd, "-Wl,--whole-archive")
-					table.append(cmd, '-l' .. lib.name)
-					table.append(cmd, "-Wl,--no-whole-archive")
-				end
-			end
-		else
-			if self.build:host():is_osx() then
-				for _, file in ipairs(lib.files) do
-					table.extend(cmd, {"-Wl,-reexport_library", file})
+					if lib.kind == 'shared' then
+						table.append(cmd, "-Wl,--export-dynamic")
+						table.append(cmd, '-l' .. lib.name)
+						table.append(cmd, "-Wl,--no-export-dynamic")
+					else
+						table.append(cmd, "-Wl,--whole-archive")
+						table.append(cmd, '-l' .. lib.name)
+						table.append(cmd, "-Wl,--no-whole-archive")
+					end
 				end
 			else
-				if lib.kind == 'shared' then
-					for _, file in ipairs(lib.files) do
-						table.append(cmd, "-Wl,--export-dynamic," .. tostring(tools.path(file)))
-					end
-					table.append(cmd, "-Wl,--no-export-dynamic")
-				else
-					for _, file in ipairs(lib.files) do
-						table.append(cmd, "-Wl,--whole-archive," .. tostring(tools.path(file)))
-					end
-					table.append(cmd, "-Wl,--no-whole-archive")
-				end
+				table.append(cmd, "-l" .. lib.name)
 			end
+		else -- Non system libraries
 			for _, file in ipairs(lib.files) do
+				if to_export[lib.name] == true then
+					if self.build:host():is_osx() then
+						for _, file in ipairs(lib.files) do
+							table.extend(cmd, {"-Wl,-reexport_library", file})
+						end
+					else
+						if lib.kind == 'shared' then
+							for _, file in ipairs(lib.files) do
+								table.append(cmd, "-Wl,--export-dynamic," .. tostring(tools.path(file)))
+							end
+							table.append(cmd, "-Wl,--no-export-dynamic")
+						else
+							for _, file in ipairs(lib.files) do
+								table.append(cmd, "-Wl,--whole-archive," .. tostring(tools.path(file)))
+							end
+							table.append(cmd, "-Wl,--no-whole-archive")
+						end
+					end
+				else
+					table.append(cmd, file)
+				end
 				if getmetatable(file) == Node then
 					table.append(sources, file)
 				end
