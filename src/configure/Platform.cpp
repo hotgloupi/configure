@@ -1,5 +1,6 @@
 #include "Platform.hpp"
 #include "error.hpp"
+#include "log.hpp"
 
 #include <map>
 #include <cassert>
@@ -213,7 +214,16 @@ namespace configure {
 		struct utsname info;
 		if (uname(&info) != 0)
 			return Platform::Arch::unknown;
-		return Platform::from_string<Platform::Arch>(info.machine);
+		if (strcmp(info.machine, "i686") == 0 ||
+		    strcmp(info.machine, "i586") == 0 ||
+		    strcmp(info.machine, "i486") == 0 ||
+		    strcmp(info.machine, "i386") == 0)
+			return Platform::Arch::x86;
+		try { return Platform::from_string<Platform::Arch>(info.machine); }
+		catch (...) {
+			log::warning("Couldn't convert", info.machine, "to a known architecture");
+			return Platform::Arch::unknown;
+		}
 #endif
 	}
 
