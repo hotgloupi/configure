@@ -48,6 +48,10 @@ function Compiler:_build_object(args)
 	if args.warnings then
 		table.append(command, '-W3')
 	end
+	if args.big_object then
+		table.append(command, '-bigobj')
+	end
+
 	local defines = table.extend({}, args.defines)
 	if args.runtime == 'static' then
 		if args.threading then
