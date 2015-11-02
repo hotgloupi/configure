@@ -32,6 +32,18 @@ Compiler._optimization_flags = {
 	fastest = {"-O2", },
 }
 
+--- Canonical library filename
+--
+-- @string name
+-- @string kind
+-- @tparam bool runtime
+-- @treturn Path the filename
+function Compiler:canonical_library_filename(name, kind, runtime)
+	local prefix = kind == 'static' and 'lib' or ''
+	return prefix .. name ..  self:_library_extension(kind, runtime)
+end
+
+
 function Compiler:_add_optimization_flag(cmd, args)
 	table.extend(cmd, self._optimization_flags[args.optimization])
 end
@@ -48,6 +60,10 @@ function Compiler:_build_object(args)
 	if args.warnings then
 		table.append(command, '-W3')
 	end
+	if args.big_object then
+		table.append(command, '-bigobj')
+	end
+
 	local defines = table.extend({}, args.defines)
 	if args.runtime == 'static' then
 		if args.threading then
@@ -185,9 +201,10 @@ function Compiler:_link_library(args)
 	}
 end
 
-function Compiler:_library_extension(kind, ext)
+function Compiler:_library_extension(kind, ext, runtime)
 	if ext then return ext end
-	if kind == 'shared' then return ".dll" else return ".lib" end
+	if runtime == true and kind == 'shared' then return '.dll' end
+	return ".lib"
 end
 
 function Compiler:_object_extension(ext)

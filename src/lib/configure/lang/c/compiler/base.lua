@@ -95,6 +95,10 @@
 -- `export_dynamic`
 -- : Exported symbols are exposed in the dynamic symbol table (default to false).
 --
+-- `big_object`
+-- : Enable big object file generation (Increase the number of sections per
+-- object) (defaults to false).
+--
 -- @classmod configure.lang.c.compiler.base
 
 local undefined = {}
@@ -131,6 +135,7 @@ local M = {
 		optimization = "no",
 		allow_unresolved_symbols = false,
 		export_dynamic = false,
+		big_object = false,
 	},
 }
 
@@ -431,6 +436,7 @@ function M:_build_objects(args)
 	local exception = self:_exception(args)
 	local warnings = self:_warnings(args)
 	local optimization = self:_optimization(args)
+	local big_object = self:_big_object(args)
 	local objects = {}
 	for idx, source in ipairs(args.sources) do
 		if getmetatable(source) ~= Node then
@@ -459,6 +465,7 @@ function M:_build_objects(args)
 			exception = exception,
 			warnings = warnings,
 			optimization = optimization,
+			big_object = big_object,
 		}
 	end
 	return objects
@@ -612,6 +619,19 @@ function M:_exception(args)
 		return self.exception
 	else
 		return args.exception
+	end
+end
+
+--- Big object
+--
+-- @param args
+-- @tparam[opt] bool args.big_object
+-- @treturn bool
+function M:_big_object(args)
+	if args.big_object == nil then
+		return self.big_object
+	else
+		return args.big_object
 	end
 end
 
