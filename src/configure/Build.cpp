@@ -633,6 +633,11 @@ namespace configure {
 	void Build::visit_targets(std::function<void(NodePtr&)> const& fn)
 	{
 		// XXX lock file nodes
+		for (auto& p: _this->directory_nodes)
+		{
+			if (utils::starts_with(p.first, this->directory()))
+				fn(p.second);
+		}
 		for (auto& p: _this->file_nodes)
 		{
 			if (utils::starts_with(p.first, this->directory()))
