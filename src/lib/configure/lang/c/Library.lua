@@ -13,6 +13,7 @@ return {
 	-- @param[opt] args.install_node a target `Node` to depends on when the library part of the build
 	-- @param[opt] args.defines List of defines
 	-- @param[opt] args.bundle A table of extra information (version, executable, ...)
+	-- @param[opt] args.dependencies A table of libraries implicitly needed
 	new = function(self, args)
 		assert(args.name)
 		local o = {}
@@ -30,6 +31,7 @@ return {
 			table.append(o.directories, path:parent_path())
 		end
 		o.defines = args.defines or {}
+		o.dependencies = args.dependencies or {}
 		o.kind = args.kind
 		o.bundle = args.bundle or {}
 		o.install_node = args.install_node or nil
