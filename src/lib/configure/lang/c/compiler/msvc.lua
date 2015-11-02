@@ -177,7 +177,12 @@ function Compiler:_link_library(args)
 			:add_target(args.target)
 			:add_shell_command(ShellCommand:new(table.unpack(command)))
 	)
-	return linker_lib
+	return self.Library:new{
+		name = args.name,
+		files = {linker_lib},
+		runtime_files = args.kind == 'static' and {} or {args.target},
+		kind = args.kind,
+	}
 end
 
 function Compiler:_library_extension(kind, ext)

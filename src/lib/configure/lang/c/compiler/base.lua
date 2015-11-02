@@ -117,7 +117,9 @@ local M = {
 		include_directories = {},
 		library_directories = {},
 		include_files = {},
-		install = true,
+		install_executable = true,
+		install_shared_library = true,
+		install_static_library = false,
 		libraries = {},
 		export_libraries = {},
 		object_directory = nil,
@@ -191,6 +193,7 @@ function M:link_executable(args)
 	local standard = args.standard or self.standard
 	local standard_library = args.standard_library or self.standard_library
 	local directory = Path:new(args.directory or self.executable_directory)
+	local libraries = self:_libraries(args)
 	local target = self:_link_executable{
 		objects = self:_build_objects(args),
 		target = self.build:target_node(
@@ -198,7 +201,7 @@ function M:link_executable(args)
 		),
 		standard = standard,
 		standard_library = standard_library,
-		libraries = self:_libraries(args),
+		libraries = libraries,
 		export_libraries = self:_export_libraries(args),
 		library_directories = self:_library_directories(args),
 		coverage = self:_coverage(args),
@@ -211,7 +214,13 @@ function M:link_executable(args)
 		export_dynamic = self:_export_dynamic(args),
 		runtime = self:_runtime(args),
 	}
-	target:set_property("install", self:_install(args))
+
+	if self:_install_executable(args) then
+		target:set_property("install", true)
+		for _, dep in ipairs(libraries) do
+			self:_set_install_property(dep)
+		end
+	end
 	self.build:add_rule(Rule:new():add_target(target))
 	return target
 end
@@ -256,8 +265,10 @@ function M:link_library(args)
 	))
 	local prefix = self:_library_filename_prefix(args.kind, args.filename_prefix)
 	local runtime = self:_runtime(args)
+	local libraries = self:_libraries(args)
 
-	local target = self:_link_library{
+	local lib = self:_link_library{
+		name = args.name,
 		objects = self:_build_objects(args),
 		target = self.build:target_node(
 			(directory / (prefix .. args.name)) +
@@ -267,7 +278,7 @@ function M:link_library(args)
 		standard = standard,
 		standard_library = standard_library,
 		import_library_directory = args.import_library_directory or self.static_library_directory,
-		libraries = self:_libraries(args),
+		libraries = libraries,
 		export_libraries = self:_export_libraries(args),
 		library_directories = self:_library_directories(args),
 		coverage = self:_coverage(args),
@@ -280,16 +291,33 @@ function M:link_library(args)
 		export_dynamic = self:_export_dynamic(args),
 		runtime = runtime,
 	}
-	self.build:add_rule(Rule:new():add_target(target))
-	return self.Library:new{
-		name = args.name,
-		system = false,
-		files = {target},
-		include_directories = self:_include_directories(args),
-		defines = args.public_defines,
-		runtime = runtime,
-		kind = args.kind,
-	}
+
+	table.extend(lib.defines, args.public_defines or {})
+	table.extend(lib.include_directories, self:_include_directories(args))
+	lib.runtime = args.runtime
+	lib.kind = args.kind
+	if self:_install_library(args, args.kind) then
+		self:_set_install_property(lib)
+		for _, dep in ipairs(libraries) do
+			self:_set_install_property(dep)
+		end
+	end
+	return lib
+end
+
+function M:_set_install_property(lib)
+	if lib.kind == 'shared' and #lib.runtime_files == 0 then
+		for _, file in ipairs(lib.files) do
+			file:set_property("install", true)
+		end
+	else
+		for _, file in ipairs(lib.runtime_files) do
+			file:set_property("install", true)
+		end
+	end
+	for _, dep in ipairs(lib.dependencies) do
+		self:_set_install_property(lib)
+	end
 end
 
 --- Check if a binary refers to this compiler instance.
@@ -601,13 +629,22 @@ function M:_warnings(args)
 end
 
 --- Install state
-function M:_install(args)
+function M:_install_library(args, kind)
 	if args.install == nil then
-		return self.install
+		return self['install_' .. kind .. '_library']
 	else
 		return args.install
 	end
 end
+
+function M:_install_executable(args)
+	if args.install == nil then
+		return self.install_executable
+	else
+		return args.install
+	end
+end
+
 --- Optiomization level.
 --
 -- @param args
