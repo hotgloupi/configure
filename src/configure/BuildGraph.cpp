@@ -87,11 +87,11 @@ namespace configure {
 
 	PropertyMap& BuildGraph::properties(Node const& node) const
 	{
-		if (!node.is_file())
-			CONFIGURE_THROW(
-			    error::InvalidNode("Only file node have properties")
-					<< error::node(_this->node_map[node.index])
-			);
+		//if (!node.is_file())
+		//	CONFIGURE_THROW(
+		//	    error::InvalidNode("Only file node have properties")
+		//			<< error::node(_this->node_map[node.index])
+		//	);
 		return _this->properties[node.path()];
 	}
 
