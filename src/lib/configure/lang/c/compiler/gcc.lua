@@ -279,7 +279,7 @@ function Compiler:_link_library(args)
 		else
 			table.extend(
 				command,
-				{'-shared', '-Wl,-soname,' .. tostring(args.target:path())}
+				{'-shared', '-Wl,-soname,' .. tostring(args.target:path():filename())}
 			)
 		end
 		local sources = {}
