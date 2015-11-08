@@ -301,6 +301,7 @@ function M:link_library(args)
 	table.extend(lib.include_directories, self:_include_directories(args))
 	lib.runtime = args.runtime
 	lib.kind = args.kind
+	lib.install_node = args.install_node
 	if self:_install_library(args, args.kind) then
 		self:_set_install_property(lib)
 		for _, dep in ipairs(libraries) do
