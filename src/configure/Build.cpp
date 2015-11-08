@@ -167,6 +167,11 @@ namespace configure {
 		}
 	}
 
+	void Build::clear_properties()
+	{
+		_this->properties.clear();
+	}
+
 	void Build::configure(fs::path const& project_directory,
 	                      fs::path const& sub_directory,
 	                      bool has_args)

@@ -70,6 +70,8 @@ namespace configure {
 		// Lua state in use for the configuration.
 		lua::State& lua_state() const;
 
+		void clear_properties();
+
 	public:
 		// Declare a new option.
 		template<typename T>

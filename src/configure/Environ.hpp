@@ -130,6 +130,8 @@ namespace configure {
 		void load(boost::filesystem::path const& path);
 		void save(boost::filesystem::path const& path) const;
 
+		void clear() { _values.clear(); }
+
 	public:
 		template<typename Archive>
 		void serialize(Archive& ar, unsigned int);

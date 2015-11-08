@@ -68,6 +68,8 @@ namespace configure {
 		std::string                        build_target;
 		std::vector<std::string>           builtin_command_args;
 		std::string                        print_var;
+		bool                               clear_properties;
+		bool                               clear_variables;
 		Impl(std::vector<std::string> args)
 			: program_name(args.at(0))
 			, args(std::move(args))
@@ -84,6 +86,9 @@ namespace configure {
 			, build_mode(false)
 			, build_target()
 			, builtin_command_args()
+			, print_var()
+			, clear_properties(false)
+			, clear_variables(false)
 		{ this->args.erase(this->args.begin()); }
 
 		void add_plugin(std::string const& arg)
@@ -213,6 +218,11 @@ namespace configure {
 		for (auto const& directory: _this->build_directories)
 		{
 			Build build(configure_path, _this->lua(), directory, _this->build_variables);
+			if (_this->clear_properties)
+				build.clear_properties();
+			if (_this->clear_variables)
+				build.env().clear();
+
 			for (auto& plugin: _this->plugins)
 			{
 				log::debug("Initialize plugin", plugin.name());
@@ -316,6 +326,12 @@ namespace configure {
 
 			<< "Optional arguments:\n"
 
+			<< "  -c, --clear" << "               "
+			<< "Clear properties on files\n"
+
+			<< "  -C, --clear-all" << "           "
+			<< "Clear properties and variables\n"
+
 			<< "  -b, --build" << "               "
 			<< "Start a build in specified directories\n"
 
@@ -340,10 +356,10 @@ namespace configure {
 			<< "  -o, --options" << "             "
 			<< "List available build options\n"
 
-			<< "  -p, --plugin NAME-OR-PATH" << "     "
+			<< "  -p, --plugin NAME-OR-PATH" << " "
 			<< "Run a plugin by name or by path\n"
 
-			<< "  --project PATH" << "        "
+			<< "  --project PATH" << "            "
 			<< "Specify the project to configure instead of detecting it\n"
 
 			<< "  -P, --print-var" << "           "
@@ -476,6 +492,10 @@ namespace configure {
 				_this->build_mode = true;
 			else if (arg == "-E" || arg == "--execute")
 				next_arg = NextArg::builtin_command;
+			else if (arg == "-c" || arg == "--clear")
+				_this->clear_properties = true;
+			else if (arg == "-C" || arg == "--clear-all")
+				_this->clear_properties = _this->clear_variables = true;
 			else if (arg.find('=') != std::string::npos)
 			{
 				auto it = arg.find('=');
