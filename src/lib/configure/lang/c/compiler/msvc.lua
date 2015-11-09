@@ -166,7 +166,7 @@ function Compiler:_link_library(args)
 		linker_lib = self.build:target_node(
 			args.import_library_directory / (args.target:path():stem() + ".lib")
 		)
-		rule:add_target(linker_lib)
+		--rule:add_target(linker_lib)
 		table.extend(command, {self.link_path, '-DLL', '-IMPLIB:' .. tostring(linker_lib:path())})
 		if args.debug then
 			table.append(command, '-DEBUG')

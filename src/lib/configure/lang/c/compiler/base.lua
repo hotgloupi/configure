@@ -277,7 +277,7 @@ function M:link_library(args)
 		objects = self:_build_objects(args),
 		target = self.build:target_node(
 			(directory / (prefix .. args.name)) +
-			self:_library_extension(args.kind, args.extension)
+			self:_library_extension(args.kind, args.extension, true)
 		),
 		kind = args.kind,
 		standard = standard,
