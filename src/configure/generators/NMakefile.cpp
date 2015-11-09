@@ -42,7 +42,19 @@ namespace configure { namespace generators {
 			// will set `key` to "value " (with a trailing white space), while
 			//      Good: > SET key=value&& cmd ...
 			// will correctly assign "value" to `key`.
-			// Hours spent fighting with weird windows shell parsing rules: 2
+			//
+			// Note:
+			// If "SET" is the first thing in the command, then it will consider
+			// everything after the '=' to be the value of the env var.
+			// However, if there is a command before that, it will stop at the
+			// first '&&'. Thats why we add "cd ." when there is no working
+			// directory specified.
+			//
+			// Hours spent fighting with weird windows shell parsing rules: 3
+
+			if (res.empty())
+				res += "cd . && ";
+
 			for (auto& pair: cmd.env())
 				res += "SET " + pair.first + "=" + pair.second + "&& ";
 		}
