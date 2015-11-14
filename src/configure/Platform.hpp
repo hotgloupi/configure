@@ -40,10 +40,11 @@ namespace configure {
 		};
 
 	private:
-		Vendor  _vendor;
-		Arch    _arch;
-		SubArch _sub_arch;
-		OS      _os;
+		Vendor      _vendor;
+		Arch        _arch;
+		SubArch     _sub_arch;
+		OS          _os;
+		std::string _os_version;
 
 	public:
 		Platform();
@@ -64,6 +65,12 @@ namespace configure {
 		CONFIGURE_PLATFORM_PROPERTY(SubArch, sub_arch);
 		CONFIGURE_PLATFORM_PROPERTY(OS, os);
 #undef CONFIGURE_PLATFORM_PROPERTY
+
+		std::string os_version() const
+		{ return _os_version; }
+
+		Platform& os_version(std::string const& version)
+		{ _os_version = version; return *this; }
 
 	public:
 		bool is_osx() const { return _os == OS::osx; }

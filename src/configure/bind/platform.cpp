@@ -6,6 +6,26 @@
 
 namespace configure {
 
+#define PLATFORM_STRING_PROPERTY(name)                                         \
+	static int Platform_##name(lua_State* state)                               \
+	{                                                                          \
+		Platform& self =                                                       \
+		  lua::Converter<std::reference_wrapper<Platform>>::extract(state, 1); \
+		if (lua_gettop(state) == 2) {                                          \
+			if (lua_isstring(state, 2))                                        \
+				self.name(lua_tostring(state, 2));                             \
+			else                                                               \
+				throw std::runtime_error("Expected string");                   \
+			lua_pushvalue(state, 1);                                           \
+		}                                                                      \
+		else                                                                   \
+		{                                                                      \
+			lua_pushstring(state, self.name().c_str());                        \
+		}                                                                      \
+		return 1;                                                              \
+	}                                                                          \
+	/**/
+
 #define PLATFORM_PROPERTY(T, name)                                             \
 	static int Platform_##name(lua_State* state)                               \
 	{                                                                          \
@@ -31,6 +51,7 @@ namespace configure {
 	PLATFORM_PROPERTY(Arch, arch);
 	PLATFORM_PROPERTY(SubArch, sub_arch);
 	PLATFORM_PROPERTY(OS, os);
+	PLATFORM_STRING_PROPERTY(os_version);
 
 	static int Platform_string(lua_State* state)
 	{
@@ -54,6 +75,7 @@ namespace configure {
 			.def("arch_string", &Platform::arch_string)
 			.def("sub_arch_string", &Platform::sub_arch_string)
 			.def("os_string", &Platform::os_string)
+			.def("os_version", &Platform_os_version)
 			.def("is_osx", &Platform::is_osx)
 			.def("is_windows", &Platform::is_windows)
 			.def("is_linux", &Platform::is_linux)

@@ -153,7 +153,7 @@ namespace configure {
 	EnumType Platform::from_string(std::string const& value)
 	{
 		auto& values = strings<EnumType>::values();
-		for (int i = 0, len = values.size(); i < len; ++i)
+		for (size_t i = 0, len = values.size(); i < len; ++i)
 			if (values[i] == value)
 				return static_cast<EnumType>(i);
 		CONFIGURE_THROW(
@@ -186,6 +186,19 @@ namespace configure {
 		default:
 			return 0;
 		}
+	}
+
+	static std::string current_os_version()
+	{
+#ifdef _WIN32
+		OSVERSIONINFO out;
+		ZeroMemory(&out, sizeof(out));
+		out.dwOSVersionInfoSize = sizeof(out);
+		if (::GetVersionEx(&out) == 0)
+			CONFIGURE_THROW_SYSTEM_ERROR("Couldn't retrieve the OS version");
+		return std::to_string(out.dwMajorVersion) + "." + std::to_string(out.dwMinorVersion);
+#endif
+		return "";
 	}
 
 	static Platform::Arch current_arch()
@@ -232,6 +245,7 @@ namespace configure {
 		Platform p;
 		p.os(CURRENT_OS);
 		p.arch(current_arch());
+		p.os_version(current_os_version());
 		return p;
 	}
 
@@ -240,6 +254,6 @@ namespace configure {
 		return out << "Platform(vendor=" << p.vendor_string()
 		           << ", arch=" << p.arch_string()
 		           << ", sub_arch=" << p.sub_arch_string()
-		           << ", os=" << p.os_string() << ")";
+		           << ", os=" << p.os_string() << "-" << p.os_version() << ")";
 	}
 }

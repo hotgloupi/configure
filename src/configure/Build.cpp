@@ -544,6 +544,8 @@ namespace configure {
 				_this->target_platform->vendor(*vendor);
 			if (auto os = this->option<std::string>("target-os", "Target OS"))
 				_this->target_platform->os(*os);
+			if (auto os_version = this->option<std::string>("target-os-version", "Target OS version (Major.minor)"))
+				_this->target_platform->os_version(*os_version);
 			if (auto arch = this->option<std::string>("target-arch", "Target architecture"))
 				_this->target_platform->arch(*arch);
 			if (auto sub_arch = this->option<std::string>("target-sub-arch", "Target sub-architecture"))
