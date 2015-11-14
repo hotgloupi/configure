@@ -24,13 +24,15 @@ install:
     - CALL "C:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/vcvarsall.bat" x86
     - SET CONFIGURE_LIBRARY_DIR=%APPVEYOR_BUILD_FOLDER%/src/lib
     - git submodule update --init --recursive
+    - SET BOOST_INCLUDE_DIR="c:/Libraries/boost" 
+    - SET BOOST_LIBRARY_DIR="c:/Libraries/boost/lib32-msvc-12.0"
 
 before_build:
     - cmd: SET
     - bash bootstrap/vs.sh
 
 build_script:
-    - configure.exe build BOOST_INCLUDE_DIR="c:/Libraries/boost" BOOST_LIBRARY_DIR="c:/Libraries/boost/lib32-msvc-12.0" -d --build --target package --plugin package.archive package-name=configure-win32
+    - configure.exe build BOOST_INCLUDE_DIR="%BOOST_INCLUDE_DIR%" BOOST_LIBRARY_DIR="%BOOST_LIBRARY_DIR%" -d --build --target package --plugin package.archive package-name=configure-win32
 
 artifacts:
     - path: build/configure-win32.zip
