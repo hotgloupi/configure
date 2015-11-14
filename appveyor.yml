@@ -24,8 +24,8 @@ install:
     - CALL "C:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/vcvarsall.bat" x86
     - SET CONFIGURE_LIBRARY_DIR=%APPVEYOR_BUILD_FOLDER%/src/lib
     - git submodule update --init --recursive
-    - SET BOOST_INCLUDE_DIR="c:/Libraries/boost" 
-    - SET BOOST_LIBRARY_DIR="c:/Libraries/boost/lib32-msvc-12.0"
+    - SET BOOST_INCLUDE_DIR=c:/Libraries/boost
+    - SET BOOST_LIBRARY_DIR=c:/Libraries/boost/lib32-msvc-12.0
 
 before_build:
     - cmd: SET
