@@ -119,9 +119,10 @@ end
 
 function Compiler:_gen_rpath_flags(dirs)
 	local rpath = ''
+	local origin = self.build:target():is_osx() and '@loader_path' or '$ORIGIN'
 	for _, dir in ipairs(dirs) do
 		if rpath ~= '' then rpath = rpath .. ':' end
-		rpath = rpath .. tostring('$ORIGIN' / dir)
+		rpath = rpath .. tostring(origin / dir)
 	end
 	if rpath ~= '' then
 		return {'-Wl,-rpath,' .. rpath}
