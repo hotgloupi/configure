@@ -13,15 +13,32 @@ Compiler._language_flag = '-TC'
 Compiler.optional_args = table.update(
 	table.update({}, Super.optional_args),
 	{
-		shared_library_directory = Super.optional_args.executable_directory
+		shared_library_directory = Super.optional_args.executable_directory,
+		subsystem = 'console',
+		subsystem_version = nil,
+		unicode = true,
+
 	}
 )
 
-function Compiler:new(args)
-	local o = Super.new(self, args)
-	o.link_path = o:find_tool("LINK", "Link program", "link.exe")
-	o.lib_path = o:find_tool("LIB", "Lib program", "lib.exe")
-	return o
+function Compiler:init()
+	Super.init(self)
+	self.link_path = self:find_tool("LINK", "Link program", "link.exe")
+	self.lib_path = self:find_tool("LIB", "Lib program", "lib.exe")
+	local os_version = self.build:target():os_version()
+	local ver = os_version:split(".")
+	local winver = "0x0" .. ver[1] .. "0" .. ver[2]
+	self.defines = table.extend({
+		{'_WIN32_WINNT', winver},
+		{'WINVER', winver},
+		{'NTDDI_VERSION', winver .. '0000'},
+	}, self.defines)
+	if self.unicode then
+		table.append(self.defines, '_UNICODE')
+	end
+	if self.subsystem_version == nil then
+		self.subsystem_version = os_version
+	end
 end
 
 Compiler._optimization_flags = {
@@ -134,9 +151,22 @@ function Compiler:_add_linker_library_flags(command, args, sources)
 	end
 end
 
+function Compiler:_add_subsystem_flags(cmd, args)
+	local subsystem = args.subsystem
+	if subsystem == nil then subsystem = self.subsystem end
+	if subsystem == false then return end
+	local version = args.subsystem_version
+	if version == nil then version = self.subsystem_version end
+	if version ~= false then
+		subsystem = subsystem .. ',' .. version
+	end
+	table.append(cmd, '-SUBSYSTEM:' .. subsystem)
+end
+
 function Compiler:_link_executable(args)
 	local command = {self.link_path, '-nologo',}
 
+	self:_add_subsystem_flags(command, args)
 	if args.debug then
 		table.append(command, '-DEBUG')
 	end
@@ -168,6 +198,7 @@ function Compiler:_link_library(args)
 		)
 		--rule:add_target(linker_lib)
 		table.extend(command, {self.link_path, '-DLL', '-IMPLIB:' .. tostring(linker_lib:path())})
+		self:_add_subsystem_flags(command, args)
 		if args.debug then
 			table.append(command, '-DEBUG')
 		end
