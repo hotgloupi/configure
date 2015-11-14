@@ -274,7 +274,7 @@ function Compiler:_link_library(args)
 		if self.build:host():os() == Platform.OS.osx then
 			table.extend(
 				command,
-				{'-dynamiclib', '-Wl,-install_name,' .. tostring(args.target:path())}
+				{'-dynamiclib', '-Wl,-install_name,@rpath/' .. tostring(args.target:path():filename())}
 			)
 		else
 			table.extend(
