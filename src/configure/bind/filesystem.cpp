@@ -190,6 +190,14 @@ namespace configure {
 		return 1;
 	}
 
+	static int fs_create_directories(lua_State* state)
+	{
+		lua::Converter<std::reference_wrapper<Filesystem>>::extract(state, 1);
+		bool res = fs::create_directories(utils::extract_path(state, 2));
+		lua::Converter<bool>::push(state, res);
+		return 1;
+	}
+
 	void bind_filesystem(lua::State& state)
 	{
 		/// Filesystem operations.
@@ -240,6 +248,11 @@ namespace configure {
 			/// Return the current script path
 			// @function Filesystem.current_script
 			.def("current_script", &fs_current_script)
+
+			/// Create directories
+			// @function Filesystem:create_directories
+			// @treturn bool True on success, false if the directories already exist
+			.def("create_directories", &fs_create_directories)
 		;
 	}
 
