@@ -412,62 +412,100 @@ function M:find_system_library_file_from_filename(filename)
 	self.build:error("Couldn't find library '" .. filename .. "'")
 end
 
+
+--- Try to compile some source code
+function M:try_build_object(name, content, args)
+	return self.binary:set_cached_property(
+		"check-" .. name,
+		function()
+			args = self:_normalize_build_object_args(args)
+
+			local dir = TemporaryDirectory:new()
+			args.source = dir:path() / (name .. '.c')
+			args.target = args.source + '.o'
+
+			local f = assert(io.open(tostring(args.source) , 'w'))
+			f:write(content)
+			f:close()
+
+			local commands = self:_build_object(args).commands
+			for _, cmd in ipairs(commands) do
+				if Process:call(cmd) ~= 0 then return false end
+			end
+			return true
+		end
+	)
+end
+
+function M:has_include(name, args)
+	local check_name = name:gsub('/', '-'):gsub('%.', '-'):gsub('\\', '-')
+	return self:try_build_object(
+		"has-include-" .. check_name,
+		"#include <" .. name .. ">",
+		args or {}
+	)
+end
+
 -------------------------------------------------------------------------------
 --- Private methods
 --
 -- Utilities used internally.
 -- @section
 
+function M:_normalize_build_object_args(args)
+	local res = table.update({}, args)
+	res.object_directory = Path:new(args.object_directory or self.object_directory)
+	res.object_extension = self:_object_extension(args.object_extension)
+	res.include_directories = self:_include_directories(args)
+	res.include_files = self:_include_files(args)
+	res.install_nodes = self:_install_nodes(args)
+	res.defines = self:_defines(args)
+	res.standard = args.standard or self.standard
+	res.standard_library = args.standard_library or self.standard_library
+	res.coverage = self:_coverage(args)
+	res.threading = self:_threading(args)
+	res.debug = self:_debug(args)
+	res.exception = self:_exception(args)
+	res.warnings = self:_warnings(args)
+	res.optimization = self:_optimization(args)
+	res.big_object = self:_big_object(args)
+	return res
+end
+
 --- Compile source files into objects
 --
 -- @param args see @{configure.lang.c.base}
 -- @return The list of objects
 function M:_build_objects(args)
-	local object_directory = Path:new(args.object_directory or self.object_directory)
-	local object_extension = self:_object_extension(args.object_extension)
-	local include_directories = self:_include_directories(args)
-	local include_files = self:_include_files(args)
-	local install_nodes = self:_install_nodes(args)
-	local defines = self:_defines(args)
-	local standard = args.standard or self.standard
-	local standard_library = args.standard_library or self.standard_library
-	local coverage = self:_coverage(args)
-	local threading = self:_threading(args)
-	local debug = self:_debug(args)
-	local exception = self:_exception(args)
-	local warnings = self:_warnings(args)
-	local optimization = self:_optimization(args)
-	local big_object = self:_big_object(args)
+	args = self:_normalize_build_object_args(args)
 	local objects = {}
 	for idx, source in ipairs(args.sources) do
 		if getmetatable(source) ~= Node then
 			source = self.build:source_node(Path:new(source))
 		end
 		source:set_property('language', self.lang)
-		source:set_property('include_directories', include_directories)
-		objects[idx] = self:_build_object{
-			source = source,
-			target = self.build:target_node(
-				object_directory / (
-					source:relative_path(self.build:project_directory()) +
-					object_extension
-				)
-			),
-			extension = object_extension,
-			include_directories = include_directories,
-			defines = defines,
-			standard = standard,
-			standard_library = standard_library,
-			coverage = coverage,
-			include_files = include_files,
-			install_nodes = install_nodes,
-			threading = threading,
-			debug = debug,
-			exception = exception,
-			warnings = warnings,
-			optimization = optimization,
-			big_object = big_object,
-		}
+		source:set_property('include_directories', args.include_directories)
+
+		local res = self:_build_object(
+			table.update({
+				source = source:path(),
+				target = self.build:target_node(
+					args.object_directory / (
+						source:relative_path(self.build:project_directory()) +
+						args.object_extension
+					)
+				):path(),
+			}, args)
+		)
+		objects[idx] = self.build:target_node(res.targets[1])
+
+		local rule = Rule:new()
+			:add_sources(tools.normalize_files(self.build, res.sources))
+			:add_targets(tools.normalize_files(self.build, res.targets))
+		for _, cmd in ipairs(res.commands) do
+			rule:add_shell_command(ShellCommand:new(table.unpack(cmd)))
+		end
+		self.build:add_rule(rule)
 	end
 	return objects
 end

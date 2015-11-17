@@ -84,14 +84,11 @@ function Compiler:_build_object(args)
 		table.extend(command, {'-include', file})
 	end
 	table.extend(command, {"-c", args.source, '-o', args.target})
-	self.build:add_rule(
-		Rule:new()
-			:add_source(args.source)
-			:add_sources(args.install_nodes)
-			:add_target(args.target)
-			:add_shell_command(ShellCommand:new(table.unpack(command)))
-	)
-	return args.target
+	return {
+		sources = table.extend({args.source}, args.install_nodes),
+		targets = {args.target},
+		commands = {command}
+	}
 end
 
 function Compiler:_add_rpath_flag(cmd, args)

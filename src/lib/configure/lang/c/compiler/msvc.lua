@@ -115,15 +115,12 @@ function Compiler:_build_object(args)
 		table.extend(command, {'-FI', file})
 	end
 
-	table.extend(command, {"-c", args.source, '-Fo' .. tostring(args.target:path())})
-	self.build:add_rule(
-		Rule:new()
-			:add_source(args.source)
-			:add_sources(args.install_nodes)
-			:add_target(args.target)
-			:add_shell_command(ShellCommand:new(table.unpack(command)))
-	)
-	return args.target
+	table.extend(command, {"-c", args.source, '-Fo' .. tostring(args.target)})
+	return {
+		sources = table.extend({args.source}, args.install_nodes),
+		targets = {args.target},
+		commands = {command}
+	}
 end
 
 function Compiler:_add_linker_library_flags(command, args, sources)
