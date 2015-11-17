@@ -231,6 +231,25 @@ namespace configure { namespace lua {
 			CONFIGURE_THROW(error::LuaError(lua_tostring(state, -1)));
 		}
 
+		static int lua_try(lua_State* state)
+		{
+			if (!lua_isfunction(state, 1))
+			{
+				lua_pushstring(state, "try() first argument must be a function");
+				lua_error(state);
+			}
+			try {
+				lua::State::check_status(
+				  state, lua_pcall(state, lua_gettop(state) - 1, 1, 0));
+				lua_pushnil(state);
+			}
+			catch (...)
+			{
+				lua_pushnil(state);
+				lua_pushstring(state, error_string().c_str());
+			}
+			return 2;
+		}
 	}
 
 	State::State(bool with_libs)
@@ -249,6 +268,7 @@ namespace configure { namespace lua {
 		{
 			luaL_openlibs(_state);
 			lua_register(_state, "print", &_print_override);
+			lua_register(_state, "try", &lua_try);
 			_register_extensions();
 		}
 	}
