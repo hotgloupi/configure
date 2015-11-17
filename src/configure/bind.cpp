@@ -13,6 +13,7 @@ namespace configure {
 		bind_process(state);
 		bind_rule(state);
 		bind_shell_command(state);
+		bind_temporary_directory(state);
 	}
 
 }
