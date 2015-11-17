@@ -95,6 +95,33 @@ namespace configure {
 		return 1;
 	}
 
+	static int Rule_add_targets(lua_State* state)
+	{
+		Rule& self = lua::Converter<Rule>::extract(state, 1);
+		if (!lua_istable(state, 2))
+			CONFIGURE_THROW(
+				error::LuaError(
+					"Expected a table, got '" + std::string(luaL_tolstring(state, 2, nullptr)) + "'"
+				)
+			);
+		for (int i = 1, len = lua_rawlen(state, 2); i <= len; ++i)
+		{
+			lua_rawgeti(state, 2, i);
+			if (NodePtr* n = lua::Converter<NodePtr>::extract_ptr(state, -1))
+				self.add_target(*n);
+			else
+				CONFIGURE_THROW(
+					error::LuaError(
+						"Expected target node, got '" + std::string(luaL_tolstring(state, -1, nullptr))
+						+ "' at index " + std::to_string(i)
+					)
+				);
+			lua_remove(state, -1);
+		}
+		lua_pushvalue(state, 1);
+		return 1;
+	}
+
 	static int Rule_add_target(lua_State* state)
 	{
 		Rule& self = lua::Converter<Rule>::extract(state, 1);
@@ -144,6 +171,12 @@ namespace configure {
 			// @tparam Node target
 			// @treturn Rule self instance
 			.def("add_target", &Rule_add_target)
+
+			/// Add target @{Node}s
+			// @function Rule:add_targets
+			// @tparam table targets List of source nodes
+			// @treturn Rule self instance
+			.def("add_targets", &Rule_add_targets)
 
 			/// Add a @{ShellCommand}
 			// @function Rule:add_shell_command
