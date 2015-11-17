@@ -33,11 +33,8 @@ namespace configure {
 		return command;
 	}
 
-	static std::pair<Process::Options, bool> parse_options(lua_State* state, int index)
+	static std::pair<Process::Options, bool> parse_options(lua_State* state, int index, Process::Options options = Process::Options())
 	{
-		Process::Options options;
-		options.stdout_ = Process::Stream::PIPE;
-		options.stderr_ = Process::Stream::DEVNULL;
 		bool ignore_errors = false;
 		if (lua_istable(state, index))
 		{
@@ -73,7 +70,10 @@ namespace configure {
 				)
 			);
 		auto command = parse_command(state, 2);
-		auto options = parse_options(state, 3);
+		Process::Options default_options;
+		default_options.stdout_ = Process::Stream::PIPE;
+		default_options.stderr_ = Process::Stream::DEVNULL;
+		auto options = parse_options(state, 3, default_options);
 		lua::Converter<std::string>::push(
 			state,
 			Process::check_output(command, options.first, options.second)
@@ -92,6 +92,21 @@ namespace configure {
 		auto command = parse_command(state, 2);
 		auto options = parse_options(state, 3);
 		Process::check_call(command, options.first);
+		return 0;
+	}
+
+	static int Process_call(lua_State* state)
+	{
+		if (!lua_istable(state, 2))
+			CONFIGURE_THROW(
+				error::LuaError(
+					"Expected a table, got '" + std::string(luaL_tolstring(state, 2, nullptr)) + "'"
+				)
+			);
+		auto command = parse_command(state, 2);
+		auto options = parse_options(state, 3);
+		auto res = Process::call(command, options.first);
+		lua::Converter<int>::push(state, res);
 		return 1;
 	}
 
@@ -102,13 +117,18 @@ namespace configure {
 		lua::Type<Process> type(state, "Process");
 		type
 			/// Retreive a command output
-			// @function Process::check_output
+			// @function Process:check_output
 			// @treturn string Command output
 			.def("check_output", Process_check_output)
 
 			/// Spawn a process and wait for it to terminate. Raise on errors.
-			// @function Process::check_call
+			// @function Process:check_call
 			.def("check_call", Process_check_call)
+
+            /// Spawn a process and wait for it to terminate.
+            // @return The exit code
+            // @function Process:call
+            .def("call", &Process_call)
 		;
 
 #define ENUM_VALUE(T, key) \
