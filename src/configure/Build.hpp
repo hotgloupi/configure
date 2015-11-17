@@ -40,11 +40,7 @@ namespace configure {
 		path_t const& project_directory() const;
 
 		// List of all project configured so far.
-		std::vector<path_t> const& project_stack() const;
-
-		// Index of current project in the stack (or -1 if there is no current
-		// one).
-		int project_index() const;
+		std::vector<path_t> const& configured_projects() const;
 
 		// Root build directory
 		path_t const& root_directory() const;

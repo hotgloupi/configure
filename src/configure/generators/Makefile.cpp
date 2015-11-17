@@ -54,7 +54,7 @@ namespace configure { namespace generators {
 		{
 			Rule regen;
 			regen.add_target(_build.target_node("Makefile"));
-			for (auto& project_dir: _build.project_stack())
+			for (auto& project_dir: _build.configured_projects())
 			{
 				auto p = Build::find_project_file(project_dir);
 				auto& n = _build.source_node(p);
@@ -63,7 +63,7 @@ namespace configure { namespace generators {
 			ShellCommand regen_cmd;
 			regen_cmd.append(
 				_build.target_node(_configure_exe),
-				"--project", _build.project_stack().at(0),
+				"--project", _build.configured_projects().at(0),
 				_build.directory()
 			);
 			regen.add_shell_command(std::move(regen_cmd));

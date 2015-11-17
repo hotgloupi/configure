@@ -41,7 +41,7 @@ namespace configure {
 		fs::path                                 root_directory;
 		lua::State&                              lua;
 		std::vector<fs::path>                    project_stack;
-		int                                      current_project_index;
+		std::vector<fs::path>                    configured_projects;
 		std::vector<fs::path>                    build_stack;
 		std::unordered_map<std::string, NodePtr> virtual_nodes;
 		std::unordered_map<fs::path, NodePtr>    file_nodes;
@@ -64,7 +64,7 @@ namespace configure {
 		    , root_directory(std::move(directory))
 		    , lua(lua)
 		    , project_stack()
-		    , current_project_index(-1)
+		    , configured_projects()
 		    , build_stack()
 		    , virtual_nodes()
 		    , file_nodes()
@@ -187,12 +187,12 @@ namespace configure {
 			throw err << error::path(project_directory);
 		}
 		_this->project_stack.push_back(project_directory);
-		_this->current_project_index += 1;
+		_this->configured_projects.push_back(project_directory);
 		_this->build_stack.push_back(_prepare_build_directory(sub_directory));
 		log::status("Configuring project", this->project_directory(), "in", this->directory());
 
 		BOOST_SCOPE_EXIT((&_this)){
-			_this->current_project_index -= 1;
+			_this->project_stack.pop_back();
 			_this->build_stack.pop_back();
 		} BOOST_SCOPE_EXIT_END
 
@@ -213,22 +213,19 @@ namespace configure {
 			throw;
 		}
 		// Last project on the stack
-		if (_this->current_project_index == 0)
+		if (_this->project_stack.size() == 1)
 			_finalize_build_directory();
 	}
 
 	fs::path const& Build::project_directory() const
 	{
-		if (_this->current_project_index < 0)
+		if (_this->project_stack.empty())
 			throw std::logic_error("No project on the stack");
-		return _this->project_stack.at(_this->current_project_index);
+		return _this->project_stack.back();
 	}
 
-	std::vector<fs::path> const& Build::project_stack() const
-	{ return _this->project_stack; }
-
-	int Build::project_index() const
-	{ return _this->current_project_index; }
+	std::vector<fs::path> const& Build::configured_projects() const
+	{ return _this->configured_projects; }
 
 	fs::path const& Build::root_directory() const
 	{ return _this->root_directory; }
