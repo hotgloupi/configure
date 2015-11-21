@@ -472,6 +472,7 @@ function M:_normalize_build_object_args(args)
 	res.warnings = self:_warnings(args)
 	res.optimization = self:_optimization(args)
 	res.big_object = self:_big_object(args)
+	res.runtime = self:_runtime(args)
 	return res
 end
 

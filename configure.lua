@@ -41,6 +41,7 @@ return function(build)
 		build = build,
 		standard = 'c++11',
 		optimization = (build_type == 'debug') and 'no' or 'fastest',
+		runtime = 'static',
 	}
 
 	local lua = build:include({
@@ -78,7 +79,8 @@ return function(build)
 		coverage = with_coverage,
 		defines = {
 			{'CONFIGURE_VERSION_STRING', '\"' .. build_type .. '-' .. version .. '\"'}
-		}
+		},
+		runtime = 'static'
 	}
 
 	local configure_exe = compiler:link_executable{
