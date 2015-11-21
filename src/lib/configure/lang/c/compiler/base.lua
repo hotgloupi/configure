@@ -212,6 +212,7 @@ function M:link_executable(args)
 		coverage = self:_coverage(args),
 		threading = self:_threading(args),
 		debug = self:_debug(args),
+		debug_runtime = self:_debug_runtime(args),
 		exception = self:_exception(args),
 		warnings = self:_warnings(args),
 		optimization = self:_optimization(args),
@@ -289,6 +290,7 @@ function M:link_library(args)
 		coverage = self:_coverage(args),
 		threading = self:_threading(args),
 		debug = self:_debug(args),
+		debug_runtime = self:_debug_runtime(args),
 		exception = self:_exception(args),
 		warnings = self:_warnings(args),
 		optimization = self:_optimization(args),
@@ -465,6 +467,7 @@ function M:_normalize_build_object_args(args)
 	res.coverage = self:_coverage(args)
 	res.threading = self:_threading(args)
 	res.debug = self:_debug(args)
+	res.debug_runtime = self:_debug_runtime(args)
 	res.exception = self:_exception(args)
 	res.warnings = self:_warnings(args)
 	res.optimization = self:_optimization(args)
@@ -644,6 +647,19 @@ function M:_debug(args)
 		return self.debug
 	else
 		return args.debug
+	end
+end
+
+--- debug runtime state
+--
+-- @param args
+-- @tparam[opt] bool args.debug_runtime
+-- @treturn bool
+function M:_debug_runtime(args)
+	if args.debug_runtime == nil then
+		return self.debug_runtime
+	else
+		return args.debug_runtime
 	end
 end
 

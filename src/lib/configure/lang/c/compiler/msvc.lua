@@ -17,7 +17,7 @@ Compiler.optional_args = table.update(
 		subsystem = 'console',
 		subsystem_version = nil,
 		unicode = true,
-
+		debug_runtime = true,
 	}
 )
 
@@ -82,20 +82,25 @@ function Compiler:_build_object(args)
 	end
 
 	local defines = table.extend({}, args.defines)
+	local runtime_flag = nil
 	if args.runtime == 'static' then
 		if args.threading then
-			table.append(command, '-MT')
+			runtime_flag = '-MT'
 		else
-			table.append(command, '-ML')
+			runtime_flag = '-ML'
 		end
 	else -- dynamic runtime
 		if args.threading then
-			table.append(command, '-MD')
+			runtime_flag = '-MD'
 		else
-			table.append(command, '-ML') -- Single threaded app
+			runtime_flag = '-ML' -- Single threaded app
 			defines.append({'_DLL'})       -- XXX is it enough for dynamic runtime ?
 		end
 	end
+	if args.debug_runtime then
+		runtime_flag = runtime_flag .. 'd'
+	end
+	table.append(command, runtime_flag)
 
 	for _, dir in ipairs(args.include_directories) do
 		table.extend(command, {'-I', dir})
