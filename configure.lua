@@ -42,6 +42,7 @@ return function(build)
 		standard = 'c++11',
 		optimization = (build_type == 'debug') and 'no' or 'fastest',
 		debug_runtime = (build_type == 'debug'),
+		debug = (build_type == 'debug'),
 		runtime = 'static',
 	}
 
