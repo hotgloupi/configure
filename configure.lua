@@ -129,6 +129,7 @@ return function(build)
 			coverage = with_coverage,
 			library_directories = library_directories,
 			install = false,
+			runtime = build:host():is_windows() and 'static' or 'shared',
 		}
 		unit_tests:add_source(bin)
 		unit_tests:add_shell_command(ShellCommand:new(bin))
