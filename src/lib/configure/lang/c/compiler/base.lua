@@ -304,6 +304,7 @@ function M:link_library(args)
 	lib.runtime = args.runtime
 	lib.kind = args.kind
 	lib.install_node = args.install_node
+	lib.libraries = libraries
 	if self:_install_library(args, args.kind) then
 		self:_set_install_property(lib)
 		for _, dep in ipairs(libraries) do
@@ -557,6 +558,16 @@ function M:_library_directories(args)
 	return tools.unique(tools.normalize_directories(self.build, dirs))
 end
 
+
+local function concat_libraries(libs)
+	local res = {}
+	for _, lib in ipairs(libs) do
+		table.append(res, lib)
+		table.extend(res, concat_libraries(lib.libraries or {}))
+	end
+	return res
+end
+
 --- Concat arguments libraries and compiler libraries
 --
 -- @param args
@@ -566,7 +577,7 @@ function M:_libraries(args)
 	local libs = {}
 	table.extend(libs, self.libraries)
 	table.extend(libs, args.libraries or {})
-	return libs
+	return tools.unique(concat_libraries(libs))
 end
 
 --- Concat arguments export libraries and compiler export libraries
