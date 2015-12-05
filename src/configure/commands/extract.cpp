@@ -12,7 +12,9 @@ namespace configure { namespace commands {
 	             boost::filesystem::path const& dest_dir)
 	{
 		auto ext = tarball.extension().string();
-		if (ext == ".tgz" || boost::ends_with(tarball.string(), ".tar.gz"))
+		if (ext == ".tgz" ||
+		    boost::ends_with(tarball.string(), ".tar.gz") ||
+		    boost::ends_with(tarball.string(), ".tar.bz2"))
 		{
 			auto tarball_resolved = boost::filesystem::canonical(tarball);
 			tarball_resolved.make_preferred();
