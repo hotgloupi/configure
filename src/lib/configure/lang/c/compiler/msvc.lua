@@ -129,15 +129,16 @@ function Compiler:_build_object(args)
 end
 
 function Compiler:_add_linker_library_flags(command, args, sources)
+	local link_args = {}
 	for _, dir in ipairs(args.library_directories) do
-		table.append(command, '-LIBPATH:' .. tostring(dir:path()))
+		table.append(link_args, '-LIBPATH:' .. tostring(dir:path()))
 	end
 	for _, lib in ipairs(args.libraries) do
 		if lib.system then
 			if lib.kind == 'static' then
-				table.append(command, lib.name .. '.lib')
+				table.append(link_args, lib.name .. '.lib')
 			elseif lib.kind == 'shared' then
-				table.append(command, lib.name .. '.lib')
+				table.append(link_args, lib.name .. '.lib')
 			end
 		else
 			for _, file in ipairs(lib.files) do
@@ -146,11 +147,12 @@ function Compiler:_add_linker_library_flags(command, args, sources)
 					table.append(sources, file)
 					path = file:path()
 				end
-				table.append(command, '-LIBPATH:' .. tostring(path:parent_path()))
-				table.append(command, path:filename())
+				table.append(link_args, '-LIBPATH:' .. tostring(path:parent_path()))
+				table.append(link_args, path:filename())
 			end
 		end
 	end
+	table.extend(command, tools.unique(link_args))
 end
 
 function Compiler:_add_subsystem_flags(cmd, args)
@@ -183,7 +185,7 @@ function Compiler:_link_executable(args)
 	self.build:add_rule(
 		Rule:new()
 			:add_sources(args.objects)
-			:add_sources(library_sources)
+			:add_sources(tools.unique(library_sources))
 			:add_target(args.target)
 			:add_shell_command(ShellCommand:new(table.unpack(command)))
 	)
