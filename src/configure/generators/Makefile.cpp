@@ -159,7 +159,12 @@ namespace configure { namespace generators {
 				for (auto out_edge_range = boost::out_edges(node->index, g);
 					 out_edge_range.first != out_edge_range.second;
 					 ++out_edge_range.first)
-					cmd.append(bg.node(boost::target(*out_edge_range.first, g)));
+				{
+					// We link as a dependency of then command outputs
+					auto obj = bg.node(boost::target(*out_edge_range.first, g));
+					_build.add_rule(Rule().add_source(target).add_target(obj));
+					cmd.append(std::move(obj));
+				}
 				cmd.append("--");
 				for (auto& dir: include_directories)
 				{
