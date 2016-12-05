@@ -35,14 +35,14 @@ namespace configure {
 			if (lua_isstring(state, 2))                                        \
 				self.name(lua_tostring(state, 2));                             \
 			else if (lua_isnumber(state, 2))                                   \
-				self.name(static_cast<Platform::T>(lua_tounsigned(state, 2))); \
+				self.name(static_cast<Platform::T>(lua_tointeger(state, 2)));  \
 			else                                                               \
 				throw std::runtime_error("Expected number or string");         \
 			lua_pushvalue(state, 1);                                           \
 		}                                                                      \
 		else                                                                   \
 		{                                                                      \
-			lua_pushunsigned(state, static_cast<int>(self.name()));            \
+			lua_pushinteger(state, static_cast<lua_Integer>(self.name()));     \
 		}                                                                      \
 		return 1;                                                              \
 	}                                                                          \
@@ -85,13 +85,10 @@ namespace configure {
 			.def("__tostring", &Platform_string)
 
 		;
-#define ENUM_VALUE(T, key) \
-		lua_pushunsigned(\
-			state.ptr(), \
-			static_cast<unsigned>(Platform::T::key)\
-		); \
-		lua_setfield(state.ptr(), -2, #key); \
-/**/
+#define ENUM_VALUE(T, key)                                                    \
+	lua_pushinteger(state.ptr(), static_cast<lua_Integer>(Platform::T::key)); \
+	lua_setfield(state.ptr(), -2, #key);                                      \
+		/**/
 		// Vendor
 		lua_newtable(state.ptr());
 		ENUM_VALUE(Vendor, unknown);

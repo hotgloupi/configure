@@ -62,7 +62,7 @@ namespace configure {
 	static int Node_kind(lua_State* state)
 	{
 		auto& self = lua::Converter<NodePtr>::extract(state, 1);
-		lua_pushunsigned(state, static_cast<int>(self->kind()));
+		lua_pushinteger(state, static_cast<lua_Integer>(self->kind()));
 		return 1;
 	}
 	void bind_node(lua::State& state)
@@ -144,9 +144,9 @@ namespace configure {
 			// @function Node::kind
 			.def("kind", &Node_kind)
 		;
-#define ENUM_VALUE(key)                                              \
-	lua_pushunsigned(state.ptr(), static_cast<unsigned>(Node::key)); \
-	lua_setfield(state.ptr(), -2, #key);                             \
+#define ENUM_VALUE(key)                                                \
+	lua_pushinteger(state.ptr(), static_cast<lua_Integer>(Node::key)); \
+	lua_setfield(state.ptr(), -2, #key);                               \
 		// Kind
 		lua_newtable(state.ptr());
 		ENUM_VALUE(file_node);

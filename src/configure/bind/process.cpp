@@ -131,13 +131,10 @@ namespace configure {
             .def("call", &Process_call)
 		;
 
-#define ENUM_VALUE(T, key) \
-		lua_pushunsigned(\
-			state.ptr(), \
-			static_cast<unsigned>(Process::T::key)\
-		); \
-		lua_setfield(state.ptr(), -2, #key); \
-/**/
+#define ENUM_VALUE(T, key)                                                   \
+	lua_pushinteger(state.ptr(), static_cast<lua_Integer>(Process::T::key)); \
+	lua_setfield(state.ptr(), -2, #key);                                     \
+		/**/
 		lua_newtable(state.ptr());
 		ENUM_VALUE(Stream, STDIN);
 		ENUM_VALUE(Stream, STDOUT);

@@ -36,6 +36,7 @@ return function(build, args)
 		"src/ltablib.c",
 		"src/loadlib.c",
 		"src/linit.c",
+		"src/lutf8lib.c",
 	}
 
 	return compiler:link_static_library{
