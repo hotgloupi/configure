@@ -7,8 +7,9 @@ description = "Configure your projects' builds"
 one = false
 sort = true
 merge = true
-topics = {'../README.md'}
+--topics = {'../README.md'}
+readme = '../README.md'
 kind_names = {topic = 'Manual',}
-template = true
-style = true
+-- template = true
+-- style = true
 format = 'discount'
