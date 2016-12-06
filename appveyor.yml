@@ -14,7 +14,7 @@ platform:
 
 install:
     - SET PYTHON=C:/Python27
-    - ps: (new-object net.webclient).DownloadFile('https://raw.github.com/pypa/pip/master/contrib/get-pip.py', 'C:/get-pip.py')
+    - ps: (new-object net.webclient).DownloadFile('https://bootstrap.pypa.io/get-pip.py', 'C:/get-pip.py')
     - "%PYTHON%/python.exe C:/get-pip.py"
     - SET PIP="%PYTHON%/Scripts/pip.exe"
     - "%PIP% --version"
