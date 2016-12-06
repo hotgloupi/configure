@@ -5,17 +5,17 @@ local Project = {}
 -- @param args
 -- @param args.build The build instance
 -- @param args.name Name of the project to add
--- @param[opt] args.root_directory Where to place all project files
-function Project:new(o)
-	assert(o ~= nil)
-	assert(o.build ~= nil)
-	o._build = o.build
-	o.build = nil
-	assert(o.name ~= nil)
-	setmetatable(o, self)
+-- @param args.root_directory Where to place all project files
+function Project:new(args)
+	assert(args ~= nil)
+	assert(args.build ~= nil)
+	args._build = args.build
+	args.build = nil
+	assert(args.name ~= nil)
+	setmetatable(args, self)
 	self.__index = self
-	o:_init()
-	return o
+	args:_init()
+	return args
 end
 
 function Project:_init()
@@ -133,10 +133,10 @@ end
 -- @param args.targets A table of commands. Each key is either a `Path`
 -- to the target file or `0` if no specific file is required. The value is a
 -- list of commands to be triggered.
--- @param[opt] args.working_directory Where to trigger the commands
--- @param[opt] args.env Environ to use for the command
--- @param[opt] args.directory The step directory
--- @param[opt] args.sources Dependency nodes
+-- @param args.working_directory Where to trigger the commands
+-- @param args.env Environ to use for the command
+-- @param args.directory The step directory
+-- @param args.sources Dependency nodes
 function Project:add_step(args)
 	local name = args.name
 	local directory = args.directory or self:step_directory(name)
@@ -222,8 +222,8 @@ end
 --
 -- @param args
 -- @param args.path The relative path to the built file
--- @param[opt] args.step The step where the file should be located (defaults to 'install')
--- @param[opt] args.is_directory True when the node is a directory node (defaults to `false`)
+-- @param args.step The step where the file should be located (defaults to 'install')
+-- @param args.is_directory True when the node is a directory node (defaults to `false`)
 function Project:node(args)
 	local step = args.step or 'install'
 	local path = self:step_directory(step) / args.path

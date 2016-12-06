@@ -5,6 +5,7 @@ local M = {}
 
 --- Convert directories to directory nodes if needed.
 --
+-- @tparam Build build
 -- @param dirs a list of string, path or nodes
 -- @return a list of directory `Node`s
 function M.normalize_directories(build, dirs)
@@ -13,7 +14,8 @@ end
 
 --- Convert a list of string, path or `Node` to a list of file `Node`s
 --
--- @param dirs a list of string, path or nodes
+-- @tparam Build build
+-- @param files a list of string, path or nodes
 -- @return a list of file `Node`s
 function M.normalize_files(build, files)
 	return M.normalize_paths(build, files, Node.Kind.file_node)
@@ -21,9 +23,9 @@ end
 
 --- Convert a list of string, path or `Node` to a list of `Node`s
 --
--- @param build Build instance
--- @param files a list of string, path or nodes
--- @tparam `Node.Kind` kind
+-- @tparam Build build
+-- @param paths a list of string, path or nodes
+-- @tparam Node.Kind kind
 -- @return a list of file `Node`s
 function M.normalize_paths(build, paths, kind)
 	local res = {}

@@ -6,14 +6,14 @@ return {
 	-- @param self
 	-- @param args
 	-- @param args.name The name of the library
-	-- @param[opt] args.system Whether or not the library is available at system level
-	-- @param[opt] args.include_directories Include directories
-	-- @param[opt] args.files list of Node or path to files to link against
-	-- @param[opt] args.runtime_files list of Node or path to files that are needed at runtime
-	-- @param[opt] args.install_node a target `Node` to depends on when the library part of the build
-	-- @param[opt] args.defines List of defines
-	-- @param[opt] args.bundle A table of extra information (version, executable, ...)
-	-- @param[opt] args.dependencies A table of libraries implicitly needed
+	-- @param args.system Whether or not the library is available at system level
+	-- @param args.include_directories Include directories
+	-- @param args.files list of Node or path to files to link against
+	-- @param args.runtime_files list of Node or path to files that are needed at runtime
+	-- @param args.install_node a target `Node` to depends on when the library part of the build
+	-- @param args.defines List of defines
+	-- @param args.bundle A table of extra information (version, executable, ...)
+	-- @param args.dependencies A table of libraries implicitly needed
 	new = function(self, args)
 		assert(args.name)
 		local o = {}

@@ -253,10 +253,10 @@ end
 -- @param args.name The target library name.
 -- @param args.kind 'shared' or 'static'
 -- @param args.sources Sources to be compiled.
--- @param[opt] args.filename_prefix Prefix used (OS dependent)
--- @param[opt] args.extension Extension of the library (Compiler dependant).
--- @param[opt] args.public_defines Preprocessor definition of the resulting library.
--- @param[opt] args.import_library_directory Where to generate the import library
+-- @param args.filename_prefix Prefix used (OS dependent)
+-- @param args.extension Extension of the library (Compiler dependant).
+-- @param args.public_defines Preprocessor definition of the resulting library.
+-- @param args.import_library_directory Where to generate the import library
 --             when compiling a shared library on windows (defaults to the static library directory)
 -- @param args.... see @{lang.c.base}
 -- @return A @{Library} instance
@@ -519,7 +519,7 @@ end
 --  arguments compiler and compiler libraries.
 --
 -- @param args
--- @param[opt] args.include_directories
+-- @param args.include_directories
 function M:_include_directories(args)
 	local dirs = {}
 	for _, list in ipairs({
@@ -550,7 +550,7 @@ end
 --- Concat and normalize library directories from argument and compiler.
 --
 -- @param args
--- @param[opt] args.library_directories
+-- @param args.library_directories
 function M:_library_directories(args)
 	local dirs = {}
 	table.extend(dirs, args.library_directories or {})
@@ -571,7 +571,7 @@ end
 --- Concat arguments libraries and compiler libraries
 --
 -- @param args
--- @param[opt] args.libraries
+-- @param args.libraries
 -- @return A list of libraries
 function M:_libraries(args)
 	local libs = {}
@@ -594,7 +594,7 @@ end
 
 --- Concat and normalize defines
 -- @param args
--- @param[opt] args.defines
+-- @param args.defines
 -- @return A list of pairs `{key, value}` where value is `nil` or a `string`.
 function M:_defines(args)
 	local res = {}
@@ -639,7 +639,7 @@ end
 --- Threading state
 --
 -- @param args
--- @tparam[opt] bool args.threading
+-- @tparam bool args.threading
 -- @treturn bool
 function M:_threading(args)
 	if args.threading == nil then
@@ -652,7 +652,7 @@ end
 --- debug state
 --
 -- @param args
--- @tparam[opt] bool args.debug
+-- @tparam bool args.debug
 -- @treturn bool
 function M:_debug(args)
 	if args.debug == nil then
@@ -679,7 +679,7 @@ end
 --- Exception state
 --
 -- @param args
--- @tparam[opt] bool args.exception
+-- @tparam bool args.exception
 -- @treturn bool
 function M:_exception(args)
 	if args.exception == nil then
@@ -705,7 +705,7 @@ end
 --- warnings state
 --
 -- @param args
--- @tparam[opt] bool args.warnings
+-- @tparam bool args.warnings
 -- @treturn bool
 function M:_warnings(args)
 	if args.warnings == nil then
@@ -735,7 +735,7 @@ end
 --- Optiomization level.
 --
 -- @param args
--- @tparam[opt] string args.optimization
+-- @tparam string args.optimization
 -- @treturn string
 function M:_optimization(args)
 	local lvl
@@ -762,7 +762,7 @@ end
 --- Runtime link mode
 --
 -- @param args
--- @tparam[opt] string args.runtime
+-- @tparam string args.runtime
 -- @treturn string 'shared' or 'static'
 function M:_runtime(args)
 	return args.runtime or self.runtime
@@ -783,14 +783,14 @@ end
 
 --- Built objects extension
 --
--- @param[opt] ext Extension or nil
+-- @param ext Extension or nil
 function M:_object_extension(ext)
 	return ext or ".o"
 end
 
 --- Built executable extension
 --
--- @param[opt] ext Extension or nil
+-- @param ext Extension or nil
 function M:_executable_extension(ext)
 	if self.build:target():os() == Platform.OS.windows then
 		return ext or ".exe"
