@@ -32,7 +32,7 @@ before_build:
     - bash bootstrap/vs.sh
 
 build_script:
-    - configure.exe build BOOST_INCLUDE_DIR="%BOOST_INCLUDE_DIR%" BOOST_LIBRARY_DIR="%BOOST_LIBRARY_DIR%" -d --build --target package --plugin package.archive package-name=configure-win32
+    - configure.exe build CXX=cl.exe BOOST_INCLUDE_DIR="%BOOST_INCLUDE_DIR%" BOOST_LIBRARY_DIR="%BOOST_LIBRARY_DIR%" -d --build --target package --plugin package.archive package-name=configure-win32
 
 artifacts:
     - path: build/configure-win32.zip
