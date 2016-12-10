@@ -63,6 +63,13 @@ namespace configure {
 		return 1;
 	}
 
+	static int Platform_current(lua_State* state)
+    {
+        static Platform platform = Platform::current();
+        lua::Converter<std::reference_wrapper<Platform>>::push(state, platform);
+        return 1;
+    }
+
 	void bind_platform(lua::State& state)
 	{
 		lua::Type<Platform, std::reference_wrapper<Platform>> type(state, "Platform");
@@ -83,8 +90,9 @@ namespace configure {
 			.def("is_64bit", &Platform::is_64bit)
 			.def("address_model", &Platform::address_model)
 			.def("__tostring", &Platform_string)
-
+			.def("current", &Platform_current)
 		;
+
 #define ENUM_VALUE(T, key)                                                    \
 	lua_pushinteger(state.ptr(), static_cast<lua_Integer>(Platform::T::key)); \
 	lua_setfield(state.ptr(), -2, #key);                                      \
