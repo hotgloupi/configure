@@ -251,9 +251,12 @@ namespace configure {
 
 	std::ostream& operator <<(std::ostream& out, Platform const& p)
 	{
-		return out << "Platform(vendor=" << p.vendor_string()
-		           << ", arch=" << p.arch_string()
-		           << ", sub_arch=" << p.sub_arch_string()
-		           << ", os=" << p.os_string() << "-" << p.os_version() << ")";
+		out << "Platform(vendor=" << p.vendor_string()
+		    << ", arch=" << p.arch_string()
+		    << ", sub_arch=" << p.sub_arch_string()
+		    << ", os=" << p.os_string();
+        if (!p.os_version().empty())
+            out << "-" << p.os_version();
+        return out << ")";
 	}
 }
