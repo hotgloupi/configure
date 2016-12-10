@@ -9,11 +9,17 @@ M.env_name = "CC"
 
 M.description = "C compiler"
 
-M.compilers = {
-	M.gcc,
-	M.clang,
-	M.msvc,
-}
+local os = Platform.current():os()
+
+if os == Platform.OS.linux then
+    M.compilers = { M.gcc, M.clang, }
+elseif os == Platform.OS.osx then
+    M.compilers = { M.clang, M.gcc, }
+elseif os == Platform.OS.windows then
+    M.compilers = { M.msvc, M.clang, M.gcc, }
+else
+    M.compilers = { M.gcc, M.clang, M.msvc, }
+end
 
 --- Find a C compiler.
 --
