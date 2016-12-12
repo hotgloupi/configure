@@ -46,7 +46,7 @@ test_script:
 deploy:
   provider: GitHub
   auth_token:
-    secure: aNNADwq2sOOL4wtFqX8qdutn+moJCs84o2LYyiQJtxvcpuD9sNMT0r3YQ/JdsQeR
+    secure: 3tRrd0Tm5axIgBgv6YntPiOSYY7UJL3FgrG78KJTG6Sjp8/QkW8NxRbTKAi0+r2A
   artifact: package
   draft: false
   prerelease: false
